@@ -1,0 +1,26 @@
+# Architecture Decision Records
+
+One file per decision. Format: Context → Decision → Consequences. Immutable once Accepted —
+a reversal is a **new** ADR that supersedes the old one, which is then marked `Superseded by
+ADR-nnnn` rather than edited.
+
+**Status values:** `Proposed` · `Accepted` · `Superseded by ADR-nnnn` · `Deprecated`
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [0001](0001-ports-and-adapters.md) | Ports and adapters (hexagonal) architecture | Accepted |
+| [0002](0002-async-first-anyio.md) | Async-first core on anyio; sync facade derived | Accepted |
+| [0003](0003-no-lowest-common-denominator.md) | No lowest common denominator: capabilities + `.native` | Accepted |
+| [0004](0004-thin-core-lazy-adapters.md) | Thin core; adapters behind extras, lazily imported | Accepted |
+| [0005](0005-secure-by-default.md) | Secure by default, enforced in v0.1 | Accepted |
+| [0006](0006-isolation-tiers-first-class.md) | Isolation tier is a first-class, reported property | Accepted |
+| [0007](0007-contract-suite-as-spec.md) | The contract suite is the adapter specification | Accepted |
+| [0008](0008-dsn-and-typed-config.md) | Dual configuration: DSN strings and typed config objects | Accepted |
+| [0009](0009-library-first-server-later.md) | Library first; MCP is the first server; `sbx-server` is gated | Accepted |
+| [0010](0010-stable-error-codes.md) | Error codes are public, semver-covered API | Accepted |
+| [0011](0011-otel-mapping-layer.md) | OTel GenAI semconv isolated behind one mapping module | Accepted |
+| [0012](0012-no-telemetry-no-import-side-effects.md) | No telemetry, no import side effects | Accepted |
+| [0013](0013-complement-openai-sandboxclient.md) | Complement OpenAI's `SandboxClient`, do not compete with it | Accepted |
+
+Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
+to an ADR here when settled.
