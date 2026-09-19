@@ -12,7 +12,7 @@ in `docs/adr/`.
 |---|----------|----------|--------|
 | [Q1](#q1--project-name) | Project name | P0 | **DECIDED** |
 | [Q2](#q2--python-version-floor) | Python version floor | P0 | **DECIDED** |
-| [Q3](#q3--license) | License | P0 | OPEN |
+| [Q3](#q3--license) | License | P0 | **DECIDED** |
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | OPEN |
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | OPEN |
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | OPEN |
@@ -59,20 +59,15 @@ rationale in [ADR-0015](adr/0015-python-version-floor.md).
 
 ## Q3 — License
 
-**Priority:** P0 · **Status:** OPEN · **Source:** not covered in `docs/input/`
+**Priority:** P0 · **Status:** DECIDED · **Source:** not covered in `docs/input/`
 
-Positioning is "self-hostable, enterprise supply-chain friendly", and the market doc calls
-out Daytona's license changes / closed-sourcing as a risk. No license is chosen anywhere.
+Positioning is self-hostable and enterprise-supply-chain friendly, and the market doc cites
+Daytona's license changes as a risk, yet no license was chosen. The surrounding ecosystem is
+overwhelmingly permissive (`anyio`, `pydantic`, `langgraph`, `e2b`, `openai-agents` all MIT).
 
-**Options**
-- **Apache-2.0** — explicit patent grant; expected by enterprise review and by an adapter
-  ecosystem; matches the fsspec/OTel neighbourhood.
-- **MIT** — shortest, most permissive, no patent grant.
-- Source-available / BSL — contradicts the stated positioning.
-
-**Recommendation:** Apache-2.0. Decide CLA/DCO at the same time (DCO is lighter and enough).
-
-**Decision:** _pending_
+**Decision:** **MIT** for the library, **DCO** for contributions, and the Phase-2
+`sandboxio-server` license deliberately left open until that package exists. Rationale and
+the Apache-2.0 trade-off in [ADR-0016](adr/0016-license-mit.md).
 
 ---
 

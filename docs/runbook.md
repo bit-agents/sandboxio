@@ -145,6 +145,7 @@ Weekly, or as they arrive for anything security-adjacent.
 - A bug that the contract suite should have caught gets a `spec-gap` label and a suite test
   in the fix PR. That loop is what keeps the suite meaningful.
 - Q&A goes to GitHub Discussions — searchable and indexed, unlike chat.
+- PRs need a DCO `Signed-off-by` line ([ADR-0016](adr/0016-license-mit.md)); there is no CLA.
 
 ---
 

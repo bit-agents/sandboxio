@@ -17,9 +17,9 @@ schemes, the entry-point group, error codes, env vars and docs URLs.
 
 - [x] [Q1](open-questions.md#q1--project-name) name — **`sandboxio`**, short code `SBX` ([ADR-0014](adr/0014-project-name.md))
 - [x] [Q2](open-questions.md#q2--python-version-floor) Python floor — **>=3.11**, dev on 3.14 ([ADR-0015](adr/0015-python-version-floor.md))
-- [ ] [Q3](open-questions.md#q3--license) license + DCO/CLA
+- [x] [Q3](open-questions.md#q3--license) license — **MIT** + DCO ([ADR-0016](adr/0016-license-mit.md))
 
-**Exit:** three ADRs written; the name reserved on PyPI; the repo named.
+**Exit:** three ADRs written ([0014](adr/0014-project-name.md), [0015](adr/0015-python-version-floor.md), [0016](adr/0016-license-mit.md)); the name reserved on PyPI; the repo named. **Done.**
 
 ---
 
@@ -33,7 +33,7 @@ an import budget added in month three is a week of untangling.
 - CI with the four hard gates **already failing closed**:
   import budget <150 ms · no sockets at import (`pytest-socket`) · wheel-contents test ·
   type check
-- `SECURITY.md`, PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md`
+- `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound, PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md`
 - `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
 - Issue templates requiring reproduction; stated triage policy
 
