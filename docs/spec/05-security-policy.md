@@ -47,7 +47,10 @@ installation and the zero-config demo work under this default.
 
 - `create()`, `run()` and `run_code()` MUST refuse unbounded execution. Default 300 s.
 - `timeout=None` at the call site means "inherit the sandbox timeout", never "no limit".
-- Timeout MUST raise, MUST NOT hang, and MUST NOT return partial output as success.
+- Timeout MUST raise (`CreateTimeout` or `ExecutionTimeout`), MUST NOT hang, and MUST NOT
+  return partial output as success.
+- A sandbox whose lifetime expires while in use MUST raise `SandboxGone`
+  ([04](04-errors.md#timeouts)).
 
 ## Resource caps
 

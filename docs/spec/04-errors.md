@@ -13,17 +13,37 @@ SandboxError                    base; carries .code, .hint, .url
 ├── CapabilityNotSupported      SBX_E1101   hint: which backends do support it
 ├── CreationError               SBX_E1201
 ├── ConnectError                SBX_E1202
+├── CreateTimeout               SBX_E1203   also a SandboxTimeout (see below)
+├── SandboxGone                 SBX_E1204   sandbox no longer exists — NOT a timeout
 ├── ExecutionError              SBX_E1301   non-zero exit via raise_for_status()
-├── SandboxTimeout              SBX_E1302   OPEN (Q4) — naming and builtin inheritance
+├── SandboxTimeout              —           base only; never raised directly
+│   └── ExecutionTimeout        SBX_E1302
 ├── NetworkPolicyViolation      SBX_E1401
 ├── ResourceLimitExceeded       SBX_E1402
 ├── AuthError                   SBX_E1501   hint: names the exact missing env var
 └── RateLimitError              SBX_E1502
 ```
 
-**OPEN ([Q4](../open-questions.md#q4--timeouterror-shadows-the-builtin))** — whether the
-canonical name is `SandboxTimeout` with a `TimeoutError` alias, and whether it inherits the
-builtin. Applies to any other builtin-shadowing name added later.
+## Timeouts
+
+Resolved in [ADR-0017](../adr/0017-timeout-error-naming.md).
+
+- **No sandboxio exception inherits from a builtin exception**, and **no name in the
+  `sandboxio` namespace shadows a builtin**. Enforced by ruff flake8-builtins (A001/A004).
+- `SandboxTimeout` is a catch-all base carrying no code; `except SandboxTimeout` catches
+  every timeout. Concrete classes carry the codes.
+- `CreateTimeout` inherits both `CreationError` and `SandboxTimeout`, so either catch works.
+- `SandboxGone` is **not** a timeout: the sandbox's lifetime ended or the backend reclaimed
+  it while the caller was still using it. Its hint points at the sandbox `timeout=` that
+  governs lifetime.
+- `except TimeoutError` does **not** catch sandboxio timeouts, by design. With an outer
+  `asyncio.timeout()` around a sandbox call, builtin `TimeoutError` means the caller's
+  deadline fired and `SandboxTimeout` means the sandbox's own limit fired — a distinction
+  inheritance would destroy.
+- `anyio.fail_after` raises the builtin `TimeoutError` internally. Core and adapters MUST
+  catch it and re-raise the matching sandboxio class with `__cause__` preserved. **A bare
+  builtin `TimeoutError` escaping a public entry point is a bug**, checked by the contract
+  suite.
 
 ## Required attributes
 

@@ -22,12 +22,13 @@ for every undeclared capability.
 |------|--------------|
 | Lifecycle | create → run → kill; context-manager teardown on normal exit **and** on exception; double-`kill()` idempotent; `connect()` to unknown id raises `ConnectError` |
 | Cancellation | task cancelled mid-`run` leaves no orphan; teardown shielded with bounded grace; cancellation during `create()` leaks nothing. **OPEN ([Q7](../open-questions.md#q7--cancellation-semantics))** |
-| `run` | exit codes; stdout/stderr separated; `env` injected; `list[str]` does not go through a shell; timeout raises the sandboxio error and does not hang |
+| `run` | exit codes; stdout/stderr separated; `env` injected; `list[str]` does not go through a shell; timeout raises `ExecutionTimeout` and does not hang |
 | `run_code` | basic execution; syntax and runtime errors surface with non-zero exit; rich outputs present iff declared; `context_id` works iff `STATEFUL_CODE`, else raises |
 | Streaming | per-stream ordering preserved; stdout/stderr distinguishable; terminal `ExecResult` reachable; abandoning the stream kills the remote process. **OPEN ([Q6](../open-questions.md#q6--stream-loses-stderr-and-exit-code))** |
 | Filesystem | read/write/upload/download/ls/mkdir/remove round-trips; binary safety; missing path raises mapped error; no host-path escape |
 | Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset |
 | Errors | every provider exception mapped into the sandboxio tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
+| Timeouts | `create()` timeout raises `CreateTimeout`, execution timeout raises `ExecutionTimeout`, expired sandbox raises `SandboxGone`; **no bare builtin `TimeoutError` escapes any public entry point** |
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
 | Observability | one operation record per operation; secrets absent from every sink; `metadata` propagated to provider-native labels |
 

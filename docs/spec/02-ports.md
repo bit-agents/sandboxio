@@ -73,8 +73,9 @@ Requirements:
   behaviour MUST be documented per adapter.
 - `timeout=None` means "inherit the sandbox timeout", never "unbounded"
   ([05](05-security-policy.md#mandatory-timeouts)).
-- A timeout MUST raise the sandboxio timeout error, and MUST NOT hang or return a partial result
-  as success.
+- A timeout MUST raise `ExecutionTimeout`, and MUST NOT hang or return a partial result as
+  success. A sandbox that has ceased to exist MUST raise `SandboxGone`, not a timeout
+  ([04](04-errors.md#timeouts)).
 - `run_code` with `context_id` requires `Capability.STATEFUL_CODE`; without it, MUST raise
   `CapabilityNotSupported`. **OPEN ([Q11](../open-questions.md#q11--stateful_code-on-docker))**
   for Docker.

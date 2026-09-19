@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Related:** [ADR-0003](0003-no-lowest-common-denominator.md), [ADR-0008](0008-dsn-and-typed-config.md)
-**Open questions:** [Q4 `TimeoutError` shadowing](../open-questions.md#q4--timeouterror-shadows-the-builtin)
+**Related:** [ADR-0017](0017-timeout-error-naming.md) — timeout naming and the no-builtin-shadowing rule
 
 ## Context
 
@@ -28,7 +28,7 @@ provider-specific. Leaking those through is the same lock-in the library exists 
   `CapabilityNotSupported` names which backends do support the feature.
 - Error-catalog docs pages are **generated from the catalog in code**, so codes, hints and
   docs cannot drift.
-- Builtin-shadowing names are resolved in [Q4](../open-questions.md#q4--timeouterror-shadows-the-builtin).
+- No exception inherits from a builtin, and no name shadows one ([ADR-0017](0017-timeout-error-naming.md)).
 
 ## Consequences
 

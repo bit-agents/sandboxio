@@ -50,8 +50,8 @@ eager import turns CI red.
 
 `models.py`, `errors.py`, `protocols.py`, `registry.py`. No I/O.
 
-Depends on: [Q4](open-questions.md#q4--timeouterror-shadows-the-builtin) error naming,
-[Q5](open-questions.md#q5--isolationtier-needs-ordering) tier ordering.
+Depends on: ~~[Q4](open-questions.md#q4--timeouterror-shadows-the-builtin) error naming~~ (decided,
+[ADR-0017](adr/0017-timeout-error-naming.md)), [Q5](open-questions.md#q5--isolationtier-needs-ordering) tier ordering.
 
 - Value objects per [spec/01](spec/01-domain-model.md), all frozen with value equality
 - Full error tree with codes, hints and URLs per [spec/04](spec/04-errors.md); the catalog
@@ -181,7 +181,7 @@ Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI das
 |------|-----------|
 | 0 | — |
 | 1 | Q1, Q2, Q3 |
-| 2 | Q4, Q5 |
+| 2 | ~~Q4~~, Q5 |
 | 3 | Q6, Q7, Q9 |
 | 4 | Q8, Q10, Q11 |
 | 5 | Step 4 exit criteria, in full |

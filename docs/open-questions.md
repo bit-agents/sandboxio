@@ -13,7 +13,7 @@ in `docs/adr/`.
 | [Q1](#q1--project-name) | Project name | P0 | **DECIDED** |
 | [Q2](#q2--python-version-floor) | Python version floor | P0 | **DECIDED** |
 | [Q3](#q3--license) | License | P0 | **DECIDED** |
-| [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | OPEN |
+| [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | **DECIDED** |
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | OPEN |
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | OPEN |
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | OPEN |
@@ -73,23 +73,20 @@ the Apache-2.0 trade-off in [ADR-0016](adr/0016-license-mit.md).
 
 ## Q4 — `TimeoutError` shadows the builtin
 
-**Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/04-api-design.md`
 
-The error taxonomy defines `sandboxio.TimeoutError` (`SBX_E1302`) and examples use
-`except sandboxio.TimeoutError`. On 3.11+ the builtin `TimeoutError` is what `asyncio` raises, so
-a shadowing name makes it ambiguous whether a caller is catching sandboxio's error, the builtin,
-or both — and readers will assume the wrong one.
+The input taxonomy named the class `TimeoutError`, shadowing the builtin — which, on our
+3.11 floor, is what `asyncio` and `anyio` raise. The decisive fact: builtin `TimeoutError`
+is an `OSError` subclass, so inheriting it would let `except OSError` swallow sandbox
+timeouts and would attach dead `errno`/`strerror` attributes. Prior art is split (httpx no,
+aiohttp yes, redis-py and urllib3 shadow the name).
 
-**Options**
-- Rename canonical class to `SandboxTimeout`, keep `TimeoutError` as a deprecated alias.
-- Keep the name but inherit from builtin `TimeoutError` so both catches work.
-- Both: `SandboxTimeout(SandboxError, TimeoutError)` + alias.
-
-**Recommendation:** both — canonical `SandboxTimeout`, inheriting the builtin, with
-`sandboxio.TimeoutError` as an alias. Same question applies to any other builtin-shadowing names
-in the taxonomy (`ConnectionError`-adjacent ones).
-
-**Decision:** _pending_
+**Decision:** no sandboxio exception inherits from a builtin and no name shadows one.
+Canonical `SandboxTimeout` as a catch-all base, with `ExecutionTimeout` (`SBX_E1302`,
+unchanged meaning) and `CreateTimeout` (`SBX_E1203`) carrying the codes, plus a new
+`SandboxGone` (`SBX_E1204`) for a sandbox whose lifetime ended mid-use — a gap the original
+catalog had no error for. No `TimeoutError` alias. Full rationale in
+[ADR-0017](adr/0017-timeout-error-naming.md).
 
 ---
 

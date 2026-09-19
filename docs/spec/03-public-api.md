@@ -63,6 +63,11 @@ res = await sb.run_code("import pandas; print(pandas.__version__)")
 await sb.files.upload("model.pkl", "/work/model.pkl")
 data = await sb.files.read("/work/out.json")
 
+try:
+    await sb.run("sleep 999", timeout=5)
+except sandboxio.SandboxTimeout:          # NOT builtin TimeoutError — see spec/04
+    await sb.kill()
+
 if sandboxio.Capability.GPU in sb.capabilities: ...
 if sb.isolation is not sandboxio.IsolationTier.MICROVM:
     log.warning("weaker than microVM isolation for untrusted multi-tenant code")
