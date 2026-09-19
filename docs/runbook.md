@@ -30,7 +30,7 @@ uv run pytest -q                        # fast: fake backend only
 uv run pytest -m docker                 # Docker contract suite (needs Docker)
 uv run ruff check . && uv run ruff format --check .
 uv run pyright && uv run mypy src/
-uv run python -X importtime -c "import sbx" 2>&1 | tail -1    # import budget
+uv run python -X importtime -c "import sandboxio" 2>&1 | tail -1    # import budget
 ```
 
 Before pushing, run what CI runs on PRs: unit + fake + docker contract + lint + types +
@@ -47,10 +47,10 @@ merge**:
 |------|-----------|---------------|
 | Import budget | <150 ms, hard fail >200 ms | agents cold-start this on every run ([H8](hazards.md#h8--import-bloat-and-eager-imports)) |
 | No network at import | zero sockets under `pytest-socket` | offline and air-gapped CI must work |
-| Wheel contents | base install pulls no adapter code; extras resolve | supply-chain surface ([H10](hazards.md#h10--a-litellm-class-incident-in-sbx-itself)) |
+| Wheel contents | base install pulls no adapter code; extras resolve | supply-chain surface ([H10](hazards.md#h10--a-litellm-class-incident-in-sandboxio-itself)) |
 | Types | pyright + mypy strict on public API; `py.typed` in wheel | without `py.typed`, downstream mypy sees `Any` |
 | Contract suite | 100% for every declared capability | [ADR-0007](adr/0007-contract-suite-as-spec.md) |
-| No leaked containers | zero sbx-labelled containers after Docker jobs | [H2](hazards.md#h2--leaked-sandboxes) |
+| No leaked containers | zero sandboxio-labelled containers after Docker jobs | [H2](hazards.md#h2--leaked-sandboxes) |
 | Error catalog | every code has a page, every page a code | [spec/04](spec/04-errors.md#catalog-is-generated) |
 
 A red gate is not overridden. If a gate is wrong, change the gate in its own PR, with a
@@ -75,7 +75,7 @@ the core value proposition ([H5](hazards.md#h5--provider-churn-outpaces-maintena
      suite has a gap; add the test in the same PR.
    - **New capability** → `Capability` flag if ≥2 backends have it, otherwise `.native`.
    - **Removed capability** → capability flag goes false for that backend; document it as a
-     provider change, not an sbx regression.
+     provider change, not an sandboxio regression.
 4. **Write the churn-log entry.** Date, provider, versions affected, what broke, what we
    did, whether users need to act.
 5. Release. Churn absorption should ship in days, not at the next milestone.
@@ -102,7 +102,7 @@ story.
 5. Tag; publish via **PyPI Trusted Publishing** with PEP 740 attestations. No token-based
    publishing, no local `twine upload`.
 6. Publish the MCP container image; update the Docker MCP Catalog entry.
-7. Verify the install path a user actually takes: `uvx sbx demo` on a clean machine.
+7. Verify the install path a user actually takes: `uvx sandboxio demo` on a clean machine.
 
 **Never:** publish from a laptop, hard-pin a provider SDK to force a green build, or ship a
 release with a skipped contract test.
@@ -137,7 +137,7 @@ Weekly, or as they arrive for anything security-adjacent.
 
 - Issue templates **require** reproduction. No repro, no triage — stated up front, applied
   without debate ([H11](hazards.md#h11--ai-slop-issues-and-prs)).
-- Ask for `sbx doctor --json` output on any environment report; it is designed to be pasted
+- Ask for `sandboxio doctor --json` output on any environment report; it is designed to be pasted
   and carries no secrets ([spec/10](spec/10-cli.md#doctor-output-contract)).
 - Labels: `provider-churn` (auto from canary), `adapter:<name>`, `security`, `spec-gap`,
   `good-first-issue`.

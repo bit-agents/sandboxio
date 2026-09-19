@@ -1,23 +1,23 @@
 # 03 — Public API
 
 Design target: autocomplete-driven and AI-legible. A coding assistant reading only the type
-signatures should produce correct sbx code.
+signatures should produce correct sandboxio code.
 
 ## Module surface
 
 ```python
-sbx.create(...)          # async, returns AsyncSandbox
-sbx.create_sync(...)     # sync facade
-sbx.connect(...)         # async, by sandbox id
-sbx.register(name, path) # runtime backend registration
-sbx.doctor()             # programmatic environment diagnosis
+sandboxio.create(...)          # async, returns AsyncSandbox
+sandboxio.create_sync(...)     # sync facade
+sandboxio.connect(...)         # async, by sandbox id
+sandboxio.register(name, path) # runtime backend registration
+sandboxio.doctor()             # programmatic environment diagnosis
 
-sbx.Capability, sbx.IsolationTier, sbx.Resources, sbx.NetworkPolicy, sbx.ExecResult
-sbx.errors.*             # full error tree, also re-exported at top level
-sbx.testing.*            # FakeBackend, fixtures, BackendContractSuite
+sandboxio.Capability, sandboxio.IsolationTier, sandboxio.Resources, sandboxio.NetworkPolicy, sandboxio.ExecResult
+sandboxio.errors.*             # full error tree, also re-exported at top level
+sandboxio.testing.*            # FakeBackend, fixtures, BackendContractSuite
 ```
 
-Importing `sbx` MUST NOT import any adapter or provider SDK
+Importing `sandboxio` MUST NOT import any adapter or provider SDK
 ([ADR-0004](../adr/0004-thin-core-lazy-adapters.md)).
 
 ## `create()`
@@ -47,15 +47,15 @@ async def create(
 ## Canonical usage
 
 ```python
-import sbx
+import sandboxio
 
-async with await sbx.create() as sb:                      # zero-config, local Docker
+async with await sandboxio.create() as sb:                      # zero-config, local Docker
     res = await sb.run_code("print('hello')")
     print(res.stdout)
 
-sb = await sbx.create("docker://python:3.12-slim")        # one-line backend swap
-sb = await sbx.create("e2b://code-interpreter")
-sb = await sbx.create("modal://base?gpu=T4")
+sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
+sb = await sandboxio.create("e2b://code-interpreter")
+sb = await sandboxio.create("modal://base?gpu=T4")
 
 res = await sb.run(["pytest", "-q"], timeout=120)
 res = await sb.run_code("import pandas; print(pandas.__version__)")
@@ -63,8 +63,8 @@ res = await sb.run_code("import pandas; print(pandas.__version__)")
 await sb.files.upload("model.pkl", "/work/model.pkl")
 data = await sb.files.read("/work/out.json")
 
-if sbx.Capability.GPU in sb.capabilities: ...
-if sb.isolation is not sbx.IsolationTier.MICROVM:
+if sandboxio.Capability.GPU in sb.capabilities: ...
+if sb.isolation is not sandboxio.IsolationTier.MICROVM:
     log.warning("weaker than microVM isolation for untrusted multi-tenant code")
 
 sb.native.tunnels()        # Modal-specific — outside the semver contract
@@ -76,7 +76,7 @@ sb.native.tunnels()        # Modal-specific — outside the semver contract
 
 ## Sync facade
 
-- Mirrors the async surface 1:1: `sb = sbx.create_sync("docker://python:3.12-slim")`.
+- Mirrors the async surface 1:1: `sb = sandboxio.create_sync("docker://python:3.12-slim")`.
 - Entry is **explicit**. `create()` MUST NOT auto-detect sync context and return a different
   type ([ADR-0002](../adr/0002-async-first-anyio.md)).
 - Errors raised through the facade MUST be the same classes with `__cause__` intact.
@@ -97,7 +97,7 @@ sb.native.tunnels()        # Modal-specific — outside the semver contract
 the contract suite.
 
 **Not covered:** `.native` and everything reached through it; anything under
-`sbx.experimental.*`; anything emitting `ExperimentalWarning`.
+`sandboxio.experimental.*`; anything emitting `ExperimentalWarning`.
 
 **Deprecation:** `DeprecationWarning` with correct `stacklevel`, plus PEP 702
 `@typing_extensions.deprecated`, plus a changelog entry, plus a generous window. Warnings

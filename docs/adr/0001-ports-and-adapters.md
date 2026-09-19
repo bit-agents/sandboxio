@@ -6,7 +6,7 @@
 
 ## Context
 
-sbx spans backends with genuinely different shapes: a local Docker daemon, E2B's Firecracker
+sandboxio spans backends with genuinely different shapes: a local Docker daemon, E2B's Firecracker
 microVMs with a code-interpreter protocol, Modal's gVisor sandboxes with Volumes and GPUs.
 Their SDKs churn independently and fast — E2B shipped v0→v1→v2 in roughly a year; Modal
 changed its Sandbox filesystem API at V2.
@@ -18,7 +18,7 @@ framework.
 
 ## Decision
 
-We will structure sbx as ports and adapters:
+We will structure sandboxio as ports and adapters:
 
 - **Core** defines protocols (`Backend`, `AsyncSandbox`, `AsyncFileSystem`, `Process`) and
   value objects (`Resources`, `NetworkPolicy`, `ExecResult`, `Capability`, `IsolationTier`).
@@ -34,7 +34,7 @@ implement them without importing a base class.
 
 ## Consequences
 
-- A third party can ship `sbx-fly` without a PR, and the contract suite tells them whether
+- A third party can ship `sandboxio-fly` without a PR, and the contract suite tells them whether
   it is correct ([ADR-0007](0007-contract-suite-as-spec.md)).
 - Provider churn is contained to one file per provider. This is the moat, and it only holds
   if core stays genuinely provider-ignorant — any provider concept leaking into core

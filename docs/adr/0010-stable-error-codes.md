@@ -21,7 +21,7 @@ provider-specific. Leaking those through is the same lock-in the library exists 
   cause, `.hint` with the **exact fix command**, and `.url` to a per-code docs page.
 - **Codes are semver-covered API.** Renaming or repurposing a code is a breaking change. One
   docs page per code, at a redirect-stable path.
-- **Adapters map native exceptions into the sbx tree, preserving `__cause__`.** A raw
+- **Adapters map native exceptions into the sandboxio tree, preserving `__cause__`.** A raw
   provider exception escaping an adapter is a bug, and the contract suite checks for it.
 - Hints are specific, not generic: auth errors name the exact missing environment variable;
   unknown-backend errors list what is installed and how to install what is not;

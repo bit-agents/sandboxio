@@ -8,10 +8,15 @@ progress bars are installed at the CLI entry point, never at library import
 
 | Command | Purpose | Ships |
 |---------|---------|-------|
-| `sbx doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sbx.doctor()`. | v0.1 |
-| `uvx sbx demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — in under 60 s with no account and no config. | v0.1 |
-| `sbx replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
-| `sbx bench` | Backend comparison: latency, cost where known. | v0.2 |
+| `sandboxio doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sandboxio.doctor()`. | v0.1 |
+| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — in under 60 s with no account and no config. | v0.1 |
+| `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
+| `sandboxio bench` | Backend comparison: latency, cost where known. | v0.2 |
+
+The primary console script is `sandboxio`. A short `sbx` alias script is installed as a
+convenience, but **copy-paste examples always use the full name** — `uvx` resolves by
+distribution name, and the three-letter name belongs to an unrelated PyPI package
+([ADR-0014](../adr/0014-project-name.md)).
 
 ## Behaviour requirements
 
@@ -23,7 +28,7 @@ progress bars are installed at the CLI entry point, never at library import
 - Progress bars for genuinely long operations only: image pull, sandbox boot.
 - `doctor` MUST print credential **variable names**, never values, and MUST NOT make a
   provider API call that costs money.
-- Shell completions and `sbx upgrade` self-check: v0.2.
+- Shell completions and `sandboxio upgrade` self-check: v0.2.
 
 ## `doctor` output contract
 

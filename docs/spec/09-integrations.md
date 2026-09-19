@@ -4,19 +4,19 @@ Integrations are the distribution strategy: being the recommended sandbox layer 
 popular framework is worth more than standalone stars. All integration modules are lazily
 imported and dependency-isolated behind extras.
 
-## Framework adapters (`sbx.integrations.*`)
+## Framework adapters (`sandboxio.integrations.*`)
 
 Each adapter returns the framework's **native tool object** wrapping `run_code`/`run` on a
 provided sandbox or per-call factory.
 
 ```python
-from sbx.integrations.langgraph import make_code_tool        # -> BaseTool
-from sbx.integrations.crewai import SbxCodeTool
-from sbx.integrations.pydantic_ai import sandbox_tool
+from sandboxio.integrations.langgraph import make_code_tool        # -> BaseTool
+from sandboxio.integrations.crewai import SbxCodeTool
+from sandboxio.integrations.pydantic_ai import sandbox_tool
 
 # OpenAI Agents SDK — both directions (ADR-0013)
-from sbx.integrations.openai_agents import make_code_tool    # sbx as a plain tool
-from sbx.integrations.openai_agents import SbxSandboxClient  # sbx backends AS a SandboxClient
+from sandboxio.integrations.openai_agents import make_code_tool    # sandboxio as a plain tool
+from sandboxio.integrations.openai_agents import SbxSandboxClient  # sandboxio backends AS a SandboxClient
 ```
 
 Rules:
@@ -35,14 +35,14 @@ Rules:
 | P1 (v0.2) | Pydantic AI, CrewAI, OpenAI `SandboxClient` adapter | "works with all four" |
 | P2 | LlamaIndex, Vercel AI SDK (via MCP), K8s agent-sandbox adapter at ≥beta | follow demand |
 
-## MCP server (`python -m sbx.mcp`)
+## MCP server (`python -m sandboxio.mcp`)
 
 Both an integration and the first server surface
 ([ADR-0009](../adr/0009-library-first-server-later.md)).
 
 ```bash
-python -m sbx.mcp --backend docker://python:3.12-slim
-docker run ghcr.io/<org>/sbx-mcp --backend e2b://code-interpreter
+python -m sandboxio.mcp --backend docker://python:3.12-slim
+docker run ghcr.io/<org>/sandboxio-mcp --backend e2b://code-interpreter
 ```
 
 Tools exposed — deliberately few, code-execution-pattern first:
@@ -62,7 +62,7 @@ code-execution pattern, and it is where the large token reduction comes from.
 Non-negotiable, informed by the LiteLLM CVE chain where the worst RCE lived in an MCP
 endpoint:
 
-- The server inherits sbx defaults: deny egress, mandatory timeouts, resource caps.
+- The server inherits sandboxio defaults: deny egress, mandatory timeouts, resource caps.
 - **No tool ever executes on the host.** Everything routes through the sandbox.
 - Configuration — backend DSN, policy — is fixed at process start. There MUST be **no
   runtime config-mutation tool**, and no unauthenticated management or test endpoint.

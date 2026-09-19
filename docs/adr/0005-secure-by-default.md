@@ -34,7 +34,7 @@ Enforced in v0.1, not deferred:
 6. **Per-tenant isolation by default.** One sandbox per session or tenant-run, labelled via
    `metadata`. Sharing and warm pools are opt-in and documented, never implicit.
 
-We will also state plainly what sbx does **not** do: it does not make untrusted code safe on
+We will also state plainly what sandboxio does **not** do: it does not make untrusted code safe on
 the `CONTAINER` tier, it does not defend against prompt injection, and it does not manage
 tenant identity or authorization.
 

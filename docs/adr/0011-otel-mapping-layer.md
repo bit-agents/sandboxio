@@ -17,12 +17,12 @@ multi-file, multi-adapter change, and stale names silently produce unqueryable t
 
 ## Decision
 
-- **All semconv attribute strings live in one module**, `sbx/otel.py`. No adapter and no
+- **All semconv attribute strings live in one module**, `sandboxio/otel.py`. No adapter and no
   core module writes a span attribute name directly. A rename is then a one-file change.
 - The semconv version we target is **pinned and documented**, and bumping it is a changelog
   entry.
 - **Zero-config participation:** if the host application has configured a tracer provider,
-  sbx emits spans; otherwise it is a no-op. sbx never installs an exporter, never starts a
+  sandboxio emits spans; otherwise it is a no-op. sandboxio never installs an exporter, never starts a
   provider, and never adds an OTel SDK to the base dependency set.
 - **Content capture is opt-in**, per the spec's privacy modes. Code and file contents are
   never on spans by default; secrets never, under any setting.

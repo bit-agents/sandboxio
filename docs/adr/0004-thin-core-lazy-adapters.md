@@ -18,11 +18,11 @@ and nobody should pay for the E2B SDK to use Docker locally.
 
 - **Core depends on `typing-extensions` and `anyio` only.** Any further base dependency
   requires an ADR.
-- **First-party adapters live in the monorepo behind extras** (`sbx[docker]`, `sbx[e2b]`,
-  `sbx[modal]`). Third parties ship separate distributions (`sbx-fly`).
-- **Resolution is by entry point**, group `sbx.backends`, read lazily via
-  `importlib.metadata`. Plus runtime `sbx.register(name, "pkg:Class")` for dynamic cases.
-- **Importing `sbx` never imports an adapter, and never imports a provider SDK.** The
+- **First-party adapters live in the monorepo behind extras** (`sandboxio[docker]`, `sandboxio[e2b]`,
+  `sandboxio[modal]`). Third parties ship separate distributions (`sandboxio-fly`).
+- **Resolution is by entry point**, group `sandboxio.backends`, read lazily via
+  `importlib.metadata`. Plus runtime `sandboxio.register(name, "pkg:Class")` for dynamic cases.
+- **Importing `sandboxio` never imports an adapter, and never imports a provider SDK.** The
   adapter module is imported on first use of that backend.
 - Enforced in CI, not by convention: import budget under 150 ms (hard fail over 200 ms), no
   sockets at import, and a wheel-contents test asserting the base install pulls no adapter

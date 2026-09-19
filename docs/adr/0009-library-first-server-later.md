@@ -1,4 +1,4 @@
-# ADR-0009 — Library first; MCP is the first server; `sbx-server` is gated
+# ADR-0009 — Library first; MCP is the first server; `sandboxio-server` is gated
 
 **Status:** Accepted
 **Date:** 2026-09-19
@@ -22,12 +22,12 @@ Three phases, each with an explicit trigger:
 | Phase | Deliverable | Trigger |
 |-------|-------------|---------|
 | 0 | Library only | now |
-| 1 | `sbx.mcp`, containerized MCP server | launch |
-| 2 | `sbx-server`, separate package, REST + SSE gateway | >30% of adopters ask for multi-tenant routing or a deployable service, **or** enterprise buyers demand SSO/JWT with central audit |
+| 1 | `sandboxio.mcp`, containerized MCP server | launch |
+| 2 | `sandboxio-server`, separate package, REST + SSE gateway | >30% of adopters ask for multi-tenant routing or a deployable service, **or** enterprise buyers demand SSO/JWT with central audit |
 
 - The MCP server is the first server surface. Containerized, single-tenant, config fixed at
   process start, **no runtime config-mutation tool**, nothing ever executed on the host.
-- `sbx-server` is a **separate distribution** when it happens, so its dependency tree and
+- `sandboxio-server` is a **separate distribution** when it happens, so its dependency tree and
   attack surface never reach library users.
 - The **routing config format is designed now and loadable by the library**, so teams can
   adopt declarative routing before adopting any server. Which backend and isolation class a

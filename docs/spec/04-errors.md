@@ -9,7 +9,7 @@ assistants that need a stable token. See [ADR-0010](../adr/0010-stable-error-cod
 SandboxError                    base; carries .code, .hint, .url
 ├── ConfigurationError          SBX_E10xx
 │   ├── BackendNotFound         SBX_E1001   hint: installed backends + install command
-│   └── BackendNotInstalled     SBX_E1002   hint: uv pip install "sbx[e2b]"
+│   └── BackendNotInstalled     SBX_E1002   hint: uv pip install "sandboxio[e2b]"
 ├── CapabilityNotSupported      SBX_E1101   hint: which backends do support it
 ├── CreationError               SBX_E1201
 ├── ConnectError                SBX_E1202
@@ -39,8 +39,8 @@ Every `SandboxError` MUST carry:
 ## Rendering
 
 ```
-sbx.errors.BackendNotInstalled: [SBX_E1002] The 'e2b' backend is not installed.
-  Fix:  uv pip install "sbx[e2b]"
+sandboxio.errors.BackendNotInstalled: [SBX_E1002] The 'e2b' backend is not installed.
+  Fix:  uv pip install "sandboxio[e2b]"
   Docs: https://<docs-domain>/errors/SBX_E1002
 ```
 
@@ -67,7 +67,7 @@ Hints are specific, which means errors are constructed with context rather than 
 3. Do not invent codes per provider. If a provider failure has no good home, that is a
    signal to add a code to this catalog, with a docs page, in the same change.
 4. Transient provider failures MUST map to `RateLimitError` or `CreationError` rather than
-   being retried silently. sbx does not retry on the caller's behalf in v0.1.
+   being retried silently. sandboxio does not retry on the caller's behalf in v0.1.
 
 ## Catalog is generated
 

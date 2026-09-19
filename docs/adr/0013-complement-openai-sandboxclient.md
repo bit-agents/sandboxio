@@ -19,8 +19,8 @@ a good-enough sandbox layer" is the highest-likelihood market risk on the board.
 
 Treat the framework layers as **distribution channels, not competitors**:
 
-- Ship `sbx.integrations.openai_agents` in **both directions**: sbx as a plain tool, and
-  `SbxSandboxClient` exposing sbx backends **as** a `SandboxClient` pluggable into
+- Ship `sandboxio.integrations.openai_agents` in **both directions**: sandboxio as a plain tool, and
+  `SbxSandboxClient` exposing sandboxio backends **as** a `SandboxClient` pluggable into
   `SandboxRunConfig`.
 - Same posture for LangGraph, Pydantic AI and CrewAI: the adapter returns the framework's
   **native** tool object, is under 100 lines, and contains no logic that belongs in core.
@@ -28,7 +28,7 @@ Treat the framework layers as **distribution channels, not competitors**:
   depth (deny-by-default, isolation tiers, audit), offline testing via `FakeBackend`, and
   the contract suite.
 - **Pre-committed pivot:** if `SandboxClient` becomes the de facto multi-provider standard,
-  retarget — sbx backends become `SandboxClient` implementations and that adapter becomes
+  retarget — sandboxio backends become `SandboxClient` implementations and that adapter becomes
   the main product surface. This is a planned outcome, not a defeat.
 
 ## Consequences

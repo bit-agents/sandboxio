@@ -27,7 +27,7 @@ Rules:
 ## Typed configuration
 
 ```python
-sbx.create(E2BConfig(
+sandboxio.create(E2BConfig(
     template="code-interpreter",
     network=NetworkPolicy(allow=("api.openai.com",)),
     resources=Resources(memory_mb=2048),
@@ -43,14 +43,14 @@ policy.
   convention (`E2B_API_KEY`, `MODAL_TOKEN_ID`/`MODAL_TOKEN_SECRET`, …).
 - Credentials MUST NOT appear in a DSN. The parser SHOULD detect credential-looking
   parameters and raise `ConfigurationError` naming the correct env var.
-- sbx MUST NOT persist credentials, and MUST NOT log them even at debug verbosity.
+- sandboxio MUST NOT persist credentials, and MUST NOT log them even at debug verbosity.
 - A missing credential MUST raise `AuthError` naming the exact variable
   ([04](04-errors.md#hint-quality)).
 
 ## Backend resolution
 
-1. Explicit `sbx.register(name, "pkg:Class")` registrations.
-2. Entry points in group `sbx.backends`, read lazily via `importlib.metadata`.
+1. Explicit `sandboxio.register(name, "pkg:Class")` registrations.
+2. Entry points in group `sandboxio.backends`, read lazily via `importlib.metadata`.
 3. Nothing found → `BackendNotFound` / `BackendNotInstalled`.
 
 Resolution MUST be lazy and cached. Entry-point scanning counts against the import budget
@@ -63,7 +63,7 @@ Designed now, loadable by the **library** before any server exists
 `RuntimeClass` for isolation classes, LiteLLM `config.yaml` for the policy surface.
 
 ```yaml
-# sbx-routing.yaml
+# sandboxio-routing.yaml
 backends:
   docker-local: { adapter: docker, image: "python:3.12-slim" }
   e2b-fast:     { adapter: e2b, template: code-interpreter, api_key: os.environ/E2B_API_KEY }
@@ -92,7 +92,7 @@ Rules:
   load-time error, not a warning.
 - First-match routing with a **mandatory** `default`. A config without a default MUST fail
   to load.
-- Library use: `sbx.create(route_for(tool="run_python", tenant_tier="enterprise"))`.
+- Library use: `sandboxio.create(route_for(tool="run_python", tenant_tier="enterprise"))`.
 - Which backend or isolation class a tool or tenant gets MUST be a YAML change, never a code
   change.
 - `spend` is meaningful only in server mode; the library MUST reject it with a clear message

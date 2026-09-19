@@ -6,7 +6,7 @@
 
 ## Context
 
-sbx sits in the path of untrusted code execution for teams whose dependency review is a
+sandboxio sits in the path of untrusted code execution for teams whose dependency review is a
 gate. Every behaviour that is surprising at import time — a network call, a mutated global,
 a configured logger, a printed banner — is both a review finding and a real failure mode in
 sandboxed, offline and air-gapped CI.

@@ -15,7 +15,7 @@ differ, this one is current.
 Nothing is committed until the name is settled, because it is baked into module paths, DSN
 schemes, the entry-point group, error codes, env vars and docs URLs.
 
-- [ ] [Q1](open-questions.md#q1--project-name) name — verify PyPI and GitHub availability, then fix it
+- [x] [Q1](open-questions.md#q1--project-name) name — **`sandboxio`**, short code `SBX` ([ADR-0014](adr/0014-project-name.md))
 - [ ] [Q2](open-questions.md#q2--python-version-floor) Python floor
 - [ ] [Q3](open-questions.md#q3--license) license + DCO/CLA
 
@@ -120,11 +120,11 @@ and E2B runs the same downstream code unchanged.
 
 ## Step 6 — Distribution surface (2 weeks)
 
-- `sbx doctor`, `uvx sbx demo` ([spec/10](spec/10-cli.md))
+- `sandboxio doctor`, `uvx sandboxio demo` ([spec/10](spec/10-cli.md))
 - MCP server, containerized, published to the Docker MCP Catalog
   ([spec/09](spec/09-integrations.md))
 - LangGraph tool adapter; OpenAI Agents tool adapter
-- OTel span mapping through `sbx/otel.py`; stdlib-logging and file audit sinks
+- OTel span mapping through `sandboxio/otel.py`; stdlib-logging and file audit sinks
 - Diátaxis docs: quickstart, per-backend how-tos, offline-testing how-to, generated error
   reference, explanation pages; `llms.txt` + `llms-full.txt`; paste-ready `AGENTS.md`
   snippet
@@ -154,12 +154,12 @@ abstraction against a genuinely different filesystem model.
 
 ## v0.2 — differentiation (ROI order)
 
-1. **Flight recorder + `sbx replay <trace>`** — record code, file diffs, stdio and timing to
+1. **Flight recorder + `sandboxio replay <trace>`** — record code, file diffs, stdio and timing to
    a portable trace; deterministic replay; local static HTML viewer. The signature feature.
 2. **Egress learning mode** — `egress="learn"` records attempted domains, emits a
    paste-ready allowlist. Nobody else does record-then-generate.
 3. **Per-execution meter** — `{duration_ms, cost_usd?, backend}` on every result, plus
-   `sbx bench`.
+   `sandboxio bench`.
 4. **Auto dependency inference** — PEP 723 / import parsing → uv provisioning, sandbox-gated.
 5. Pre-execution security lint hook (advisory by default).
 6. Pydantic AI + CrewAI adapters; OpenAI `SandboxClient` adapter.
@@ -169,7 +169,7 @@ abstraction against a genuinely different filesystem model.
 
 Snapshot/fork once ≥2 backends are stable · shadow mode (run on two backends, diff) ·
 Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI dashboard ·
-`sbx-server` **only when its trigger fires**
+`sandboxio-server` **only when its trigger fires**
 ([ADR-0009](adr/0009-library-first-server-later.md)).
 
 ---

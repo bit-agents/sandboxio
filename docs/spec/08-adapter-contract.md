@@ -1,13 +1,13 @@
 # 08 — Adapter Contract
 
-`sbx.testing.suite` is **normative**. Where this prose and the suite disagree, the suite
+`sandboxio.testing.suite` is **normative**. Where this prose and the suite disagree, the suite
 wins; behaviour covered by neither is not guaranteed
 ([ADR-0007](../adr/0007-contract-suite-as-spec.md)).
 
 ## Conforming in one import
 
 ```python
-from sbx.testing.suite import BackendContractSuite
+from sandboxio.testing.suite import BackendContractSuite
 
 class TestFlyAdapter(BackendContractSuite):
     backend = FlyBackend(...)
@@ -22,12 +22,12 @@ for every undeclared capability.
 |------|--------------|
 | Lifecycle | create → run → kill; context-manager teardown on normal exit **and** on exception; double-`kill()` idempotent; `connect()` to unknown id raises `ConnectError` |
 | Cancellation | task cancelled mid-`run` leaves no orphan; teardown shielded with bounded grace; cancellation during `create()` leaks nothing. **OPEN ([Q7](../open-questions.md#q7--cancellation-semantics))** |
-| `run` | exit codes; stdout/stderr separated; `env` injected; `list[str]` does not go through a shell; timeout raises the sbx error and does not hang |
+| `run` | exit codes; stdout/stderr separated; `env` injected; `list[str]` does not go through a shell; timeout raises the sandboxio error and does not hang |
 | `run_code` | basic execution; syntax and runtime errors surface with non-zero exit; rich outputs present iff declared; `context_id` works iff `STATEFUL_CODE`, else raises |
 | Streaming | per-stream ordering preserved; stdout/stderr distinguishable; terminal `ExecResult` reachable; abandoning the stream kills the remote process. **OPEN ([Q6](../open-questions.md#q6--stream-loses-stderr-and-exit-code))** |
 | Filesystem | read/write/upload/download/ls/mkdir/remove round-trips; binary safety; missing path raises mapped error; no host-path escape |
 | Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset |
-| Errors | every provider exception mapped into the sbx tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
+| Errors | every provider exception mapped into the sandboxio tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
 | Observability | one operation record per operation; secrets absent from every sink; `metadata` propagated to provider-native labels |
 
@@ -46,7 +46,7 @@ for every undeclared capability.
 
 ## FakeBackend
 
-`sbx.testing.FakeBackend` is a supported **product surface**, not an internal test helper.
+`sandboxio.testing.FakeBackend` is a supported **product surface**, not an internal test helper.
 It MUST pass the same contract suite.
 
 - In-memory; no Docker, no cloud, no network.
@@ -55,7 +55,7 @@ It MUST pass the same contract suite.
 - Records every call for assertions (`fake.calls`), including audit events and the policy in
   effect.
 - Simulates failures on demand: timeout, `NetworkPolicyViolation`, non-zero exit, flakiness.
-- Reachable as `sbx.create("fake://")` through the same DSN mechanism as real backends.
+- Reachable as `sandboxio.create("fake://")` through the same DSN mechanism as real backends.
 - Ships a pytest plugin with an `sbx_fake` fixture, registered by entry point.
 
 ```python
@@ -85,9 +85,9 @@ churn-absorption log.
 
 ## Hygiene gates (CI-enforced)
 
-- Import budget: `python -X importtime -c "import sbx"` under 150 ms; hard fail over 200 ms.
+- Import budget: `python -X importtime -c "import sandboxio"` under 150 ms; hard fail over 200 ms.
 - No network at import, verified with `pytest-socket`.
-- No leaked containers: Docker jobs assert zero sbx-labelled containers remain.
+- No leaked containers: Docker jobs assert zero sandboxio-labelled containers remain.
 - pyright + mypy strict on the public API; `py.typed` present in the wheel.
 - Wheel contents: base install pulls no adapter code; extras resolve.
 - Error catalog: every code has a docs page and vice versa.

@@ -1,10 +1,12 @@
-# sbx — Project Documentation
+# sandboxio — Project Documentation
 
-Working documentation for **sbx**: a framework-agnostic Python sandbox abstraction library
+Working documentation for **sandboxio**: a framework-agnostic Python sandbox abstraction library
 for AI-agent code and tool execution. One async API over Docker, E2B and Modal backends;
 ports/adapters; capability discovery; security-first defaults; native escape hatches.
 
-> The name `sbx` is not yet settled — see [Q1](open-questions.md#q1--project-name).
+> **Naming:** the project is `sandboxio`; `SBX` is its short code, used for error codes
+> (`SBX_E1002`), env vars (`SBX_DEBUG`), the pytest fixture (`sbx_fake`) and the CLI alias.
+> Canonical usage is `import sandboxio`, unaliased. See [ADR-0014](adr/0014-project-name.md).
 
 ## Layout
 

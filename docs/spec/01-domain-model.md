@@ -33,7 +33,7 @@ Read/write access scoped to one sandbox. Never host filesystem access.
 ### Template
 
 A base environment specification: a container image reference, or a provider template id.
-sbx does not build images in v0.1.
+sandboxio does not build images in v0.1.
 
 ### Session
 

@@ -73,7 +73,7 @@ Requirements:
   behaviour MUST be documented per adapter.
 - `timeout=None` means "inherit the sandbox timeout", never "unbounded"
   ([05](05-security-policy.md#mandatory-timeouts)).
-- A timeout MUST raise the sbx timeout error, and MUST NOT hang or return a partial result
+- A timeout MUST raise the sandboxio timeout error, and MUST NOT hang or return a partial result
   as success.
 - `run_code` with `context_id` requires `Capability.STATEFUL_CODE`; without it, MUST raise
   `CapabilityNotSupported`. **OPEN ([Q11](../open-questions.md#q11--stateful_code-on-docker))**
@@ -109,7 +109,7 @@ class AsyncFileSystem(Protocol):
 - All paths are **sandbox-internal**. An adapter MUST NOT resolve a path against the host
   filesystem, except for the explicit `local` arguments of `upload`/`download`.
 - `read` returns `bytes`; text decoding is the caller's. Round-trips MUST be binary-safe.
-- A missing path MUST raise a mapped sbx error, never return empty.
+- A missing path MUST raise a mapped sandboxio error, never return empty.
 - Large transfers SHOULD stream rather than buffer whole files in memory.
 
 ## Cancellation and teardown

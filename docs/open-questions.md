@@ -10,7 +10,7 @@ in `docs/adr/`.
 
 | # | Question | Priority | Status |
 |---|----------|----------|--------|
-| [Q1](#q1--project-name) | Project name | P0 | OPEN |
+| [Q1](#q1--project-name) | Project name | P0 | **DECIDED** |
 | [Q2](#q2--python-version-floor) | Python version floor | P0 | OPEN |
 | [Q3](#q3--license) | License | P0 | OPEN |
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | OPEN |
@@ -28,26 +28,17 @@ in `docs/adr/`.
 
 ## Q1 — Project name
 
-**Priority:** P0 · **Status:** OPEN · **Source:** `docs/input/README.md`
+**Priority:** P0 · **Status:** DECIDED · **Source:** `docs/input/README.md`
 
-`sbx` is called a working-name placeholder, but it is load-bearing across the whole design:
-module paths (`sbx.adapters.*`), DSN schemes, the `sbx.backends` entry-point group, error
-codes (`SBX_E1002`), env vars (`SBX_DEBUG`), CLI name, docs URLs (`/errors/SBX_E1002`), the
-MCP module (`python -m sbx.mcp`), and the third-party package convention (`sbx-fly`).
-Renaming after launch breaks every one of them, and error codes are declared semver-covered
-API.
+The working name was load-bearing across module paths, DSN handling, the entry-point group,
+error codes, env vars, the CLI, docs URLs and the third-party package convention — and it
+is taken on PyPI by a dormant 2020 flashcards package. PEP 541 transfer is slow and
+uncertain, so it was treated as unavailable.
 
-Criteria already stated: short, neutral, generic (fsspec-style), pip-available, signals
-"substrate" not "framework".
-
-**Options**
-- Keep `sbx` if PyPI + GitHub org are free — stop calling it a placeholder.
-- Pick a successor now, before commit one.
-
-**Recommendation:** decide today. Check PyPI/GitHub availability, then treat the name as
-fixed. Cost of deferring only rises.
-
-**Decision:** _pending_
+**Decision:** the project is **`sandboxio`**, with **`SBX`** as its short code for error
+codes, env vars, the pytest fixture and the CLI alias. Canonical usage is `import
+sandboxio`, unaliased. Full rationale, the candidate sweep and the surface-by-surface table
+are in [ADR-0014](adr/0014-project-name.md).
 
 ---
 
@@ -96,9 +87,9 @@ out Daytona's license changes / closed-sourcing as a risk. No license is chosen 
 
 **Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/04-api-design.md`
 
-The error taxonomy defines `sbx.TimeoutError` (`SBX_E1302`) and examples use
-`except sbx.TimeoutError`. On 3.11+ the builtin `TimeoutError` is what `asyncio` raises, so
-a shadowing name makes it ambiguous whether a caller is catching sbx's error, the builtin,
+The error taxonomy defines `sandboxio.TimeoutError` (`SBX_E1302`) and examples use
+`except sandboxio.TimeoutError`. On 3.11+ the builtin `TimeoutError` is what `asyncio` raises, so
+a shadowing name makes it ambiguous whether a caller is catching sandboxio's error, the builtin,
 or both — and readers will assume the wrong one.
 
 **Options**
@@ -107,7 +98,7 @@ or both — and readers will assume the wrong one.
 - Both: `SandboxTimeout(SandboxError, TimeoutError)` + alias.
 
 **Recommendation:** both — canonical `SandboxTimeout`, inheriting the builtin, with
-`sbx.TimeoutError` as an alias. Same question applies to any other builtin-shadowing names
+`sandboxio.TimeoutError` as an alias. Same question applies to any other builtin-shadowing names
 in the taxonomy (`ConnectionError`-adjacent ones).
 
 **Decision:** _pending_
@@ -190,7 +181,7 @@ cleaned up best-effort with the reaper as backstop. Every adapter then proves it
 
 "Sync facade is **generated** via an anyio blocking portal" is ambiguous between build-time
 codegen and a runtime wrapper. Affects typing fidelity, wheel contents, traceback quality
-and how `sbx.create()` behaves when called from a sync context.
+and how `sandboxio.create()` behaves when called from a sync context.
 
 **Options**
 - Build-time codegen of real `.py` — best typing/IDE, adds a generation step to CI and a
@@ -198,7 +189,7 @@ and how `sbx.create()` behaves when called from a sync context.
 - Runtime `__getattr__`/portal wrapper + hand-written `.pyi` stubs — simplest, stubs can drift.
 - Hand-written thin sync class — most code, zero magic, best tracebacks.
 
-**Also unresolved:** `04` shows both `sbx.create_sync(...)` and "auto-detected `sbx.create()`
+**Also unresolved:** `04` shows both `sandboxio.create_sync(...)` and "auto-detected `sandboxio.create()`
 in sync context". Auto-detection returning different types from one name is hostile to typing
 and to the "one obvious way" rule.
 
@@ -235,12 +226,12 @@ or only post-hoc from billing? If the latter, it is an estimate and must be labe
 
 `NetworkPolicy(egress="deny")` is the v0.1 headline default, and the Docker mapping is
 network mode `none`. But the streaming example in `04` is literally
-`pip install -r requirements.txt` inside the sandbox, and `09` requires `uvx sbx demo` to
+`pip install -r requirements.txt` inside the sandbox, and `09` requires `uvx sandboxio demo` to
 work with no account and no config. With egress denied, anything installing packages at
 runtime fails.
 
 **Needs deciding**
-- Does `sbx demo` opt into egress (undermining the default) or run fully offline on a
+- Does `sandboxio demo` opt into egress (undermining the default) or run fully offline on a
   pre-baked image?
 - Is there a blessed pattern for "install deps then lock down" — two-phase policy, or
   build-time image prep only?

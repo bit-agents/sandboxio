@@ -16,11 +16,12 @@ ADR-nnnn` rather than edited.
 | [0006](0006-isolation-tiers-first-class.md) | Isolation tier is a first-class, reported property | Accepted |
 | [0007](0007-contract-suite-as-spec.md) | The contract suite is the adapter specification | Accepted |
 | [0008](0008-dsn-and-typed-config.md) | Dual configuration: DSN strings and typed config objects | Accepted |
-| [0009](0009-library-first-server-later.md) | Library first; MCP is the first server; `sbx-server` is gated | Accepted |
+| [0009](0009-library-first-server-later.md) | Library first; MCP is the first server; `sandboxio-server` is gated | Accepted |
 | [0010](0010-stable-error-codes.md) | Error codes are public, semver-covered API | Accepted |
 | [0011](0011-otel-mapping-layer.md) | OTel GenAI semconv isolated behind one mapping module | Accepted |
 | [0012](0012-no-telemetry-no-import-side-effects.md) | No telemetry, no import side effects | Accepted |
 | [0013](0013-complement-openai-sandboxclient.md) | Complement OpenAI's `SandboxClient`, do not compete with it | Accepted |
+| [0014](0014-project-name.md) | Project name: `sandboxio`, short code `SBX` | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

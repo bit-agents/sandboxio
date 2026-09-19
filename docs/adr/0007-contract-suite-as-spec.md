@@ -16,7 +16,7 @@ Prior art: SQLAlchemy's dialect compliance suite, fsspec's shared tests, and the
 
 ## Decision
 
-- **`sbx.testing.suite` is normative.** Where the suite and prose disagree, the suite wins;
+- **`sandboxio.testing.suite` is normative.** Where the suite and prose disagree, the suite wins;
   a behaviour not covered by the suite is not guaranteed.
 - Adapter authors subclass one class: `class TestFlyAdapter(BackendContractSuite)`.
 - The suite covers lifecycle and teardown-under-exception, cancellation and shielded

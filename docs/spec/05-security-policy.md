@@ -9,11 +9,11 @@ In scope:
 
 1. Malicious or buggy agent-generated code — exfiltration, resource exhaustion, escape
    attempts.
-2. Prompt-injected agents invoking tools with attacker-chosen code or arguments. sbx cannot
+2. Prompt-injected agents invoking tools with attacker-chosen code or arguments. sandboxio cannot
    prevent the injection; it bounds the blast radius.
 3. Cross-tenant leakage — tenant A's code, files or state reaching tenant B.
 4. Credential leakage into sandboxes, logs, traces or audit events.
-5. Supply-chain compromise of sbx itself ([ADR-0004](../adr/0004-thin-core-lazy-adapters.md),
+5. Supply-chain compromise of sandboxio itself ([ADR-0004](../adr/0004-thin-core-lazy-adapters.md),
    [runbook](../runbook.md#release)).
 
 Explicitly out of scope, and documented as such: making untrusted code safe on the
@@ -61,7 +61,7 @@ installation and the zero-config demo work under this default.
 - Context-manager exit MUST kill the sandbox, including on exception and on cancellation
   ([Q7](../open-questions.md#q7--cancellation-semantics)).
 - The Docker adapter MUST ship a Ryuk-style reaper so a crashed test run leaks no
-  containers. CI asserts zero sbx-labelled containers remain after Docker jobs.
+  containers. CI asserts zero sandboxio-labelled containers remain after Docker jobs.
 - `kill()` MUST be idempotent.
 
 ## Secrets
@@ -72,7 +72,7 @@ installation and the zero-config demo work under this default.
   parameters and raise `ConfigurationError` pointing at the env-var convention.
 - Where a backend supports broker-style injection (Vercel credential brokering, Modal
   Secrets), adapters SHOULD prefer it over writing values into the environment.
-- sbx MUST NOT persist credentials anywhere.
+- sandboxio MUST NOT persist credentials anywhere.
 - Provider credentials themselves: docs MUST prescribe least-privilege, short-lived keys.
 
 ## Tenancy
@@ -81,7 +81,7 @@ installation and the zero-config demo work under this default.
   `metadata={"tenant_id": ..., "session_id": ...}`.
 - Labels MUST propagate to provider-native labels where supported, so orphans are findable.
 - Tenant-scoped storage MUST be used where the backend provides it (Modal Volume `sub_path`).
-- Warm pools and fork-per-tenant are **opt-in documented patterns**. sbx MUST NOT silently
+- Warm pools and fork-per-tenant are **opt-in documented patterns**. sandboxio MUST NOT silently
   share a sandbox across tenants under any circumstance.
 
 ## Isolation enforcement

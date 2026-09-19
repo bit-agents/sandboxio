@@ -1,6 +1,6 @@
 # Specification
 
-Normative specification for sbx. Derived from [`../input/`](../input/), constrained by
+Normative specification for sandboxio. Derived from [`../input/`](../input/), constrained by
 [`../adr/`](../adr/). Where this spec and any other document disagree, **this spec wins**.
 
 ## Conventions
@@ -20,7 +20,7 @@ Normative specification for sbx. Derived from [`../input/`](../input/), constrai
 |------|-------|
 | [01-domain-model.md](01-domain-model.md) | Entities, value objects, capabilities, isolation tiers, lifecycle |
 | [02-ports.md](02-ports.md) | Protocol interfaces adapters implement |
-| [03-public-api.md](03-public-api.md) | `sbx.*` surface, `create()`, results, sync facade, stability contract |
+| [03-public-api.md](03-public-api.md) | `sandboxio.*` surface, `create()`, results, sync facade, stability contract |
 | [04-errors.md](04-errors.md) | Error tree, code catalog, rendering, mapping rules |
 | [05-security-policy.md](05-security-policy.md) | Defaults, network policy, secrets, tenancy, isolation enforcement |
 | [06-observability.md](06-observability.md) | The operation record, audit sinks, OTel spans, meter, redaction |
@@ -31,6 +31,6 @@ Normative specification for sbx. Derived from [`../input/`](../input/), constrai
 
 ## Scope fences
 
-sbx is not an agent framework, not a memory system, not a durable-execution engine, not a
+sandboxio is not an agent framework, not a memory system, not a durable-execution engine, not a
 managed cloud, and not a lowest-common-denominator wrapper. These are permanent, not
 "not yet".

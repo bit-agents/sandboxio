@@ -30,7 +30,7 @@ and only finds out from an exfiltration.
 A cancelled task, a crashed process, or a cancellation during `create()` leaves cloud
 sandboxes running and billing. At agent scale this is a runaway cost, not an untidiness.
 
-- **Tripwire:** CI reports non-zero sbx-labelled containers after a Docker job; a provider
+- **Tripwire:** CI reports non-zero sandboxio-labelled containers after a Docker job; a provider
   console shows sandboxes with no corresponding run.
 - **Response:** shielded teardown, a Ryuk-style reaper, `metadata` labels propagated to
   provider-native labels so orphans are findable, and a CI assertion on every Docker job
@@ -117,9 +117,9 @@ then actively costs trust instead of building it.
 
 ## Supply-chain hazards
 
-### H10 — A litellm-class incident in sbx itself
+### H10 — A litellm-class incident in sandboxio itself
 
-sbx is a credential-adjacent dependency that executes untrusted code. A compromise here is
+sandboxio is a credential-adjacent dependency that executes untrusted code. A compromise here is
 maximally bad, and the enterprise accounts we are targeting are exactly the ones that will
 never come back.
 
@@ -184,7 +184,7 @@ broad adoption.
 
 ## Server-mode hazards (Phase 2)
 
-Only live if `sbx-server` is triggered, but the constraints are decided now. The server
+Only live if `sandboxio-server` is triggered, but the constraints are decided now. The server
 holds cloud credentials **and** executes untrusted code — a tier-1 credential surface. The
 LiteLLM 2026 failure chain, not to be repeated:
 

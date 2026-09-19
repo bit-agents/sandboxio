@@ -12,7 +12,7 @@ single testable claim.
 
 ```
 record → redact → ├── audit sink(s)      (AuditEvent)
-                  ├── OTel span          (sbx/otel.py attribute mapping)
+                  ├── OTel span          (sandboxio/otel.py attribute mapping)
                   └── ExecResult.meter   (v0.2)
 ```
 
@@ -54,10 +54,10 @@ class AuditEvent:
 - Attributes: backend, isolation tier, sandbox id, exit code, duration, bytes in/out.
 - Content capture (code, file contents) is **opt-in**, per the spec's privacy modes.
   Secrets are never captured at any setting.
-- **All attribute strings live in `sbx/otel.py`.** No other module writes an attribute name.
+- **All attribute strings live in `sandboxio/otel.py`.** No other module writes an attribute name.
   The targeted semconv version is pinned and documented; a bump is a changelog entry.
 - Zero-config: participate if the host app configured a tracer provider, no-op otherwise.
-  sbx MUST NOT install exporters or start providers.
+  sandboxio MUST NOT install exporters or start providers.
 
 ## Metering (v0.2)
 
