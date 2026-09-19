@@ -152,7 +152,7 @@ Weekly, or as they arrive for anything security-adjacent.
 
 ## Quarterly review
 
-The market facts in [`input/02-market-landscape.md`](input/02-market-landscape.md) were a
+The competitor and market facts underpinning [`hazards.md`](hazards.md) were a
 Q3 2026 snapshot. This space moves monthly; a stale snapshot silently becomes a wrong
 strategy.
 

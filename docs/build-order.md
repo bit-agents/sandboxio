@@ -5,9 +5,6 @@ start until they are green. Ordering is deliberate: the two things the whole bet
 (the contract suite and the docs) are the two things that slip if left last, so they move
 early.
 
-Scope reference: [`input/10-roadmap.md`](input/10-roadmap.md). Where this file and that one
-differ, this one is current.
-
 ---
 
 ## Step 0 — Lock the P0 decisions (½ day)

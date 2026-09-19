@@ -1,6 +1,6 @@
 # Open Questions
 
-Gaps, contradictions and unmade decisions found in `docs/input/`. Worked through one at a
+Gaps, contradictions and unmade decisions found in the original design set. Worked through one at a
 time; each resolved item gets a `Decision:` line and, where it shapes the codebase, an ADR
 in `docs/adr/`.
 
@@ -28,7 +28,7 @@ in `docs/adr/`.
 
 ## Q1 — Project name
 
-**Priority:** P0 · **Status:** DECIDED · **Source:** `docs/input/README.md`
+**Priority:** P0 · **Status:** DECIDED · **Source:** original design set
 
 The working name was load-bearing across module paths, DSN handling, the entry-point group,
 error codes, env vars, the CLI, docs URLs and the third-party package convention — and it
@@ -44,7 +44,7 @@ are in [ADR-0014](adr/0014-project-name.md).
 
 ## Q2 — Python version floor
 
-**Priority:** P0 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
+**Priority:** P0 · **Status:** DECIDED · **Source:** original design set
 
 Never stated in the input set. A floor is an adoption gate: the whole target ecosystem
 (`e2b`, `modal`, `langgraph`, `openai-agents`, `pydantic-ai`, `crewai`, `typer`, `anyio`)
@@ -59,7 +59,7 @@ rationale in [ADR-0015](adr/0015-python-version-floor.md).
 
 ## Q3 — License
 
-**Priority:** P0 · **Status:** DECIDED · **Source:** not covered in `docs/input/`
+**Priority:** P0 · **Status:** DECIDED · **Source:** not covered in the original design set
 
 Positioning is self-hostable and enterprise-supply-chain friendly, and the market doc cites
 Daytona's license changes as a risk, yet no license was chosen. The surrounding ecosystem is
@@ -73,7 +73,7 @@ the Apache-2.0 trade-off in [ADR-0016](adr/0016-license-mit.md).
 
 ## Q4 — `TimeoutError` shadows the builtin
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** original design set
 
 The input taxonomy named the class `TimeoutError`, shadowing the builtin — which, on our
 3.11 floor, is what `asyncio` and `anyio` raise. The decisive fact: builtin `TimeoutError`
@@ -92,7 +92,7 @@ catalog had no error for. No `TimeoutError` alias. Full rationale in
 
 ## Q5 — `IsolationTier` needs ordering
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/05-security.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** original design set
 
 `require_isolation=MICROVM` implies a comparison a plain `Enum` does not provide, and
 `CONTAINER < GVISOR < MICROVM` is not self-evidently a legitimate total order. Kubernetes
@@ -111,7 +111,7 @@ requirement, and creating on one warns. Rationale in
 
 ## Q6 — `stream()` loses stderr and exit code
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** original design set
 
 `AsyncIterator[bytes]` loses stdout/stderr separation and the exit code, and carries a
 `**kwargs` black hole. The decisive constraint was cleanup: breaking out of an `async for`
@@ -128,7 +128,7 @@ the rejected alternatives in [ADR-0019](adr/0019-streaming-process-handle.md).
 
 ## Q7 — Cancellation semantics
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** not covered in `docs/input/`
+**Priority:** P1 · **Status:** DECIDED · **Source:** not covered in the original design set
 
 Undefined in the input set, and behind the most expensive failure mode in the project.
 Under structured concurrency a `finally: await sb.kill()` is decorative — it is cancelled at
@@ -147,7 +147,7 @@ The mandatory `create(timeout=...)` is the guaranteed backstop. Rationale in
 
 ## Q8 — Sync facade mechanism
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** original design set
 
 "Generated via an anyio blocking portal" was ambiguous between build-time codegen and a
 runtime wrapper. The point that collapsed the option space: **codegen does not avoid the
@@ -166,7 +166,7 @@ runtime-proxy lean in ADR-0002. Rationale in [ADR-0022](adr/0022-sync-facade.md)
 
 ## Q9 — One event, three sinks (Audit / OTel / Meter)
 
-**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/05-security.md`, `06-integrations.md`, `04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** original design set
 
 Three surfaces carried overlapping fields and would have drifted, forcing the
 secret-redaction rule to be implemented per sink. Two things the original question missed:
@@ -186,7 +186,7 @@ Evidence and rationale in [ADR-0021](adr/0021-observability-record.md).
 
 ## Q10 — Deny-by-default vs. the demo
 
-**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/05-security.md` vs `04-api-design.md`, `09-dx-playbook.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** original design set
 
 Half the premise was a misreading: `network_mode: none` governs the *sandbox's* egress, while
 `docker pull` runs on the *host* daemon. The demo was never in conflict with the default. The
@@ -205,7 +205,7 @@ Rationale in [ADR-0023](adr/0023-docker-network-and-dependencies.md).
 
 ## Q11 — `STATEFUL_CODE` on Docker
 
-**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/08-testing-strategy.md`, `03-architecture.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** original design set
 
 `run_code(context_id=...)` needs a persistent interpreter, which Docker does not provide.
 Baking an exec server or Jupyter kernel into an image fails on a point that outweighs
@@ -224,7 +224,7 @@ Purpose-built-image approaches are rejected outright. Rationale in
 
 ## Q12 — v0.1 scope cut
 
-**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/10-roadmap.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** original design set
 
 Three real adapters plus the suite, CI matrix, MCP server, two framework adapters, OTel,
 audit, CLI and full docs is not an eight-week scope. What slips under pressure is
@@ -240,18 +240,18 @@ set, so it stresses the abstraction hardest. One framework adapter (LangGraph) i
 
 ## Q13 — Doc bug: `is` on a dataclass
 
-**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/08-testing-strategy.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** original design set
 
 `assert sbx_fake.calls[0].network is NetworkPolicy(egress="deny")` is always false. Minor
-alone, but `input/` is fed to coding agents, so the bug propagates into generated tests.
+alone, but the set was fed to coding agents, so the bug propagated into generated tests.
 Q13 also called for a sweep of the other snippets for the same class of error.
 
 **Decision:** value objects are frozen dataclasses compared with `==`
 ([spec/01](spec/01-domain-model.md#value-objects)); the corrected snippet is in
 [spec/08](spec/08-adapter-contract.md#fakebackend). The sweep was done and found a worse
-one — the routing config in `input/07` **is not valid YAML** and was copied verbatim into
+one — the routing config in the original set **was not valid YAML** and was copied verbatim into
 the spec before a parser caught it. Fixed in [spec/07](spec/07-configuration.md#routing-file),
 which now also restructures `default_class` as a top-level mandatory key rather than a
 pseudo-route. All findings are listed as
-[known errors in `input/`](readme.md#known-errors-in-input); `input/` stays frozen. Every
+[corrections to the original design](readme.md#corrections-to-the-original-design). Every
 config sample in `spec/` is now parse-tested in CI.

@@ -1,7 +1,6 @@
 # Specification
 
-Normative specification for sandboxio. Derived from [`../input/`](../input/), constrained by
-[`../adr/`](../adr/). Where this spec and any other document disagree, **this spec wins**.
+Normative specification for sandboxio, constrained by [`../adr/`](../adr/). Where this spec and any other document disagree, **this spec wins**.
 
 ## Conventions
 

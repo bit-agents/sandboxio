@@ -99,8 +99,8 @@ Rules:
   default is not a match rule, and encoding it as one made the list heterogeneous.
 - Every route entry has exactly the keys `match` and `class`. An unknown key MUST be a
   load-time error.
-- The example above is **parse-tested in CI**. The input-set version of this config was not
-  valid YAML at all ([readme errata](../readme.md#known-errors-in-input)); every config
+- The example above is **parse-tested in CI**. The original design set's version of this config was
+  not valid YAML at all ([readme errata](../readme.md#corrections-to-the-original-design)); every config
   sample in this spec MUST be machine-verified, not eyeballed.
 - Library use: `sandboxio.create(route_for(tool="run_python", tenant_tier="enterprise"))`.
 - Which backend or isolation class a tool or tenant gets MUST be a YAML change, never a code
