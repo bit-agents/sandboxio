@@ -200,3 +200,14 @@ LiteLLM 2026 failure chain, not to be repeated:
 
 Plus: rootless container, least-privilege per-backend credentials, bind localhost unless
 configured otherwise, and **never** a Docker socket reachable from sandboxed code.
+
+---
+
+## Pre-committed engineering gates
+
+Pre-committed, so the call is not made under schedule pressure. Both are CI-enforced.
+
+| Signal | Action |
+|--------|--------|
+| Docker adapter cannot pass 100% of the contract suite cleanly | Fix the abstraction before any cloud adapter |
+| Import time >200 ms, or any import-time network call | **Feature freeze until fixed** |
