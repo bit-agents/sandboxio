@@ -80,6 +80,10 @@ shared test, not a special case in the fake.
 | **latest-SDK canary** | all cloud adapters against `pip install -U <provider>` | nightly — the churn early-warning system |
 | framework matrix | LangGraph / OpenAI Agents adapters across supported versions | weekly |
 
+Python matrix: **3.11, 3.12, 3.13, 3.14** on the unit and fake-contract job; 3.11 is a
+required check and 3.14 is the default ([ADR-0015](../adr/0015-python-version-floor.md)).
+Note `crewai` caps at `<3.14`, so its adapter job runs on 3.11-3.13 only.
+
 Canary failures MUST open an auto-labelled `provider-churn` issue, which feeds the public
 churn-absorption log.
 

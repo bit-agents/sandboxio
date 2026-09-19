@@ -19,9 +19,10 @@ uv sync --all-extras          # core + docker + e2b + modal + dev
 uv run pytest                 # unit + fake contract suite; no Docker, no network
 ```
 
-Requirements: Python per [Q2](open-questions.md#q2--python-version-floor) (the machine this
-was drafted on has 3.9, which will not work), Docker for the Docker contract job, and
-provider credentials only for cloud jobs.
+Requirements: **Python 3.14 for development** (floor is 3.11 —
+[ADR-0015](adr/0015-python-version-floor.md)), Docker for the Docker contract job, and
+provider credentials only for cloud jobs. `uv python install 3.14` if you do not have it;
+the floor is proven by CI, not by your local interpreter.
 
 ## Daily loop
 

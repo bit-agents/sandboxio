@@ -11,7 +11,7 @@ in `docs/adr/`.
 | # | Question | Priority | Status |
 |---|----------|----------|--------|
 | [Q1](#q1--project-name) | Project name | P0 | **DECIDED** |
-| [Q2](#q2--python-version-floor) | Python version floor | P0 | OPEN |
+| [Q2](#q2--python-version-floor) | Python version floor | P0 | **DECIDED** |
 | [Q3](#q3--license) | License | P0 | OPEN |
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | OPEN |
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | OPEN |
@@ -44,23 +44,16 @@ are in [ADR-0014](adr/0014-project-name.md).
 
 ## Q2 — Python version floor
 
-**Priority:** P0 · **Status:** OPEN · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
+**Priority:** P0 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
 
-Never stated. The API as written needs ≥3.10 (`X | Y` in signatures at runtime,
-`anyio`, PEP 702 `@deprecated` via `typing_extensions`). Local dev machine currently has
-3.9, which cannot run it.
+Never stated in the input set. A floor is an adoption gate: the whole target ecosystem
+(`e2b`, `modal`, `langgraph`, `openai-agents`, `pydantic-ai`, `crewai`, `typer`, `anyio`)
+sits at `>=3.10`, and download share shows a 3.13 floor would exclude roughly three
+quarters of it, a 3.14 floor ~94%. `crewai` additionally caps at `<3.14`.
 
-**Options**
-- **3.10** — widest reach still in support.
-- **3.11** — builtin `TimeoutError` is its own class (see Q4), `Self`, `StrEnum`, cheaper
-  zero-cost exceptions, better tracebacks.
-- **3.12** — narrowest, no strong pull.
-
-**Recommendation:** 3.11, unless a concrete prospective user is pinned to 3.10. Also decide
-whether `from __future__ import annotations` is used repo-wide (affects runtime-introspected
-dataclasses and `runtime_checkable` protocols).
-
-**Decision:** _pending_
+**Decision:** `requires-python = ">=3.11"`, CI matrix 3.11-3.14, development and default CI
+on **3.14**, `from __future__ import annotations` repo-wide, no upper cap. Data and
+rationale in [ADR-0015](adr/0015-python-version-floor.md).
 
 ---
 

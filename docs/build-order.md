@@ -16,7 +16,7 @@ Nothing is committed until the name is settled, because it is baked into module 
 schemes, the entry-point group, error codes, env vars and docs URLs.
 
 - [x] [Q1](open-questions.md#q1--project-name) name — **`sandboxio`**, short code `SBX` ([ADR-0014](adr/0014-project-name.md))
-- [ ] [Q2](open-questions.md#q2--python-version-floor) Python floor
+- [x] [Q2](open-questions.md#q2--python-version-floor) Python floor — **>=3.11**, dev on 3.14 ([ADR-0015](adr/0015-python-version-floor.md))
 - [ ] [Q3](open-questions.md#q3--license) license + DCO/CLA
 
 **Exit:** three ADRs written; the name reserved on PyPI; the repo named.
@@ -29,6 +29,7 @@ Gates are cheap now and expensive to retrofit: an accidental eager import spread
 an import budget added in month three is a week of untangling.
 
 - `uv` project, `src/` layout, `py.typed`, ruff, pyright strict, mypy strict
+- `requires-python = ">=3.11"`; CI matrix 3.11-3.14 with 3.11 a **required** check, dev default 3.14
 - CI with the four hard gates **already failing closed**:
   import budget <150 ms · no sockets at import (`pytest-socket`) · wheel-contents test ·
   type check
