@@ -29,8 +29,9 @@ an import budget added in month three is a week of untangling.
 - `requires-python = ">=3.11"`; CI matrix 3.11-3.14 with 3.11 a **required** check, dev default 3.14
 - CI with the four hard gates **already failing closed**:
   import budget <150 ms · no sockets at import (`pytest-socket`) · wheel-contents test ·
-  type check · doc-sample parse test
-- `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound, PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md`
+  type check · doc-sample parse test · doc-link check (`scripts/check_doc_links.py`)
+- [x] `LICENSE` (MIT), `LICENSE-DOCS` (CC BY 4.0, [ADR-0026](adr/0026-docs-license-cc-by.md)), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound
+- PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md`
 - `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
 - Issue templates requiring reproduction; stated triage policy
 

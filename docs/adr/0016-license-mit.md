@@ -3,6 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Resolves:** [Q3](../open-questions.md#q3--license)
+**Amended by:** [ADR-0026](0026-docs-license-cc-by.md) — prose in `docs/` is CC BY 4.0
 **Related:** [ADR-0004](0004-thin-core-lazy-adapters.md), [ADR-0009](0009-library-first-server-later.md)
 
 ## Context

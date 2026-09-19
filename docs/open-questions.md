@@ -67,7 +67,9 @@ overwhelmingly permissive (`anyio`, `pydantic`, `langgraph`, `e2b`, `openai-agen
 
 **Decision:** **MIT** for the library, **DCO** for contributions, and the Phase-2
 `sandboxio-server` license deliberately left open until that package exists. Rationale and
-the Apache-2.0 trade-off in [ADR-0016](adr/0016-license-mit.md).
+the Apache-2.0 trade-off in [ADR-0016](adr/0016-license-mit.md). Prose in `docs/` is
+**CC BY 4.0**, with fenced code samples staying MIT
+([ADR-0026](adr/0026-docs-license-cc-by.md)).
 
 ---
 

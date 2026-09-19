@@ -32,6 +32,7 @@ uv run pytest -m docker                 # Docker contract suite (needs Docker)
 uv run ruff check . && uv run ruff format --check .
 uv run pyright && uv run mypy src/
 uv run python -X importtime -c "import sandboxio" 2>&1 | tail -1    # import budget
+uv run python scripts/check_doc_links.py                            # doc links + anchors
 ```
 
 Before pushing, run what CI runs on PRs: unit + fake + docker contract + lint + types +
@@ -54,6 +55,7 @@ merge**:
 | No leaked containers | zero sandboxio-labelled containers after Docker jobs | [H2](hazards.md#h2--leaked-sandboxes) |
 | Error catalog | every code has a page, every page a code | [spec/04](spec/04-errors.md#catalog-is-generated) |
 | Doc samples | every YAML/JSON sample in `spec/` parses; every Python sample compiles | the input set shipped a config that was not valid YAML |
+| Doc links | every relative link and heading anchor resolves (`scripts/check_doc_links.py`) | `spec/` is the contract; a dead link into it is a dead requirement |
 
 A red gate is not overridden. If a gate is wrong, change the gate in its own PR, with a
 reason.

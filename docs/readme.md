@@ -58,6 +58,13 @@ arbitrary until you know what it is fixing.
 Every configuration sample in [`spec/`](spec/) is parse-tested in CI, precisely because the
 first one was not.
 
+## Licensing
+
+Code is **MIT** ([`LICENSE`](../LICENSE)). The prose in this directory is **CC BY 4.0**
+([`LICENSE-DOCS`](../LICENSE-DOCS)) — quote and adapt the spec, with credit. Code samples
+inside these documents are MIT, not CC BY: anything in a fenced block is code, everything
+else is prose ([ADR-0026](adr/0026-docs-license-cc-by.md)).
+
 ## Core principles
 
 Each is expanded in an ADR.
