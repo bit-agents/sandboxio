@@ -35,8 +35,26 @@ there and it will outlive the PR, it needs an ADR.
 
 When two documents disagree: [`spec/`](spec/) wins over [`adr/`](adr/) wins over
 [`input/`](input/). `input/` is history, not instruction — it predates every decision made
-since and contains at least one known copy-forward bug
-([Q13](open-questions.md#q13--doc-bug-is-on-a-dataclass)).
+since, and several of its snippets are wrong.
+
+### Known errors in `input/`
+
+`input/` is frozen, so these are **not** fixed in place. They are listed here because the
+set is fed to coding agents as context, and a wrong snippet gets copied forward.
+
+| Where | Error | Resolved by |
+|-------|-------|-------------|
+| `07-server-mode-and-routing.md` | The routing config is **not valid YAML** — `-> isolated` trailing a flow mapping is a parser error. Verified with a parser, not by eye. | [spec/07](spec/07-configuration.md#routing-file) |
+| `08-testing-strategy.md` | `assert ... is NetworkPolicy(egress="deny")` — `is` against a freshly constructed dataclass is always false. Use `==`. | [spec/01](spec/01-domain-model.md#value-objects) |
+| `04-api-design.md` | The streaming example is `pip install -r requirements.txt`, which cannot run under the default deny-egress policy. | [Q10](open-questions.md#q10--deny-by-default-vs-the-demo) |
+| `04-api-design.md` | `TimeoutError` shadows the builtin, which on our floor is what `asyncio` raises. | [ADR-0017](adr/0017-timeout-error-naming.md) |
+| `03`, `04` | `stream() -> AsyncIterator[bytes]` with `**kw` — loses stderr and exit code, and leaks a kwargs black hole. | [ADR-0019](adr/0019-streaming-process-handle.md) |
+| `03-architecture.md` | Auto-detected `create()` returning a different type in sync context. | [ADR-0002](adr/0002-async-first-anyio.md) |
+| `02`, `05` | Daytona listed at `CONTAINER` beside the word "verify" — an unearned isolation claim. | [ADR-0018](adr/0018-isolation-tier-ordering.md) |
+| all | The name `sbx` is unavailable on PyPI. | [ADR-0014](adr/0014-project-name.md) |
+
+Every configuration sample in [`spec/`](spec/) is parse-tested in CI, precisely because the
+first one was not.
 
 ## Core principles
 

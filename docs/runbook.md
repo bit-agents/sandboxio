@@ -53,6 +53,7 @@ merge**:
 | Contract suite | 100% for every declared capability | [ADR-0007](adr/0007-contract-suite-as-spec.md) |
 | No leaked containers | zero sandboxio-labelled containers after Docker jobs | [H2](hazards.md#h2--leaked-sandboxes) |
 | Error catalog | every code has a page, every page a code | [spec/04](spec/04-errors.md#catalog-is-generated) |
+| Doc samples | every YAML/JSON sample in `spec/` parses; every Python sample compiles | the input set shipped a config that was not valid YAML |
 
 A red gate is not overridden. If a gate is wrong, change the gate in its own PR, with a
 reason.

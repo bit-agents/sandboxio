@@ -69,16 +69,20 @@ backends:
   e2b-fast:     { adapter: e2b, template: code-interpreter, api_key: os.environ/E2B_API_KEY }
   modal-gpu:    { adapter: modal, gpu: T4, api_key: os.environ/MODAL_TOKEN }
 
-isolation_classes:
+isolation_classes:            # cf. Kubernetes RuntimeClass
   standard:  { backend: docker-local }    # trusted / dev
   sandboxed: { backend: modal-gpu }       # gVisor tier
   isolated:  { backend: e2b-fast }        # microVM tier — untrusted multi-tenant
 
-routes:
-  - match: { tool: run_python }        -> isolated
-  - match: { tool: data_transform }    -> sandboxed
-  - match: { tenant_tier: enterprise } -> isolated
-  - default: standard
+routes:                       # first match wins
+  - match: { tool: run_python }
+    class: isolated
+  - match: { tool: data_transform }
+    class: sandboxed
+  - match: { tenant_tier: enterprise }
+    class: isolated
+
+default_class: standard       # mandatory
 
 policy:
   network: { egress: deny }
@@ -90,8 +94,14 @@ Rules:
 
 - Secrets **only** as `os.environ/NAME` references. A literal secret in this file MUST be a
   load-time error, not a warning.
-- First-match routing with a **mandatory** `default`. A config without a default MUST fail
-  to load.
+- First-match routing. `default_class` is a **top-level, mandatory** key — a config without
+  it MUST fail to load. It is deliberately not a pseudo-route in the `routes` list: a
+  default is not a match rule, and encoding it as one made the list heterogeneous.
+- Every route entry has exactly the keys `match` and `class`. An unknown key MUST be a
+  load-time error.
+- The example above is **parse-tested in CI**. The input-set version of this config was not
+  valid YAML at all ([readme errata](../readme.md#known-errors-in-input)); every config
+  sample in this spec MUST be machine-verified, not eyeballed.
 - Library use: `sandboxio.create(route_for(tool="run_python", tenant_tier="enterprise"))`.
 - Which backend or isolation class a tool or tenant gets MUST be a YAML change, never a code
   change.

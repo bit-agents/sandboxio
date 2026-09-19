@@ -22,7 +22,7 @@ in `docs/adr/`.
 | [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | OPEN |
 | [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | OPEN |
 | [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | OPEN |
-| [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | OPEN |
+| [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | **DECIDED** |
 
 ---
 
@@ -260,18 +260,18 @@ stays.
 
 ## Q13 — Doc bug: `is` on a dataclass
 
-**Priority:** P2 · **Status:** OPEN · **Source:** `docs/input/08-testing-strategy.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/08-testing-strategy.md`
 
-```python
-assert sbx_fake.calls[0].network is NetworkPolicy(egress="deny")
-```
+`assert sbx_fake.calls[0].network is NetworkPolicy(egress="deny")` is always false. Minor
+alone, but `input/` is fed to coding agents, so the bug propagates into generated tests.
+Q13 also called for a sweep of the other snippets for the same class of error.
 
-`is` against a freshly constructed dataclass is always false. Minor in itself, but this file
-is explicitly fed to coding agents as input context, so the bug gets copied into generated
-tests.
-
-**Fix:** use `==` (and make `NetworkPolicy` a frozen, eq-comparable dataclass). Worth a pass
-over the other `docs/input/` snippets for the same class of copy-forward error before they
-are used as agent context.
-
-**Decision:** _pending_
+**Decision:** value objects are frozen dataclasses compared with `==`
+([spec/01](spec/01-domain-model.md#value-objects)); the corrected snippet is in
+[spec/08](spec/08-adapter-contract.md#fakebackend). The sweep was done and found a worse
+one — the routing config in `input/07` **is not valid YAML** and was copied verbatim into
+the spec before a parser caught it. Fixed in [spec/07](spec/07-configuration.md#routing-file),
+which now also restructures `default_class` as a top-level mandatory key rather than a
+pseudo-route. All findings are listed as
+[known errors in `input/`](readme.md#known-errors-in-input); `input/` stays frozen. Every
+config sample in `spec/` is now parse-tested in CI.
