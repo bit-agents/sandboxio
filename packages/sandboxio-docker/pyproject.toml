@@ -1,0 +1,32 @@
+[project]
+name = "sandboxio-docker"
+description = "Docker adapter for sandboxio."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+dependencies = ["sandboxio", "docker>=7.1"]
+
+[project.entry-points."sandboxio.backends"]
+docker = "sandboxio_docker:DockerBackend"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/sandboxio_docker/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sandboxio_docker"]
+
+[tool.uv.sources]
+sandboxio = { workspace = true }

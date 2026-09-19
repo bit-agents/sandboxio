@@ -22,17 +22,22 @@ pytestmark = [
 
 
 @pytest.fixture(scope="module")
-def wheel(tmp_path_factory: pytest.TempPathFactory) -> zipfile.ZipFile:
+def wheels(tmp_path_factory: pytest.TempPathFactory) -> dict[str, zipfile.ZipFile]:
     out = tmp_path_factory.mktemp("dist")
     subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(out)],
+        ["uv", "build", "--all-packages", "--wheel", "--out-dir", str(out)],
         cwd=REPO_ROOT,
         check=True,
         capture_output=True,
     )
-    built = list(out.glob("*.whl"))
-    assert len(built) == 1, built
-    return zipfile.ZipFile(built[0])
+    built = {p.name.split("-")[0]: zipfile.ZipFile(p) for p in out.glob("*.whl")}
+    assert set(built) == {"sandboxio", "sandboxio_docker"}, sorted(built)
+    return built
+
+
+@pytest.fixture(scope="module")
+def wheel(wheels: dict[str, zipfile.ZipFile]) -> zipfile.ZipFile:
+    return wheels["sandboxio"]
 
 
 def _metadata(wheel: zipfile.ZipFile) -> list[str]:
@@ -69,3 +74,18 @@ def test_base_dependencies_are_only_the_two(wheel: zipfile.ZipFile) -> None:
 def test_license_files_ship(wheel: zipfile.ZipFile) -> None:
     names = {Path(n).name for n in wheel.namelist() if ".dist-info/licenses/" in n}
     assert {"LICENSE", "LICENSE-DOCS"} <= names
+
+
+def test_docker_adapter_ships_as_its_own_distribution(
+    wheels: dict[str, zipfile.ZipFile],
+) -> None:
+    docker_wheel = wheels["sandboxio_docker"]
+    names = docker_wheel.namelist()
+    assert "sandboxio_docker/py.typed" in names
+    assert {Path(n).parts[0] for n in names if not n.endswith((".dist-info",))} >= {
+        "sandboxio_docker"
+    }
+    entry_points = next(n for n in names if n.endswith("entry_points.txt"))
+    assert "docker = sandboxio_docker:DockerBackend" in docker_wheel.read(entry_points).decode()
+    deps = {r.split(">")[0].split(";")[0].strip() for r in _metadata(docker_wheel)}
+    assert deps == {"sandboxio", "docker"}

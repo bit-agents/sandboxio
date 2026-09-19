@@ -28,6 +28,11 @@ Every absorbed provider break gets an entry here as well as in the churn-absorpt
 - Audit: `AuditConfig`, `AuditEvent`, `NoopSink`, `QueueSink`; one redacted operation record
   per operation. Shielded, bounded teardown with `SBX_TEARDOWN_GRACE`.
 - Error codes `SBX_E1700` (`FileSystemError`) and `SBX_E1701` (`PathNotFound`).
+- `sandboxio-docker`, the Docker adapter, installed by `sandboxio[docker]`: `network: none`
+  by default, allowlists refused, `STATEFUL_CODE` off, a Ryuk-style reaper, and a
+  provider-side lifetime backstop.
+- The sync facade: `create_sync()`, `connect_sync()`, `sandboxio.sync.Sandbox` with a
+  per-sandbox portal thread, and the CI parity test against the async protocols.
 
 Nothing is released. There is no public API yet — see
 [docs/build-order.md](docs/build-order.md).

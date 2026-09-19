@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import json
 import sys
 
@@ -33,10 +32,21 @@ def test_import_pulls_in_nothing_beyond_the_base_dependencies() -> None:
     )
 
 
+# Same idea as pytest-socket, but in a child interpreter: deleting `sandboxio.*` from
+# sys.modules in-process would hand later tests a second copy of every class.
+SOCKET_GUARD = """
+import socket
+def _deny(*args, **kwargs):
+    raise RuntimeError("socket opened at import time")
+socket.socket = _deny
+socket.create_connection = _deny
+import sandboxio
+"""
+
+
 def test_no_socket_at_import() -> None:
-    for name in [m for m in sys.modules if m == "sandboxio" or m.startswith("sandboxio.")]:
-        del sys.modules[name]
-    importlib.import_module("sandboxio")  # pytest-socket fails this if a socket is opened
+    proc = run_python("-c", SOCKET_GUARD)
+    assert proc.returncode == 0, proc.stderr
 
 
 def test_import_is_silent() -> None:

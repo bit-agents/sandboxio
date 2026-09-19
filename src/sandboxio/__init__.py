@@ -45,6 +45,7 @@ from sandboxio.models import (
     RichOutput,
 )
 from sandboxio.registry import register
+from sandboxio.sync import connect_sync, create_sync
 
 __version__ = "0.0.0"
 
@@ -85,6 +86,8 @@ __all__ = [
     "UnverifiedIsolationWarning",
     "__version__",
     "connect",
+    "connect_sync",
     "create",
+    "create_sync",
     "register",
 ]

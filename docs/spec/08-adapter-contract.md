@@ -86,7 +86,7 @@ shared test, not a special case in the fake.
 | Job | Backend | When |
 |-----|---------|------|
 | unit + fake contract | FakeBackend | every PR |
-| docker contract | Docker via testcontainers, Ryuk cleanup | every PR |
+| docker contract | Docker via docker-py, Ryuk-style reaper | every PR |
 | e2b contract | E2B (real) | nightly + release, gated on secret |
 | modal contract | Modal (real) | nightly + release, gated on secret |
 | **latest-SDK canary** | all cloud adapters against `pip install -U <provider>` | nightly — the churn early-warning system |

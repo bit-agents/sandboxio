@@ -107,18 +107,29 @@ Dependencies resolved: Q8 sync facade ([ADR-0022](adr/0022-sync-facade.md)), Q10
 dependencies ([ADR-0023](adr/0023-docker-network-and-dependencies.md)), Q11 `STATEFUL_CODE`
 ([ADR-0024](adr/0024-stateful-code-on-docker.md)). **Unblocked.**
 
-- Full adapter: lifecycle, `run`, `run_code`, streaming, filesystem
-- `network_mode: none` by default; deny verified against a canary host; non-empty `allow`
+- [x] Full adapter: lifecycle, `run`, `run_code`, streaming, filesystem — shipped as the
+  workspace distribution `sandboxio-docker` (import `sandboxio_docker`), which is what
+  `sandboxio[docker]` installs; the same shape a third-party adapter takes
+- [x] `network_mode: none` by default; deny verified against a canary host; non-empty `allow`
   raises `CapabilityNotSupported`; `STATEFUL_CODE` declared off
-- Ryuk-style reaper; CI asserts zero leaked containers
-- Sync facade ([ADR-0022](adr/0022-sync-facade.md)) landed, with the parity test, and
-  exercised through the same contract suite
+- [x] Ryuk-style reaper (one sidecar per process, `SBX_DOCKER_REAPER=0` disables); CI asserts
+  zero leaked containers
+- [x] Sync facade ([ADR-0022](adr/0022-sync-facade.md)) landed with the parity test; exercised
+  by behaviour tests against the fake and a smoke test on real Docker, **not** by the full
+  contract suite — the suite is async, and wrapping sync back into async would not test the
+  cancellation rows honestly. Open point for the suite, not the facade.
+
+Decisions taken here: docker-py in worker threads, never an asyncio-only client (ADR-0002's
+trio point); a timeout or cancellation restarts the container because Docker cannot signal
+one `exec` — every process dies, the filesystem survives, and the docs say so; the PID 1 is
+`sleep <timeout>`, which is the provider-side lifetime backstop Docker otherwise lacks;
+`disk_mb` is refused rather than silently ignored.
 
 **Threshold:** if Docker cannot pass the suite cleanly, **fix the abstraction before
 touching a cloud adapter** — a suite bent to fit Docker is worthless for E2B.
 
-**Exit:** 100% of the suite green on real Docker in CI; zero leaked containers; deny-egress
-proven.
+**Exit:** 100% of the suite green on real Docker (locally against OrbStack; the CI job is
+in place); zero leaked containers; deny-egress proven against a canary host. **Done.**
 
 ---
 

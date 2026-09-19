@@ -9,8 +9,8 @@ fake.
 <!-- {{BADGES}} -->
 
 > [!WARNING]
-> **Pre-alpha. The core types, the contract suite and `FakeBackend` exist; no real adapter
-> does yet.**
+> **Pre-alpha. The core, the contract suite, `FakeBackend` and the Docker adapter exist;
+> E2B does not yet.**
 >
 > The public API is not stable, nothing is published to PyPI, and no version is suitable for
 > any use. What *is* stable enough to build against is [`docs/spec/`](docs/spec/), which is
@@ -68,7 +68,7 @@ Full surface, including the sync facade, streaming, filesystem and capability di
 
 | Backend | Status | Isolation tier |
 |---------|--------|----------------|
-| Docker | planned for v0.1 | <!-- {{TIER}} --> |
+| Docker | adapter built, unreleased | <!-- {{TIER}} --> |
 | E2B | planned for v0.1 | <!-- {{TIER}} --> |
 | `FakeBackend` | planned for v0.1 | n/a — in-process, for tests |
 | Modal | planned for v0.1.1 | <!-- {{TIER}} --> |

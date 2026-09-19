@@ -66,7 +66,10 @@ def test_unknown_name_raises_not_found_listing_available() -> None:
 
 
 @pytest.mark.parametrize("name", ["docker", "e2b", "modal"])
-def test_first_party_name_without_its_extra_raises_not_installed(name: str) -> None:
+def test_first_party_name_without_its_extra_raises_not_installed(
+    name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(registry, "_entry_points", {})  # as if no extra were installed
     with pytest.raises(BackendNotInstalled) as info:
         registry.resolve(name)
     assert info.value.code == "SBX_E1002"

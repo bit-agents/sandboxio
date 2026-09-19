@@ -33,7 +33,10 @@ async def test_create_fake_by_dsn_through_the_entry_point() -> None:
         assert sb.isolation is IsolationTier.CONTAINER
 
 
-async def test_default_target_is_docker_which_is_not_installed_yet() -> None:
+async def test_default_target_is_docker_and_names_the_extra_when_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(registry, "_entry_points", {})
     with pytest.raises(BackendNotInstalled) as info:
         await sandboxio.create()
     assert info.value.hint == 'uv pip install "sandboxio[docker]"'

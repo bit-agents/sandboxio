@@ -26,8 +26,10 @@ dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
 # TODO(placeholder): [project.urls] lands once the repo home is chosen. The GitHub org
 # `sandboxio` is taken and the org name is not part of the public contract (ADR-0014).
 
-# Adapter extras (docker/e2b/modal) land with their adapters in build-order steps 4-5.
-# Declaring an extra that installs nothing would make `uv sync --all-extras` a lie.
+# Each first-party adapter is its own distribution in packages/, exactly like a third-party
+# `sandboxio-<name>`; the extra pulls it in. e2b and modal land with their adapters.
+[project.optional-dependencies]
+docker = ["sandboxio-docker"]
 
 [dependency-groups]
 dev = [
@@ -38,6 +40,7 @@ dev = [
     "mypy>=1.14",
     "pyright>=1.1.390",
     "types-PyYAML>=6.0",
+    "types-docker>=7.1",
 ]
 
 [project.entry-points."sandboxio.backends"]
@@ -62,19 +65,27 @@ include = ["src/", "tests/", "docs/", "scripts/", "README.md", "CHANGELOG.md", "
 [tool.uv]
 required-version = ">=0.5"
 
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+sandboxio-docker = { workspace = true }
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket"
+addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker'"
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
     "docker: needs a working Docker daemon",
 ]
+# Docker tests are opt-in: `uv run pytest -m docker`.
+
 filterwarnings = ["error"]
 
 [tool.ruff]
 line-length = 96
-src = ["src", "tests", "scripts"]
+src = ["src", "tests", "scripts", "packages/*/src"]
 # Markdown stays out: the spec aligns comments in its samples on purpose.
 extend-exclude = ["*.md"]
 target-version = "py311"
@@ -112,14 +123,14 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src", "tests", "scripts"]
+files = ["src", "tests", "scripts", "packages"]
 strict = true
 warn_unreachable = true
 disallow_any_explicit = false
 enable_error_code = ["redundant-expr", "truthy-bool", "ignore-without-code", "possibly-undefined"]
 
 [tool.pyright]
-include = ["src", "tests", "scripts"]
+include = ["src", "tests", "scripts", "packages"]
 pythonVersion = "3.11"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = "error"
