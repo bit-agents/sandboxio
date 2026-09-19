@@ -95,3 +95,6 @@ Hints are specific, which means errors are constructed with context rather than 
 The per-code docs pages MUST be generated from the in-code catalog, so codes, hints and docs
 cannot drift. Adding an error means adding code, hint and page in one change; CI MUST fail
 if a code exists without a page or a page without a code.
+
+The generated pages live in [`docs/errors/`](../errors/README.md); regenerate with
+`uv run python scripts/gen_error_catalog.py`.

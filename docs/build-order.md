@@ -58,15 +58,19 @@ Dependencies resolved: [Q4](open-questions.md#q4--timeouterror-shadows-the-built
 ([ADR-0017](adr/0017-timeout-error-naming.md)), [Q5](open-questions.md#q5--isolationtier-needs-ordering)
 tier ordering ([ADR-0018](adr/0018-isolation-tier-ordering.md)). **Unblocked.**
 
-- Value objects per [spec/01](spec/01-domain-model.md), all frozen with value equality
-- `IsolationTier` with its rank map, plus the test asserting every member is ranked
-- Full error tree with codes, hints and URLs per [spec/04](spec/04-errors.md); the catalog
-  is data, and the docs pages generate from it
-- Protocols per [spec/02](spec/02-ports.md)
-- Registry: entry points + `register()`, lazy and cached
+- [x] Value objects per [spec/01](spec/01-domain-model.md), all frozen with value equality
+- [x] `IsolationTier` with its rank map, plus the test asserting every member is ranked
+- [x] Full error tree with codes, hints and URLs per [spec/04](spec/04-errors.md); the catalog
+  is data, and the docs pages generate from it (`scripts/gen_error_catalog.py` → [`errors/`](errors/README.md))
+- [x] Protocols per [spec/02](spec/02-ports.md)
+- [x] Registry: entry points + `register()`, lazy and cached
 
-**Exit:** `BackendNotFound` and `BackendNotInstalled` raise with correct hints and install
-commands; catalog-to-docs generation runs in CI; import budget still green.
+Decisions taken here that the spec left implicit: `ConfigurationError` raised directly
+carries `SBX_E1000`; `RichOutput` and `FileInfo` got minimal shapes in spec/01;
+`ExecResult.results` is a tuple, like every other sequence in a frozen value object.
+
+**Exit:** `BackendNotFound` and `BackendNotInstalled` raise with the exact install command;
+`--check` on the generated catalog is a pytest gate; import is ~9 ms. **Done.**
 
 ---
 

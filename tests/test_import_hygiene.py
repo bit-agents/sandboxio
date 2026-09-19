@@ -52,3 +52,10 @@ def test_import_configures_no_logging_handlers() -> None:
         "print(logging.getLogger('sandboxio').handlers, logging.root.handlers)",
     )
     assert out.strip() == "[] []"
+
+
+def test_entry_point_scanning_is_lazy() -> None:
+    out = stdout_of("-c", "import sys, sandboxio; print('importlib.metadata' in sys.modules)")
+    assert out.strip() == "False", (
+        "the registry must scan entry points on first use, not at import"
+    )

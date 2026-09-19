@@ -61,6 +61,17 @@ class NetworkPolicy:
     egress: Literal["deny", "allow", "learn"] = "deny"
     allow: tuple[str, ...] = ()       # hostnames and/or CIDRs
     ingress_ports: tuple[int, ...] = ()
+
+@dataclass(frozen=True)
+class RichOutput:
+    mime_type: str                    # e.g. "text/html", "image/png"
+    data: str                         # binary payloads are base64 text
+
+@dataclass(frozen=True)
+class FileInfo:
+    path: str                         # sandbox-internal
+    size: int
+    is_dir: bool
 ```
 
 - `Resources` defaults MUST resolve to modest concrete caps, never "unlimited"
@@ -147,7 +158,7 @@ class ExecResult:
     exit_code: int
     stdout: str
     stderr: str
-    results: list[RichOutput] | None = None   # interpreter rich outputs; None if unsupported
+    results: tuple[RichOutput, ...] | None = None   # interpreter rich outputs; None if unsupported
     meter: Meter | None = None                # v0.2 — duration + backend, no cost
     streamed: bool = False                    # True → stdout/stderr empty by construction
 ```
