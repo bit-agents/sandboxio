@@ -34,8 +34,8 @@ there and it will outlive the PR, it needs an ADR.
 
 When two documents disagree: [`spec/`](spec/) wins over [`adr/`](adr/).
 
-Both descend from an earlier planning set — *the original design set*, the term the ADRs
-use in their Context sections. It is not part of this repository and is superseded, not
+Both descend from an earlier planning set, which the ADRs' Context sections call *the
+input set* or *the input design*. It is not part of this repository and is superseded, not
 authoritative: it predates every decision recorded here, and several of its snippets were
 wrong.
 
