@@ -30,6 +30,7 @@ dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
 # `sandboxio-<name>`; the extra pulls it in. e2b and modal land with their adapters.
 [project.optional-dependencies]
 docker = ["sandboxio-docker"]
+e2b = ["sandboxio-e2b"]
 
 [dependency-groups]
 dev = [
@@ -70,18 +71,25 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 sandboxio-docker = { workspace = true }
+sandboxio-e2b = { workspace = true }
 
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker'"
+addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker and not e2b'"
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
     "docker: needs a working Docker daemon",
+    "e2b: needs E2B_API_KEY and network; `uv run --env-file .env pytest -m e2b`",
 ]
-# Docker tests are opt-in: `uv run pytest -m docker`.
+# Provider tests are opt-in: `uv run pytest -m docker`, `uv run --env-file .env pytest -m e2b`.
 
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    # docker-py leaves response sockets to the GC; scoped to its socket so nothing else hides.
+    "ignore:unclosed <socket.socket.*docker.sock:ResourceWarning",
+    "ignore:.*docker.sock.*:pytest.PytestUnraisableExceptionWarning",
+]
 
 [tool.ruff]
 line-length = 96
@@ -128,6 +136,11 @@ strict = true
 warn_unreachable = true
 disallow_any_explicit = false
 enable_error_code = ["redundant-expr", "truthy-bool", "ignore-without-code", "possibly-undefined"]
+
+[[tool.mypy.overrides]]
+# e2b-code-interpreter ships no py.typed marker.
+module = ["e2b_code_interpreter", "e2b_code_interpreter.*"]
+ignore_missing_imports = true
 
 [tool.pyright]
 include = ["src", "tests", "scripts", "packages"]

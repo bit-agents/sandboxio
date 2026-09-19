@@ -21,7 +21,9 @@ uv run pytest                 # unit + fake contract suite; no Docker, no networ
 
 Requirements: **Python 3.14 for development** (floor is 3.11 —
 [ADR-0015](adr/0015-python-version-floor.md)), Docker for the Docker contract job, and
-provider credentials only for cloud jobs. `uv python install 3.14` if you do not have it;
+provider credentials only for cloud jobs. Credentials live in a git-ignored `.env`
+(`E2B_API_KEY=...`) and reach the process only through `uv run --env-file .env`; the
+library never reads dotfiles. `uv python install 3.14` if you do not have it;
 the floor is proven by CI, not by your local interpreter.
 
 ## Daily loop
@@ -29,8 +31,9 @@ the floor is proven by CI, not by your local interpreter.
 ```bash
 uv run pytest -q                        # fast: fake backend only
 uv run pytest -m docker                 # Docker contract suite (needs Docker)
+uv run --env-file .env pytest -m e2b    # E2B contract suite (needs E2B_API_KEY in .env)
 uv run ruff check . && uv run ruff format --check .
-uv run pyright && uv run mypy src/
+uv run pyright && uv run mypy
 uv run python -X importtime -c "import sandboxio" 2>&1 | tail -1    # import budget
 uv run python scripts/check_doc_links.py                            # doc links + anchors
 ```

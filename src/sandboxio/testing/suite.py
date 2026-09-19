@@ -90,6 +90,7 @@ class BackendContractSuite:
     short_timeout: ClassVar[float] = 0.5
     settle: ClassVar[float] = 0.2
     allowlist_supported: ClassVar[bool] = False
+    resource_caps_supported: ClassVar[bool] = True
     canary_host: ClassVar[str] = "example.com"
     audit_sink: ClassVar[RecordingSink | None] = None
 
@@ -605,6 +606,10 @@ class BackendContractSuite:
             await self.create(network=NetworkPolicy(egress="learn"))
 
     async def test_resource_caps_are_applied(self) -> None:
+        if not self.resource_caps_supported:
+            with pytest.raises(ConfigurationError):
+                await self.create(resources=Resources(memory_mb=256))
+            return
         async with await self.create(resources=Resources(memory_mb=256)) as sb:
             applied = await self.applied_resources(sb)
             if applied is None:

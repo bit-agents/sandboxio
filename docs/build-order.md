@@ -137,16 +137,29 @@ in place); zero leaked containers; deny-egress proven against a canary host. **D
 
 The real stress test of the abstraction: rich outputs, PTY, pause/resume, microVM isolation.
 
-- Full adapter; rich outputs surfaced through `ExecResult.results`
-- PTY and pause/resume stay behind `.native` for v0.1
-- Native exception mapping with `__cause__`
-- Nightly + release CI job, gated on the API key
+- [x] Full adapter as the workspace distribution `sandboxio-e2b`; rich outputs surfaced
+  through `ExecResult.results` as `RichOutput(mime_type, data)` per Jupyter format;
+  `STATEFUL_CODE` declared, every run owning a code context we can restart
+- [x] PTY and pause/resume stay behind `.native` for v0.1
+- [x] Native exception mapping with `__cause__`; `AuthError` names `E2B_API_KEY`
+- [x] Nightly + release CI job, gated on the API key
+
+Decisions taken here: a `list[str]` command is `shlex`-quoted into E2B's bash (the SDK
+runs shell strings only); a timed-out or cancelled `run_code` restarts its code context,
+the only way to stop a cell; a dropped stream the SDK reports as a timeout is checked
+against `is_running()` and surfaces as `SandboxGone` when the lifetime ended; CPU and
+memory come from the template, so `Resources(...)` is refused — the suite gained
+`resource_caps_supported = False` for adapters like this.
+
+What the abstraction did **not** need: no `Capability` widened, nothing pushed to `.native`
+that the spec had not already put there.
 
 **Expect to widen `Capability` or push things to `.native` here.** Never bend toward the
 lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md)).
 
-**Exit:** 100% of the suite for declared capabilities; a one-line DSN swap between Docker
-and E2B runs the same downstream code unchanged.
+**Exit:** 100% of the suite for declared capabilities against the real service (73 s,
+≈60 sandboxes); `tests/test_one_line_swap.py` runs the same downstream code on `fake://`,
+`docker://` and `e2b://`. **Done.**
 
 ---
 

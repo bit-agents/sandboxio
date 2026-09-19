@@ -12,3 +12,7 @@ build/
 .mypy_cache/
 .coverage
 htmlcov/
+
+# Local secrets (E2B_API_KEY, ...). Loaded only via `uv run --env-file .env`; never read by the library.
+.env
+.env.*

@@ -44,8 +44,9 @@ Before pushing, run what CI runs:
 ```bash
 uv run pytest -q                        # fast: fake backend only
 uv run pytest -m docker                 # Docker contract suite (needs Docker)
+uv run --env-file .env pytest -m e2b    # E2B contract suite; E2B_API_KEY in a git-ignored .env
 uv run ruff check . && uv run ruff format --check .
-uv run pyright && uv run mypy src/
+uv run pyright && uv run mypy
 uv run python scripts/check_doc_links.py
 ```
 

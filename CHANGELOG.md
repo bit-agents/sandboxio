@@ -33,6 +33,8 @@ Every absorbed provider break gets an entry here as well as in the churn-absorpt
   provider-side lifetime backstop.
 - The sync facade: `create_sync()`, `connect_sync()`, `sandboxio.sync.Sandbox` with a
   per-sandbox portal thread, and the CI parity test against the async protocols.
+- `sandboxio-e2b`, the E2B adapter, installed by `sandboxio[e2b]`: `MICROVM` tier,
+  deny-by-default egress with native allowlists, stateful code contexts, rich outputs.
 
 Nothing is released. There is no public API yet — see
 [docs/build-order.md](docs/build-order.md).

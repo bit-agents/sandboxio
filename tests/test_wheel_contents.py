@@ -31,7 +31,7 @@ def wheels(tmp_path_factory: pytest.TempPathFactory) -> dict[str, zipfile.ZipFil
         capture_output=True,
     )
     built = {p.name.split("-")[0]: zipfile.ZipFile(p) for p in out.glob("*.whl")}
-    assert set(built) == {"sandboxio", "sandboxio_docker"}, sorted(built)
+    assert set(built) == {"sandboxio", "sandboxio_docker", "sandboxio_e2b"}, sorted(built)
     return built
 
 
@@ -89,3 +89,13 @@ def test_docker_adapter_ships_as_its_own_distribution(
     assert "docker = sandboxio_docker:DockerBackend" in docker_wheel.read(entry_points).decode()
     deps = {r.split(">")[0].split(";")[0].strip() for r in _metadata(docker_wheel)}
     assert deps == {"sandboxio", "docker"}
+
+
+def test_e2b_adapter_ships_as_its_own_distribution(wheels: dict[str, zipfile.ZipFile]) -> None:
+    e2b_wheel = wheels["sandboxio_e2b"]
+    names = e2b_wheel.namelist()
+    assert "sandboxio_e2b/py.typed" in names
+    entry_points = next(n for n in names if n.endswith("entry_points.txt"))
+    assert "e2b = sandboxio_e2b:E2BBackend" in e2b_wheel.read(entry_points).decode()
+    deps = {r.split(">")[0].split(";")[0].strip() for r in _metadata(e2b_wheel)}
+    assert deps == {"sandboxio", "e2b-code-interpreter"}

@@ -860,7 +860,7 @@ class FakeFileSystem:
     def __init__(self, sb: FakeSandbox) -> None:
         self._sb = sb
         self._files: dict[str, bytes] = {}
-        self._dirs: set[str] = {"/", WORKDIR}
+        self._dirs: set[str] = {"/", "/tmp", WORKDIR}  # what every image has
 
     def _norm(self, path: str) -> str:
         joined = path if path.startswith("/") else posixpath.join(WORKDIR, path)

@@ -39,7 +39,7 @@ Adapters map the policy to the provider's real control:
 | Backend | Deny | Allowlist |
 |---------|------|-----------|
 | Docker | network mode `none` | **not supported** — Docker has no per-host egress filtering; `--network` accepts only `none \| bridge \| host \| container \| <custom>`. A non-empty `allow` MUST raise `CapabilityNotSupported` ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)) |
-| E2B | `allow_internet_access=False` | `update_network` |
+| E2B | `allow_internet_access=False` | `network={deny_out: [0.0.0.0/0], allow_out: [...]}` at create |
 | Modal | empty `outbound_cidr_allowlist` — **not** legacy `block_network=True`, which is incompatible | `outbound_cidr_allowlist` |
 | Vercel | deny-all `networkPolicy` | `networkPolicy` |
 | Daytona | `network_block_all=True` | unverified |
