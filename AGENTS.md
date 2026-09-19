@@ -66,6 +66,8 @@ A red gate is never worked around. If a gate is wrong, change the gate in its ow
   compile, every relative link and anchor resolves.
 - **A capability you declare, you implement.** Declaring a `Capability` an adapter does not
   honour is the one unforgivable bug ([ADR-0007](docs/adr/0007-contract-suite-as-spec.md)).
+  Every adapter subclasses `sandboxio.testing.suite.BackendContractSuite`; the suite is the
+  spec, and `tests/test_fake_contract.py` shows how to wire one up.
 - **Never widen the API to the lowest common denominator.** One-backend features go behind
   `Capability` flags and `.native` ([ADR-0003](docs/adr/0003-no-lowest-common-denominator.md)).
 

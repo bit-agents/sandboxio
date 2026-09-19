@@ -61,7 +61,7 @@ def test_unknown_name_raises_not_found_listing_available() -> None:
     with pytest.raises(BackendNotFound) as info:
         registry.resolve("nope")
     assert info.value.code == "SBX_E1001"
-    assert info.value.available == ("stub",)
+    assert "stub" in info.value.available
     assert "stub" in info.value.hint
 
 

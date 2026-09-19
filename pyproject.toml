@@ -40,6 +40,12 @@ dev = [
     "types-PyYAML>=6.0",
 ]
 
+[project.entry-points."sandboxio.backends"]
+fake = "sandboxio.testing.fake:FakeBackend"
+
+[project.entry-points.pytest11]
+sandboxio = "sandboxio.testing.pytest_plugin"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -59,7 +65,7 @@ required-version = ">=0.5"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = "-q --strict-markers --strict-config --disable-socket"
+addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket"
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
     "docker: needs a working Docker daemon",

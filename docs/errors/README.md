@@ -21,5 +21,7 @@ a link to its page here. Codes are stable across releases
 | [SBX_E1501](SBX_E1501.md) | `AuthError` | A provider credential is missing or rejected. |
 | [SBX_E1502](SBX_E1502.md) | `RateLimitError` | The provider throttled the request. sandboxio does not retry on your behalf in v0.1. |
 | [SBX_E1601](SBX_E1601.md) | `AuditSinkError` | An audit sink failed and ``on_sink_failure="fail"`` was configured. |
+| [SBX_E1700](SBX_E1700.md) | `FileSystemError` | A sandbox filesystem operation failed for a reason other than a missing path. |
+| [SBX_E1701](SBX_E1701.md) | `PathNotFound` | The sandbox-internal path does not exist. |
 
 <!-- Generated from src/sandboxio/errors.py by scripts/gen_error_catalog.py. Do not edit by hand. -->

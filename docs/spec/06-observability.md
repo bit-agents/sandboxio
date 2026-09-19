@@ -39,6 +39,9 @@ class AuditEvent:
     network_denials: int            # blocked egress attempts, where the backend reports them
 ```
 
+Sinks are configured per backend instance through `AuditConfig(sinks=..., on_sink_failure=...,
+capture_code=...)`, passed to the adapter's constructor — never through global state.
+
 ### Sink protocol
 
 ```python

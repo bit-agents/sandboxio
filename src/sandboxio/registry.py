@@ -4,12 +4,16 @@ entry-point group, scanned lazily and cached (spec/07, ADR-0004).
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from sandboxio.errors import BackendNotFound, BackendNotInstalled
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from sandboxio.protocols import Backend
+
+BackendFactory: TypeAlias = "Callable[[], Backend]"
 
 __all__ = ["ENTRY_POINT_GROUP", "available", "register", "resolve"]
 
@@ -23,13 +27,16 @@ _FIRST_PARTY_EXTRAS: dict[str, str] = {
     "modal": "sandboxio[modal]",
 }
 
-_registered: dict[str, str | type[Backend]] = {}
-_loaded: dict[str, type[Backend]] = {}
+_registered: dict[str, str | BackendFactory] = {}
+_loaded: dict[str, BackendFactory] = {}
 _entry_points: dict[str, str] | None = None
 
 
-def register(name: str, target: str | type[Backend]) -> None:
+def register(name: str, target: str | BackendFactory) -> None:
     """Register a backend at runtime; takes precedence over entry points.
+
+    ``target`` is a dotted ``pkg.module:Class`` path or any zero-argument factory — a class,
+    or a lambda returning a configured instance.
 
     >>> register("mine", "my_pkg.sandbox:MyBackend")
     """
@@ -46,8 +53,8 @@ def available() -> tuple[str, ...]:
     return tuple(sorted({*_registered, *_scan_entry_points()}))
 
 
-def resolve(name: str) -> type[Backend]:
-    """Load the backend class for ``name``, importing its module on first use only."""
+def resolve(name: str) -> BackendFactory:
+    """Load the backend factory for ``name``, importing its module on first use only."""
     if name in _loaded:
         return _loaded[name]
 
@@ -67,7 +74,7 @@ def resolve(name: str) -> type[Backend]:
     return backend
 
 
-def _load(target: str) -> type[Backend]:
+def _load(target: str) -> BackendFactory:
     import importlib
 
     module_name, _, attr = target.partition(":")

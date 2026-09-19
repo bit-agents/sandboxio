@@ -21,6 +21,13 @@ Every absorbed provider break gets an entry here as well as in the churn-absorpt
   `docs/errors/`; `SandboxWarning` and its subclasses.
 - Port protocols (`Backend`, `AsyncSandbox`, `Process`, `AsyncFileSystem`).
 - Backend registry: `sandboxio.register()` plus lazy, cached `sandboxio.backends` entry points.
+- `sandboxio.create()` / `connect()` with DSN parsing, typed `BackendConfig`, and
+  `require_isolation` enforced before provisioning.
+- `sandboxio.testing.suite.BackendContractSuite`, the normative adapter contract, and
+  `sandboxio.testing.FakeBackend` with the `sbx_fake` pytest fixture and `fake://` DSN.
+- Audit: `AuditConfig`, `AuditEvent`, `NoopSink`, `QueueSink`; one redacted operation record
+  per operation. Shielded, bounded teardown with `SBX_TEARDOWN_GRACE`.
+- Error codes `SBX_E1700` (`FileSystemError`) and `SBX_E1701` (`PathNotFound`).
 
 Nothing is released. There is no public API yet — see
 [docs/build-order.md](docs/build-order.md).

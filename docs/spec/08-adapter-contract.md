@@ -16,6 +16,13 @@ class TestFlyAdapter(BackendContractSuite):
 The suite reads `backend.capabilities` and runs the matching tests, **plus** negative tests
 for every undeclared capability.
 
+Command probes (`cmd_echo`, `cmd_hang`, …) default to a POSIX shell and are overridable
+for other images. Behaviour probes (`assert_no_orphans`, `simulate_kill_hang`,
+`expire_sandbox`, …) let the suite drive situations only the adapter can provoke; a probe
+the adapter does not implement **skips visibly** rather than passing. Observability rows
+need the adapter constructed with an `AuditConfig` holding a `RecordingSink`, exposed as
+`audit_sink`. `FakeBackend`'s own subclass in `tests/test_fake_contract.py` is the reference.
+
 ## Coverage map
 
 | Area | Requirements |

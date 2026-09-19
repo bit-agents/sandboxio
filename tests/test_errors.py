@@ -58,6 +58,8 @@ def test_catalog_matches_the_spec_table() -> None:
         ("AuthError", "SBX_E1501"),
         ("RateLimitError", "SBX_E1502"),
         ("AuditSinkError", "SBX_E1601"),
+        ("FileSystemError", "SBX_E1700"),
+        ("PathNotFound", "SBX_E1701"),
     }
 
 

@@ -9,7 +9,8 @@ fake.
 <!-- {{BADGES}} -->
 
 > [!WARNING]
-> **Pre-alpha. There is no code in this repository yet — only the specification.**
+> **Pre-alpha. The core types, the contract suite and `FakeBackend` exist; no real adapter
+> does yet.**
 >
 > The public API is not stable, nothing is published to PyPI, and no version is suitable for
 > any use. What *is* stable enough to build against is [`docs/spec/`](docs/spec/), which is

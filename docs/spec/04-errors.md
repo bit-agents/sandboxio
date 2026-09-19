@@ -22,7 +22,9 @@ SandboxError                    base; carries .code, .hint, .url
 ├── ResourceLimitExceeded       SBX_E1402
 ├── AuthError                   SBX_E1501   hint: names the exact missing env var
 ├── RateLimitError              SBX_E1502
-└── AuditSinkError              SBX_E1601   only when on_sink_failure="fail"
+├── AuditSinkError              SBX_E1601   only when on_sink_failure="fail"
+└── FileSystemError             SBX_E1700
+    └── PathNotFound            SBX_E1701   sandbox-internal path does not exist
 ```
 
 ## Timeouts

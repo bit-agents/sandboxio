@@ -59,3 +59,8 @@ def test_entry_point_scanning_is_lazy() -> None:
     assert out.strip() == "False", (
         "the registry must scan entry points on first use, not at import"
     )
+
+
+def test_testing_package_is_not_imported_eagerly() -> None:
+    out = stdout_of("-c", "import sys, sandboxio; print('sandboxio.testing' in sys.modules)")
+    assert out.strip() == "False"

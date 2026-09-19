@@ -33,8 +33,10 @@ __all__ = [
     "ExecutionError",
     "ExecutionTimeout",
     "ExperimentalWarning",
+    "FileSystemError",
     "NetworkPolicyViolation",
     "OrphanedSandboxWarning",
+    "PathNotFound",
     "RateLimitError",
     "ResourceLimitExceeded",
     "SandboxError",
@@ -278,6 +280,29 @@ class AuditSinkError(SandboxError):
 
     code = "SBX_E1601"
     default_hint = 'Fix the sink, or use `on_sink_failure="warn"` to proceed without a record.'
+
+
+# --- SBX_E17xx: filesystem -----------------------------------------------------------------
+
+
+class FileSystemError(SandboxError):
+    """A sandbox filesystem operation failed for a reason other than a missing path."""
+
+    code = "SBX_E1700"
+    default_hint = "Inspect `__cause__`; paths are sandbox-internal, never host paths."
+
+
+class PathNotFound(FileSystemError):
+    """The sandbox-internal path does not exist."""
+
+    code = "SBX_E1701"
+    default_hint = (
+        "List the parent with `sandbox.files.ls()`; paths resolve inside the sandbox."
+    )
+
+    def __init__(self, path: str) -> None:
+        super().__init__(f"No such path in the sandbox: {path!r}.")
+        self.path = path
 
 
 # --- warnings ---------------------------------------------------------------------------------

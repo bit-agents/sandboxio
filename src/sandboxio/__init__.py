@@ -6,6 +6,7 @@ beyond the base dependencies (ADR-0004, ADR-0012).
 
 from __future__ import annotations
 
+from sandboxio.api import BackendConfig, connect, create
 from sandboxio.errors import (
     AuditSinkError,
     AuditSinkWarning,
@@ -20,8 +21,10 @@ from sandboxio.errors import (
     ExecutionError,
     ExecutionTimeout,
     ExperimentalWarning,
+    FileSystemError,
     NetworkPolicyViolation,
     OrphanedSandboxWarning,
+    PathNotFound,
     RateLimitError,
     ResourceLimitExceeded,
     SandboxError,
@@ -49,6 +52,7 @@ __all__ = [
     "AuditSinkError",
     "AuditSinkWarning",
     "AuthError",
+    "BackendConfig",
     "BackendNotFound",
     "BackendNotInstalled",
     "Capability",
@@ -62,12 +66,14 @@ __all__ = [
     "ExecutionTimeout",
     "ExperimentalWarning",
     "FileInfo",
+    "FileSystemError",
     "IsolationTier",
     "Meter",
     "NetworkPolicy",
     "NetworkPolicyViolation",
     "OrphanedSandboxWarning",
     "OutputChunk",
+    "PathNotFound",
     "RateLimitError",
     "ResourceLimitExceeded",
     "Resources",
@@ -78,5 +84,7 @@ __all__ = [
     "SandboxWarning",
     "UnverifiedIsolationWarning",
     "__version__",
+    "connect",
+    "create",
     "register",
 ]

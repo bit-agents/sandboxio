@@ -83,13 +83,21 @@ Dependencies resolved: Q6 streaming ([ADR-0019](adr/0019-streaming-process-handl
 Q7 cancellation ([ADR-0020](adr/0020-cancellation-semantics.md)), Q9 observability record
 ([ADR-0021](adr/0021-observability-record.md)). **Unblocked.**
 
-- `BackendContractSuite` covering the map in [spec/08](spec/08-adapter-contract.md),
+- [x] `BackendContractSuite` covering the map in [spec/08](spec/08-adapter-contract.md),
   including the four streaming-cleanup cases, the four cancellation cases, and capability honesty
-- `FakeBackend` + `sbx_fake` pytest fixture, registered by entry point
-- The one operation record, redaction at close, and the no-op + queue audit sinks
+- [x] `FakeBackend` + `sbx_fake` pytest fixture, registered by entry point
+- [x] The one operation record, redaction at close, and the no-op + queue audit sinks
+- [x] Pulled forward because the fake had to be reachable as `create("fake://")`: the DSN
+  parser, `sandboxio.create()`/`connect()` with `require_isolation`, shielded teardown and
+  request validation shared by every adapter
 
-**Exit:** `FakeBackend` passes 100% of the suite; a deliberately broken fake (swallowed
-timeout, faked capability, leaked secret) fails it.
+Decisions taken here: sinks are configured per backend via `AuditConfig`; a backend that
+does not declare `NETWORK_POLICY` refuses to create at all, since deny-by-default cannot be
+honoured; the filesystem family `SBX_E1700`/`SBX_E1701` was added under spec/04's rule 3.
+
+**Exit:** `FakeBackend` passes the suite in three configurations (everything declared,
+almost nothing declared, `UNKNOWN` tier); three deliberately broken fakes fail it exactly
+where they are broken and nowhere else. **Done.**
 
 ---
 
