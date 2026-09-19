@@ -18,7 +18,7 @@ in `docs/adr/`.
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | **DECIDED** |
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | **DECIDED** |
 | [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | OPEN |
-| [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | OPEN |
+| [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | **DECIDED** |
 | [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | OPEN |
 | [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | OPEN |
 | [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | OPEN |
@@ -172,21 +172,21 @@ auto-detection, keep `create_sync()` as the single explicit sync entry point.
 
 ## Q9 — One event, three sinks (Audit / OTel / Meter)
 
-**Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/05-security.md`, `06-integrations.md`, `04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/05-security.md`, `06-integrations.md`, `04-api-design.md`
 
-Three observability surfaces carry overlapping fields — `AuditEvent` (backend, isolation,
-duration_ms, exit_code, bytes in/out), OTel span attributes (same list), and `Meter`
-(duration_ms, cost_usd, backend). Emitted independently they will drift, and the redaction
-rule ("secrets never appear in events, logs or spans") then has to be enforced three times.
+Three surfaces carried overlapping fields and would have drifted, forcing the
+secret-redaction rule to be implemented per sink. Two things the original question missed:
+the sub-question of whether `cost_usd` is knowable at all, and that a *slow* audit sink is a
+subtler problem than a failing one.
 
-**Recommendation:** one internal operation record produced per op, with three renderers
-(audit sink, OTel span mapper, `ExecResult.meter`) and **one** redaction pass upstream of
-all of them. Makes the secret-redaction contract testable once.
-
-**Open sub-question:** is `Meter.cost_usd` actually knowable at execution time for E2B/Modal,
-or only post-hoc from billing? If the latter, it is an estimate and must be labelled as one.
-
-**Decision:** _pending_
+**Decision:** one `_OperationRecord` opened at start and closed at completion, redacted once
+at close, rendered three ways; the OTel span starts at open so long executions are visible
+while running. **No inline `cost_usd`** — both SDKs were inspected and the data does not
+exist at execution time (E2B has no cost surface; Modal's billing is post-hoc, account-level
+and daily-resolution). Cost ships instead as capability-gated post-hoc reconciliation by
+`metadata` label. Audit sinks are async, must return promptly, are awaited inline under
+`SBX_AUDIT_TIMEOUT`, and failure policy is configurable (`warn` default, `fail` available).
+Evidence and rationale in [ADR-0021](adr/0021-observability-record.md).
 
 ---
 

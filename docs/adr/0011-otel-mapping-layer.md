@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Related:** [ADR-0012](0012-no-telemetry-no-import-side-effects.md), [ADR-0005](0005-secure-by-default.md)
-**Open questions:** [Q9 audit / OTel / meter overlap](../open-questions.md#q9--one-event-three-sinks-audit--otel--meter)
+**Related:** [ADR-0021](0021-observability-record.md) — the shared operation record
 
 ## Context
 
@@ -27,8 +27,9 @@ multi-file, multi-adapter change, and stale names silently produce unqueryable t
 - **Content capture is opt-in**, per the spec's privacy modes. Code and file contents are
   never on spans by default; secrets never, under any setting.
 - Spans, audit events and `ExecResult.meter` are three renderings of **one** internal
-  operation record, with redaction applied once upstream
-  ([Q9](../open-questions.md#q9--one-event-three-sinks-audit--otel--meter)).
+  operation record, with redaction applied once at close
+  ([ADR-0021](0021-observability-record.md)). The span starts when the record opens, so a
+  long execution is visible while it runs.
 
 ## Consequences
 

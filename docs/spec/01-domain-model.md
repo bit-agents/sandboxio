@@ -78,6 +78,7 @@ class Capability(Flag):
     STREAMING = auto(); FILESYSTEM = auto(); UPLOAD_DOWNLOAD = auto()
     PTY = auto(); PAUSE_RESUME = auto(); SNAPSHOT_FORK = auto()
     GPU = auto(); LSP = auto(); GIT = auto(); NETWORK_POLICY = auto(); TUNNELS = auto()
+    COST_REPORTING = auto()          # post-hoc cost attribution by label (v0.2)
 ```
 
 Rules:
@@ -138,7 +139,7 @@ class ExecResult:
     stdout: str
     stderr: str
     results: list[RichOutput] | None = None   # interpreter rich outputs; None if unsupported
-    meter: Meter | None = None                # v0.2
+    meter: Meter | None = None                # v0.2 — duration + backend, no cost
     streamed: bool = False                    # True → stdout/stderr empty by construction
 ```
 

@@ -12,7 +12,8 @@ progress bars are installed at the CLI entry point, never at library import
 | `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — in under 60 s with no account and no config. | v0.1 |
 | `sandboxio reap` | List and kill orphaned sandboxes by `metadata` label — the operator-facing backstop when shielded teardown could not finish ([ADR-0020](../adr/0020-cancellation-semantics.md)). Dry-run by default; `--kill` to act. | v0.1 |
 | `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
-| `sandboxio bench` | Backend comparison: latency, cost where known. | v0.2 |
+| `sandboxio bench` | Backend comparison: latency. | v0.2 |
+| `sandboxio costs` | Post-hoc cost attribution by `metadata` label, e.g. `--since 2026-09-01 --label tenant_id=acme`. Requires `Capability.COST_REPORTING`; reports the provider's own resolution rather than interpolating ([06](06-observability.md#cost-reconciliation-capability-gated-v02)). | v0.2 |
 
 The primary console script is `sandboxio`. A short `sbx` alias script is installed as a
 convenience, but **copy-paste examples always use the full name** — `uvx` resolves by

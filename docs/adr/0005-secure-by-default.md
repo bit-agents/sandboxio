@@ -46,7 +46,8 @@ tenant identity or authorization.
   documentation and image design, not by weakening the default.
 - Every default above is a contract test. "Deny actually denies" is verified by egress to a
   canary host failing, per adapter, against the real backend.
-- Redaction must happen in one place upstream of all sinks, or it will be implemented three
-  times and get it wrong once ([Q9](../open-questions.md#q9--one-event-three-sinks-audit--otel--meter)).
+- Redaction happens in one place, at record close, upstream of all renderings — otherwise it
+  would be implemented three times and get it wrong once
+  ([ADR-0021](0021-observability-record.md)).
 - Mandatory timeouts will annoy someone with a legitimately long job. They can raise the cap;
   they cannot remove it.

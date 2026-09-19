@@ -39,13 +39,26 @@ class AuditEvent:
     network_denials: int            # blocked egress attempts, where the backend reports them
 ```
 
-- Sink protocol: `async def emit(event: AuditEvent) -> None`.
-- Ship three sinks: stdlib-logging (JSON lines), file, no-op. Default is no-op — the library
-  is quiet unless asked ([ADR-0012](../adr/0012-no-telemetry-no-import-side-effects.md)).
+### Sink protocol
+
+```python
+class AuditSink(Protocol):
+    async def emit(self, event: AuditEvent) -> None: ...
+```
+
+- `emit` **MUST return promptly.** Buffering is the sink's responsibility, as with
+  `logging.Handler`. A sink that blocks on network I/O adds latency to every execution.
+- It is awaited **inline**, bounded by `SBX_AUDIT_TIMEOUT` (default 5 s). sandboxio owns no
+  background drain task ([ADR-0020](../adr/0020-cancellation-semantics.md)).
+- Failure or timeout is governed by **`on_sink_failure`**:
+  - `"warn"` (default) — emit `AuditSinkWarning`, the operation proceeds.
+  - `"fail"` — raise `AuditSinkError` (`SBX_E1601`); the operation fails. For a regulated
+    buyer, an unrecorded operation may be one that should not have happened.
+- Shipped sinks: **no-op (default)**, stdlib-logging JSON lines, file, and **`QueueSink`** —
+  a bounded wrapper whose `emit` enqueues instantly and whose `drain()` coroutine the
+  **host application** runs in its own task group. Overflow drops oldest and warns.
 - Code is **hashed by default**; full-code capture is opt-in.
 - Secrets and env values MUST NOT appear in an event, ever, including in `argv`.
-- A failing sink MUST NOT fail the operation; it MUST be reported through the library
-  logger. Auditing is not a correctness dependency of execution.
 
 ## Tracing
 
@@ -66,14 +79,42 @@ class AuditEvent:
 class Meter:
     duration_ms: int
     backend: str
-    cost_usd: float | None = None
-    cost_is_estimate: bool = True
 ```
 
-- **OPEN ([Q9](../open-questions.md#q9--one-event-three-sinks-audit--otel--meter))** —
-  whether `cost_usd` is knowable at execution time for E2B and Modal, or only post-hoc from
-  billing. If post-hoc, it is an estimate and MUST be labelled one; a wrong cost number is
-  worse than no cost number.
+**There is no `cost_usd`.** Per-execution cost does not exist at execution time on either
+backend: E2B's SDK exposes no cost surface at all, and Modal's billing is a post-hoc,
+account-level `workspace_billing_report(start, end, resolution="d", tag_names=[...])`
+attributed per object, not per execution. An inline figure could only be a client-side
+estimate from a price table we maintain — a churn surface with no SDK release to trip the
+canary, and wrong under committed-use pricing
+([ADR-0021](../adr/0021-observability-record.md)).
+
+### Cost reconciliation (capability-gated, v0.2)
+
+Cost ships as post-hoc attribution instead, using the `metadata` labels that
+[05](05-security-policy.md#tenancy) already requires be propagated to provider-native
+labels.
+
+```python
+@dataclass(frozen=True)
+class CostEntry:
+    object_id: str
+    description: str
+    interval_start: datetime
+    cost_usd: Decimal            # Decimal, never float
+    labels: dict[str, str]
+
+# Backend-level, requires Capability.COST_REPORTING
+async def costs(self, *, since: datetime, until: datetime | None = None,
+                labels: dict[str, str] | None = None) -> list[CostEntry]: ...
+```
+
+- Requires `Capability.COST_REPORTING`; otherwise `CapabilityNotSupported`. Modal supports
+  it, E2B does not.
+- Amounts MUST be `Decimal`. Money is never a float.
+- Resolution is the provider's, not ours, and MUST be reported rather than interpolated —
+  Modal's default is daily.
+- Surfaced as `sandboxio costs --since ... --label tenant_id=...` ([10](10-cli.md)).
 
 ## Redaction
 

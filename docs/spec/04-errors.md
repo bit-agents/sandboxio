@@ -21,7 +21,8 @@ SandboxError                    base; carries .code, .hint, .url
 ├── NetworkPolicyViolation      SBX_E1401
 ├── ResourceLimitExceeded       SBX_E1402
 ├── AuthError                   SBX_E1501   hint: names the exact missing env var
-└── RateLimitError              SBX_E1502
+├── RateLimitError              SBX_E1502
+└── AuditSinkError              SBX_E1601   only when on_sink_failure="fail"
 ```
 
 ## Timeouts
