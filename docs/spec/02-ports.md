@@ -154,11 +154,29 @@ class AsyncFileSystem(Protocol):
 
 ## Cancellation and teardown
 
-**OPEN ([Q7](../open-questions.md#q7--cancellation-semantics))** — normative once decided.
-Required properties:
+Resolved in [ADR-0020](../adr/0020-cancellation-semantics.md). Under structured concurrency
+a plain `finally: await self.kill()` is decorative — it is cancelled at its first
+checkpoint — so teardown MUST be shielded.
 
-- Cancelling a task awaiting `run()` MUST NOT leave an orphaned remote process.
-- Teardown MUST run under a shielded cancel scope with a bounded grace period.
-- Cancellation during `create()` MUST NOT leak a provisioned-but-unreferenced sandbox; where
-  best-effort cleanup cannot be guaranteed, `metadata` labels plus a reaper are the backstop.
-- Every one of the above is a contract-suite test, not adapter discretion.
+```python
+with anyio.move_on_after(TEARDOWN_GRACE, shield=True):
+    await self._kill()
+```
+
+- Teardown MUST run in a **shielded, bounded** scope. `TEARDOWN_GRACE` defaults to **5 s**,
+  overridable by `SBX_TEARDOWN_GRACE`. It is NOT a `create()` parameter.
+- Cancelling a task awaiting `run()`, `run_code()` or a stream MUST NOT leave an orphaned
+  remote process. Cancellation **kills** the remote process; detach-on-cancel is deferred.
+- **Partial creation MUST be shielded narrowly**: the window between the provider returning
+  an id and the handle owning it, and no wider. `create()` as a whole MUST NOT be shielded.
+- If the grace expires, `OrphanedSandboxWarning` MUST be emitted naming the sandbox id,
+  backend and `metadata` labels.
+- **Cancellation MUST propagate as cancellation.** `CancelledError` /
+  `anyio.get_cancelled_exc_class()` MUST NOT be wrapped in a `SandboxError`;
+  `except BaseException` in an adapter is a bug.
+- `kill()` MUST be safe to call from inside a shielded scope, MUST be idempotent, and MUST
+  NOT block indefinitely.
+- The provider-side timeout from `create(timeout=...)` is the guaranteed backstop: it bounds
+  the worst-case orphan even when every other mechanism fails
+  ([05](05-security-policy.md#mandatory-timeouts)).
+- Each of the above is a contract-suite test, not adapter discretion.

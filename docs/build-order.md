@@ -71,12 +71,12 @@ commands; catalog-to-docs generation runs in CI; import budget still green.
 The suite is written **before** any adapter, so it specifies behaviour instead of describing
 whatever Docker happened to do. This is the step that makes everything after it cheap.
 
-Depends on: ~~Q6 streaming shape~~ (decided, [ADR-0019](adr/0019-streaming-process-handle.md)),
-[Q7](open-questions.md#q7--cancellation-semantics) cancellation,
+Depends on: ~~Q6 streaming shape~~ ([ADR-0019](adr/0019-streaming-process-handle.md)),
+~~Q7 cancellation~~ ([ADR-0020](adr/0020-cancellation-semantics.md)),
 [Q9](open-questions.md#q9--one-event-three-sinks-audit--otel--meter) one-record design.
 
 - `BackendContractSuite` covering the map in [spec/08](spec/08-adapter-contract.md),
-  including cancellation, shielded teardown and capability honesty
+  including the four streaming-cleanup cases, the four cancellation cases, and capability honesty
 - `FakeBackend` + `sbx_fake` pytest fixture, registered by entry point
 - The one operation record, redaction, and a no-op audit sink
 
@@ -123,7 +123,7 @@ and E2B runs the same downstream code unchanged.
 
 ## Step 6 — Distribution surface (2 weeks)
 
-- `sandboxio doctor`, `uvx sandboxio demo` ([spec/10](spec/10-cli.md))
+- `sandboxio doctor`, `sandboxio reap`, `uvx sandboxio demo` ([spec/10](spec/10-cli.md))
 - MCP server, containerized, published to the Docker MCP Catalog
   ([spec/09](spec/09-integrations.md))
 - LangGraph tool adapter; OpenAI Agents tool adapter
@@ -184,7 +184,7 @@ Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI das
 | 0 | — |
 | 1 | Q1, Q2, Q3 |
 | 2 | — (Q4, Q5 decided) |
-| 3 | ~~Q6~~, Q7, Q9 |
+| 3 | ~~Q6~~, ~~Q7~~, Q9 |
 | 4 | Q8, Q10, Q11 |
 | 5 | Step 4 exit criteria, in full |
 | 6 | Q12 (scope), Q10 (demo) |

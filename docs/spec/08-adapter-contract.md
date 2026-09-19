@@ -21,7 +21,8 @@ for every undeclared capability.
 | Area | Requirements |
 |------|--------------|
 | Lifecycle | create → run → kill; context-manager teardown on normal exit **and** on exception; double-`kill()` idempotent; `connect()` to unknown id raises `ConnectError` |
-| Cancellation | task cancelled mid-`run` leaves no orphan; teardown shielded with bounded grace; cancellation during `create()` leaks nothing. **OPEN ([Q7](../open-questions.md#q7--cancellation-semantics))** |
+| Cancellation | cancel mid-`run`, mid-`run_code`, mid-stream and mid-`create` each leave no orphan; teardown is shielded and bounded; only the id-known window of `create()` is shielded, not the whole call |
+| Cancellation identity | cancellation surfaces as `CancelledError` / the anyio cancelled class, **never** wrapped in a `SandboxError`; `kill()` is callable from inside a shielded scope; grace expiry emits `OrphanedSandboxWarning` |
 | `run` | exit codes; stdout/stderr separated; `env` injected; `list[str]` does not go through a shell; timeout raises `ExecutionTimeout` and does not hang |
 | `run_code` | basic execution; syntax and runtime errors surface with non-zero exit; rich outputs present iff declared; `context_id` works iff `STATEFUL_CODE`, else raises |
 | Streaming | `stream()` is not awaitable; per-stream ordering preserved; stdout/stderr distinguishable; `wait()` returns `streamed=True` with empty stdout/stderr and is idempotent; `CapabilityNotSupported` raised from `stream()` before entry |

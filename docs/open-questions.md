@@ -16,7 +16,7 @@ in `docs/adr/`.
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | **DECIDED** |
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | **DECIDED** |
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | **DECIDED** |
-| [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | OPEN |
+| [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | **DECIDED** |
 | [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | OPEN |
 | [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | OPEN |
 | [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | OPEN |
@@ -128,26 +128,20 @@ the rejected alternatives in [ADR-0019](adr/0019-streaming-process-handle.md).
 
 ## Q7 — Cancellation semantics
 
-**Priority:** P1 · **Status:** OPEN · **Source:** not covered in `docs/input/`
+**Priority:** P1 · **Status:** DECIDED · **Source:** not covered in `docs/input/`
 
-Undefined: what happens when the caller's anyio task is cancelled mid-`run()` or mid-`create()`.
-Under structured concurrency, cancellation propagates into the adapter's own awaits — so a
-naive `finally: await sb.kill()` is itself cancelled and every cancelled agent run leaks a
-cloud sandbox (and bills for it). Partial-creation is the worse case: cancelled between
-provider-side create and returning the handle, nothing owns the sandbox.
+Undefined in the input set, and behind the most expensive failure mode in the project.
+Under structured concurrency a `finally: await sb.kill()` is decorative — it is cancelled at
+its first checkpoint — so a cancelled agent run leaks a billing cloud sandbox.
 
-**Needs deciding**
-- Teardown runs under a shielded cancel scope with a bounded grace period — what period?
-- Does cancellation kill the remote process, or detach and leave it running?
-- `create()` cancelled mid-flight: best-effort shielded cleanup, or reconcile later via the
-  `metadata` labels + reaper?
-- Does `Process`/stream cancellation differ from `run()` cancellation?
-
-**Recommendation:** define it as part of the **contract suite**, not just prose — shielded
-teardown with a bounded grace period, cancellation kills the remote process, and creation is
-cleaned up best-effort with the reaper as backstop. Every adapter then proves it.
-
-**Decision:** _pending_
+**Decision:** shielded teardown in a bounded `anyio.move_on_after(TEARDOWN_GRACE,
+shield=True)` scope, default 5 s, overridable by `SBX_TEARDOWN_GRACE`. Cancellation kills
+the remote process; detach-on-cancel is deferred. Only the id-known window of `create()` is
+shielded, never the whole call. Cancellation always propagates as cancellation, never
+wrapped in a `SandboxError`. Grace expiry emits `OrphanedSandboxWarning`; `sandboxio reap`
+is the operator backstop. A background reaper task was rejected as unowned global state.
+The mandatory `create(timeout=...)` is the guaranteed backstop. Rationale in
+[ADR-0020](adr/0020-cancellation-semantics.md).
 
 ---
 

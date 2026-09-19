@@ -27,6 +27,7 @@ ADR-nnnn` rather than edited.
 | [0017](0017-timeout-error-naming.md) | `SandboxTimeout` does not inherit the builtin; timeouts split by phase | Accepted |
 | [0018](0018-isolation-tier-ordering.md) | `IsolationTier` ordering via an explicit rank; `UNKNOWN` is the default | Accepted |
 | [0019](0019-streaming-process-handle.md) | Streaming returns a `Process` context manager, not a bare iterator | Accepted |
+| [0020](0020-cancellation-semantics.md) | Shielded teardown with a bounded grace; the mandatory timeout is the backstop | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

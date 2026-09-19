@@ -61,8 +61,14 @@ installation and the zero-config demo work under this default.
 
 ## Guaranteed teardown
 
-- Context-manager exit MUST kill the sandbox, including on exception and on cancellation
-  ([Q7](../open-questions.md#q7--cancellation-semantics)).
+- Context-manager exit MUST kill the sandbox, including on exception and on cancellation,
+  in a **shielded scope bounded by `TEARDOWN_GRACE`** (default 5 s)
+  ([02](02-ports.md#cancellation-and-teardown)).
+- The mandatory `create(timeout=...)` is the guaranteed backstop for teardown that fails:
+  it is enforced provider-side and cannot be cancelled away. This is why timeouts are
+  non-negotiable — the rule is as much about cost as about security.
+- Grace expiry MUST emit `OrphanedSandboxWarning` with the sandbox id and labels so an
+  operator can reap it.
 - The Docker adapter MUST ship a Ryuk-style reaper so a crashed test run leaks no
   containers. CI asserts zero sandboxio-labelled containers remain after Docker jobs.
 - `kill()` MUST be idempotent.

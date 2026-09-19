@@ -10,6 +10,7 @@ progress bars are installed at the CLI entry point, never at library import
 |---------|---------|-------|
 | `sandboxio doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sandboxio.doctor()`. | v0.1 |
 | `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — in under 60 s with no account and no config. | v0.1 |
+| `sandboxio reap` | List and kill orphaned sandboxes by `metadata` label — the operator-facing backstop when shielded teardown could not finish ([ADR-0020](../adr/0020-cancellation-semantics.md)). Dry-run by default; `--kill` to act. | v0.1 |
 | `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
 | `sandboxio bench` | Backend comparison: latency, cost where known. | v0.2 |
 
@@ -28,6 +29,8 @@ distribution name, and the three-letter name belongs to an unrelated PyPI packag
 - Progress bars for genuinely long operations only: image pull, sandbox boot.
 - `doctor` MUST print credential **variable names**, never values, and MUST NOT make a
   provider API call that costs money.
+- `reap` MUST default to listing only. Killing requires an explicit flag, because the tool
+  operates on live infrastructure and a label filter can be wrong.
 - Shell completions and `sandboxio upgrade` self-check: v0.2.
 
 ## `doctor` output contract

@@ -4,7 +4,7 @@
 **Date:** 2026-09-19
 **Resolves:** [Q6](../open-questions.md#q6--stream-loses-stderr-and-exit-code)
 **Related:** [ADR-0003](0003-no-lowest-common-denominator.md), [ADR-0007](0007-contract-suite-as-spec.md)
-**Depends on:** [Q7 cancellation](../open-questions.md#q7--cancellation-semantics) for teardown semantics
+**Depends on:** [ADR-0020](0020-cancellation-semantics.md) for teardown semantics
 
 ## Context
 
@@ -50,7 +50,7 @@ async with sb.stream(["pytest", "-q"], timeout=300) as proc:
   quietly. The process starts on `__aenter__`.
 - **`__aexit__` terminates the process if it is still running** — whether iteration
   completed, the caller broke early, an exception propagated, or the task was cancelled.
-  The shielding and grace period are [Q7](../open-questions.md#q7--cancellation-semantics).
+  Shielding and grace period per [ADR-0020](0020-cancellation-semantics.md).
 - **Ordering is guaranteed within each stream, not between them.** Two pipes cannot be
   globally ordered, and claiming otherwise would be a lie the contract suite could not test.
 - `wait()` returns the terminal `ExecResult`. It is idempotent; calling it with output still

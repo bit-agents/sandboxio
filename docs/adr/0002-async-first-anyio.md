@@ -3,7 +3,8 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Related:** [ADR-0001](0001-ports-and-adapters.md)
-**Open questions:** [Q7 cancellation](../open-questions.md#q7--cancellation-semantics), [Q8 facade mechanism](../open-questions.md#q8--sync-facade-mechanism)
+**Open questions:** [Q8 facade mechanism](../open-questions.md#q8--sync-facade-mechanism)
+**Related:** [ADR-0020](0020-cancellation-semantics.md) — cancellation and teardown semantics
 
 ## Context
 
@@ -27,7 +28,7 @@ We will make the core async-first on **anyio**:
 - Sync entry is **explicit** (`create_sync`). We reject context auto-detection that returns
   different types from one call site: it defeats type checkers and violates one-obvious-way.
 - Cancellation and teardown semantics are part of the port contract, not adapter discretion,
-  and are proven by the contract suite. Definition is [Q7](../open-questions.md#q7--cancellation-semantics).
+  and are proven by the contract suite. Defined in [ADR-0020](0020-cancellation-semantics.md).
 
 ## Consequences
 

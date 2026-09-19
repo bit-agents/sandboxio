@@ -32,9 +32,12 @@ sandboxes running and billing. At agent scale this is a runaway cost, not an unt
 
 - **Tripwire:** CI reports non-zero sandboxio-labelled containers after a Docker job; a provider
   console shows sandboxes with no corresponding run.
-- **Response:** shielded teardown, a Ryuk-style reaper, `metadata` labels propagated to
-  provider-native labels so orphans are findable, and a CI assertion on every Docker job
-  ([Q7](open-questions.md#q7--cancellation-semantics)).
+- **Response:** shielded teardown bounded by `TEARDOWN_GRACE`, a Ryuk-style reaper for
+  Docker, `metadata` labels propagated to provider-native labels so orphans are findable,
+  `sandboxio reap` for operators, and a CI assertion on every Docker job
+  ([ADR-0020](adr/0020-cancellation-semantics.md)). The mandatory `create(timeout=...)` is
+  the guaranteed backstop — it bounds the worst case at ~300 s of billing even when every
+  other mechanism fails.
 
 ### H3 — A secret reaches a log, trace, repr or audit event
 
