@@ -89,10 +89,13 @@ installation and the zero-config demo work under this default.
 
 ## Isolation enforcement
 
-- `require_isolation=` MUST be evaluated before provisioning; failure raises
+- `require_isolation=` MUST be evaluated **before provisioning**; failure raises
   `ConfigurationError` and provisions nothing.
-- **OPEN ([Q5](../open-questions.md#q5--isolationtier-needs-ordering))** — comparison
-  semantics.
+- Comparison uses the explicit rank in [01](01-domain-model.md#isolationtier), which orders
+  escape resistance only ([ADR-0018](../adr/0018-isolation-tier-ordering.md)).
+- An `UNKNOWN`-tier backend satisfies no requirement at all, and creating on one without a
+  requirement MUST emit `UnverifiedIsolationWarning`.
+- `require_isolation=UNKNOWN` MUST raise `ConfigurationError`.
 - Docs MUST state that `CONTAINER` is for trusted/dev/CI code, that gVisor is defence in
   depth rather than VM-equivalent, and that `MICROVM` is the recommended floor for untrusted
   multi-tenant code.

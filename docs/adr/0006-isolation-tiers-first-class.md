@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Related:** [ADR-0005](0005-secure-by-default.md), [ADR-0003](0003-no-lowest-common-denominator.md)
-**Open questions:** [Q5 tier ordering](../open-questions.md#q5--isolationtier-needs-ordering)
+**Related:** [ADR-0018](0018-isolation-tier-ordering.md) — rank semantics and the `UNKNOWN` default
 
 ## Context
 
@@ -22,14 +22,15 @@ that the security assumption changed.
   backend and every sandbox**, reported at runtime and present in reprs, audit events and
   spans.
 - `create(require_isolation=...)` is an **enforceable precondition**: if the resolved backend
-  is weaker, creation fails with `ConfigurationError` before anything is provisioned. How
-  "weaker" is expressed is [Q5](../open-questions.md#q5--isolationtier-needs-ordering).
+  is weaker, creation fails with `ConfigurationError` before anything is provisioned.
+  "Weaker" is defined by the rank in [ADR-0018](0018-isolation-tier-ordering.md).
 - Docs state the honest position: gVisor is defence-in-depth and not hardware-VM equivalent;
   `CONTAINER` is for trusted, dev and CI code only; `MICROVM` is the recommended floor for
   untrusted multi-tenant code.
-- **A tier is a claim we must be able to defend.** No backend gets a tier above `CONTAINER`
-  until its mechanism is verified from the provider's own documentation. Daytona in
-  particular is unverified and must not be claimed above `CONTAINER`.
+- **A tier is a claim we must be able to defend.** A backend whose mechanism is not
+  verified from the provider's own documentation reports `UNKNOWN`, not `CONTAINER` —
+  reporting `CONTAINER` is itself an unearned claim
+  ([ADR-0018](0018-isolation-tier-ordering.md)). Daytona is `UNKNOWN`.
 
 ## Consequences
 

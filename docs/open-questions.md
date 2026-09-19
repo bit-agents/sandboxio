@@ -14,7 +14,7 @@ in `docs/adr/`.
 | [Q2](#q2--python-version-floor) | Python version floor | P0 | **DECIDED** |
 | [Q3](#q3--license) | License | P0 | **DECIDED** |
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | **DECIDED** |
-| [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | OPEN |
+| [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | **DECIDED** |
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | OPEN |
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | OPEN |
 | [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | OPEN |
@@ -92,23 +92,20 @@ catalog had no error for. No `TimeoutError` alias. Full rationale in
 
 ## Q5 — `IsolationTier` needs ordering
 
-**Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/05-security.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/05-security.md`
 
-`require_isolation=IsolationTier.MICROVM` must raise `ConfigurationError` "if the resolved
-backend is weaker" — that implies a comparison. A plain `Enum` does not compare, and
-`CONTAINER | GVISOR | MICROVM` is not obviously a total order in the first place (gVisor is
-documented as defence-in-depth, explicitly *not* hardware-VM equivalent).
+`require_isolation=MICROVM` implies a comparison a plain `Enum` does not provide, and
+`CONTAINER < GVISOR < MICROVM` is not self-evidently a legitimate total order. Kubernetes
+`RuntimeClass`, which we already borrow as a mental model, deliberately does not rank its
+handlers. The discriminator was what happens when a stronger tier is added later: a
+set-based `require_isolation={MICROVM}` would reject a future `CONFIDENTIAL_VM` backend.
 
-**Options**
-- `IntEnum` with declared ranks — simple, but leaks arithmetic into the public API.
-- Plain `Enum` + explicit internal rank map + a `satisfies()` helper.
-- Set-of-acceptable-tiers instead of a floor: `require_isolation={MICROVM, GVISOR}`.
-
-**Recommendation:** plain `Enum` + explicit rank map + `tier.satisfies(minimum)`. Keeps the
-ordering a documented policy claim rather than an accident of enum values, and stays
-extensible when a new tier lands mid-scale.
-
-**Decision:** _pending_
+**Decision:** plain `Enum` with string values plus an explicit rank map spaced by 10, rich
+comparisons derived from the rank, no arithmetic, and `tier.satisfies(minimum)` as the
+taught form. The rank orders **escape resistance only**, not general security. Adds
+`UNKNOWN` as the default for any adapter that does not declare a tier — it satisfies no
+requirement, and creating on one warns. Rationale in
+[ADR-0018](adr/0018-isolation-tier-ordering.md).
 
 ---
 

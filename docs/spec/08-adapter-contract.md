@@ -30,6 +30,7 @@ for every undeclared capability.
 | Errors | every provider exception mapped into the sandboxio tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
 | Timeouts | `create()` timeout raises `CreateTimeout`, execution timeout raises `ExecutionTimeout`, expired sandbox raises `SandboxGone`; **no bare builtin `TimeoutError` escapes any public entry point** |
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
+| Isolation honesty | the backend reports a tier; an undeclared tier resolves to `UNKNOWN`; `require_isolation` above the reported tier fails **before** provisioning; `UNKNOWN` satisfies nothing |
 | Observability | one operation record per operation; secrets absent from every sink; `metadata` propagated to provider-native labels |
 
 ## Adapter rules

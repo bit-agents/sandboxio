@@ -88,24 +88,43 @@ Rules:
 
 ```python
 class IsolationTier(Enum):
+    UNKNOWN   = "unknown"     # undeclared or unverified — satisfies NO requirement
     CONTAINER = "container"   # runc, shared kernel — trusted/dev/CI code only
     GVISOR    = "gvisor"      # user-space kernel — defence in depth, not VM-equivalent
     MICROVM   = "microvm"     # dedicated guest kernel — floor for untrusted multi-tenant
 ```
 
+Ordering is an **explicit internal rank map** (`UNKNOWN 0, CONTAINER 10, GVISOR 20,
+MICROVM 30`), not a property of the member values ([ADR-0018](../adr/0018-isolation-tier-ordering.md)).
+
+- The rank orders **one thing only: resistance to kernel escape by an adversarial tenant**,
+  under the threat model in [05](05-security-policy.md#threat-model). It MUST NOT be
+  presented as a general "more secure" scale.
+- Rich comparisons (`<`, `<=`, `>`, `>=`) derive from the rank; arithmetic is not available.
+  `tier.satisfies(minimum)` is the form the docs teach.
+- Ranks are spaced by 10 so a tier can be inserted without renumbering. Adding a stronger
+  tier means an existing `require_isolation` accepts it automatically.
+- Every member MUST have a rank, asserted by a test that enumerates the class.
 - Every backend and every sandbox MUST report a tier.
 - A tier above `CONTAINER` MUST be justified by provider documentation, recorded with a date
   ([ADR-0006](../adr/0006-isolation-tiers-first-class.md)).
-- **OPEN ([Q5](../open-questions.md#q5--isolationtier-needs-ordering))** — comparison
-  semantics for `require_isolation=`.
+
+### `UNKNOWN`
+
+- `UNKNOWN` is the **default for any adapter that does not declare a tier**. An adapter
+  author who says nothing has claimed nothing.
+- It satisfies **no** requirement, including `require_isolation=CONTAINER`.
+- `require_isolation=UNKNOWN` is meaningless and MUST raise `ConfigurationError`.
+- Creating on an `UNKNOWN`-tier backend MUST emit `UnverifiedIsolationWarning` once per
+  backend per process.
 
 | Backend | Tier | Notes |
 |---------|------|-------|
 | Docker (local) | `CONTAINER` | shared kernel; trusted code only |
 | E2B | `MICROVM` | Firecracker |
 | Modal | `GVISOR` | not hardware-VM equivalent |
-| Fake | `CONTAINER` | no isolation at all; MUST NOT be used outside tests |
-| Daytona | unverified | MUST NOT be claimed above `CONTAINER` until verified |
+| Fake | `CONTAINER` | executes nothing; MUST NOT be used outside tests |
+| Daytona | `UNKNOWN` | unverified — not claimed at any tier until documented with a date |
 
 ## ExecResult
 

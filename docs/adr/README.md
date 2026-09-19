@@ -25,6 +25,7 @@ ADR-nnnn` rather than edited.
 | [0015](0015-python-version-floor.md) | Python floor 3.11; develop on 3.14 | Accepted |
 | [0016](0016-license-mit.md) | MIT license; DCO for contributions | Accepted |
 | [0017](0017-timeout-error-naming.md) | `SandboxTimeout` does not inherit the builtin; timeouts split by phase | Accepted |
+| [0018](0018-isolation-tier-ordering.md) | `IsolationTier` ordering via an explicit rank; `UNKNOWN` is the default | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

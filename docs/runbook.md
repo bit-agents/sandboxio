@@ -167,7 +167,8 @@ Every quarter:
 - [ ] Review [open-questions.md](open-questions.md): anything DEFERRED whose trigger fired?
 - [ ] Check the OTel GenAI semconv version for renames
       ([ADR-0011](adr/0011-otel-mapping-layer.md)).
-- [ ] Daytona: isolation tier, SDK state, license state — still unverified until proven.
+- [ ] Daytona: isolation tier, SDK state, license state — `UNKNOWN` until proven.
+- [ ] Any backend still reporting `UNKNOWN`: can it be verified and promoted this quarter?
 
 The point of pre-committing the thresholds is that this review is mechanical. Do not
 renegotiate a threshold during the review in which it fires.
