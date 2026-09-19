@@ -5,6 +5,7 @@ signatures should produce correct sandboxio code.
 
 ## Module surface
 
+<!-- doc-sample: skip -->
 ```python
 sandboxio.create(...)          # async, returns AsyncSandbox
 sandboxio.create_sync(...)     # sync facade

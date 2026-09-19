@@ -1,0 +1,23 @@
+name: Spec gap
+description: The spec is silent, ambiguous, or contradicts itself.
+labels: ["spec-gap"]
+body:
+  - type: textarea
+    id: where
+    attributes:
+      label: Where
+      description: Link the spec section or ADR. A dead or ambiguous requirement is a defect.
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: What is undecided or contradictory
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: What you cannot build or test without an answer
+    validations:
+      required: true

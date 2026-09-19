@@ -1,0 +1,10 @@
+# TODO(placeholder): fill both URLs once the repo home is chosen (ADR-0014), and enable
+# Discussions. Until then these links do not resolve — the repo is not public.
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/{{ORG}}/sandboxio/discussions
+    about: Questions and design discussion go to Discussions, not issues.
+  - name: Security vulnerability
+    url: https://github.com/{{ORG}}/sandboxio/security/advisories/new
+    about: Report privately via the Security tab. Never open a public issue for a security bug.

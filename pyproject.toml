@@ -1,0 +1,114 @@
+[project]
+name = "sandboxio"
+description = "One secure Python API for running AI-agent code in any sandbox."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "LICENSE-DOCS"]
+authors = [{ name = "sandboxio contributors" }]
+keywords = ["sandbox", "agents", "llm", "docker", "e2b", "isolation", "security"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+
+# Core stays at these two. Any further base dependency needs an ADR (ADR-0004).
+dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
+
+# TODO(placeholder): [project.urls] lands once the repo home is chosen. The GitHub org
+# `sandboxio` is taken and the org name is not part of the public contract (ADR-0014).
+
+# Adapter extras (docker/e2b/modal) land with their adapters in build-order steps 4-5.
+# Declaring an extra that installs nothing would make `uv sync --all-extras` a lie.
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-socket>=0.7",
+    "pyyaml>=6.0",
+    "ruff>=0.14",
+    "mypy>=1.14",
+    "pyright>=1.1.390",
+    "types-PyYAML>=6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/sandboxio/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sandboxio"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "docs/", "scripts/", "README.md", "CHANGELOG.md", "LICENSE", "LICENSE-DOCS"]
+
+[tool.uv]
+required-version = ">=0.5"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config --disable-socket"
+markers = [
+    "wheel: builds a wheel; needs `uv` on PATH",
+    "docker: needs a working Docker daemon",
+]
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 96
+src = ["src", "tests", "scripts"]
+# Markdown stays out: the spec aligns comments in its samples on purpose.
+extend-exclude = ["*.md"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",      # pycodestyle + pyflakes
+    "I",                # isort
+    "UP",               # pyupgrade
+    "B",                # bugbear
+    "SIM",              # simplify
+    "TID",              # tidy imports
+    "RUF",
+    "ANN",              # annotations — the public surface is the product
+    "TC",               # type-checking-only imports stay out of the import budget
+    "PTH",
+    "RET",
+    "C4",
+]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["TC"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "tests", "scripts"]
+strict = true
+warn_unreachable = true
+disallow_any_explicit = false
+enable_error_code = ["redundant-expr", "truthy-bool", "ignore-without-code", "possibly-undefined"]
+
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "error"

@@ -25,18 +25,24 @@ schemes, the entry-point group, error codes, env vars and docs URLs.
 Gates are cheap now and expensive to retrofit: an accidental eager import spreads fast, and
 an import budget added in month three is a week of untangling.
 
-- `uv` project, `src/` layout, `py.typed`, ruff, pyright strict, mypy strict
-- `requires-python = ">=3.11"`; CI matrix 3.11-3.14 with 3.11 a **required** check, dev default 3.14
-- CI with the four hard gates **already failing closed**:
+- [x] `uv` project, `src/` layout, `py.typed`, ruff, pyright strict, mypy strict
+- [x] `requires-python = ">=3.11"`; CI matrix 3.11-3.14, dev default 3.14. Making 3.11 a
+  **required** check is a branch-protection setting, applied when the repo goes public
+- [x] CI with the four hard gates **already failing closed**:
   import budget <150 ms · no sockets at import (`pytest-socket`) · wheel-contents test ·
   type check · doc-sample parse test · doc-link check (`scripts/check_doc_links.py`)
 - [x] `LICENSE` (MIT), `LICENSE-DOCS` (CC BY 4.0, [ADR-0026](adr/0026-docs-license-cc-by.md)), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound
-- PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md`
-- `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
-- Issue templates requiring reproduction; stated triage policy
+- [x] PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md` — the release workflow
+  is token-free and attesting; the PyPI-side publisher entry is configured at first release
+- [x] `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
+- [x] Issue templates requiring reproduction; stated triage policy
 
-**Exit:** empty package installs, imports in <150 ms, CI green, and a deliberately-added
-eager import turns CI red.
+Adapter extras (`sandboxio[docker]`, `[e2b]`, `[modal]`) are deliberately **not** declared
+yet: an extra that installs nothing is a lie, and each provider SDK choice belongs to the
+step that writes its adapter.
+
+**Exit:** empty package installs, imports in 0.2 ms, gates green on 3.11 and 3.14, and both
+a deliberately-added eager import and a socket at import turn them red. **Done.**
 
 > `AGENTS.md` belongs here, not at the end. Most of this will be built through coding
 > agents, and without the pinned decisions in context every session re-invents the sync

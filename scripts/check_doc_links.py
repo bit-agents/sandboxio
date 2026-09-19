@@ -22,7 +22,8 @@ MD_LINK_IN_HEADING = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 
 def strip_fences(text: str) -> str:
     """Blank out fenced code blocks so their contents are never parsed as markup."""
-    out, in_fence = [], False
+    out: list[str] = []
+    in_fence = False
     for line in text.splitlines():
         if FENCE.match(line.strip()):
             in_fence = not in_fence
@@ -56,9 +57,7 @@ def anchors_of(text: str) -> set[str]:
 
 def markdown_files() -> list[Path]:
     return sorted(
-        p
-        for p in ROOT.rglob("*.md")
-        if not SKIP_DIRS & set(p.relative_to(ROOT).parts)
+        p for p in ROOT.rglob("*.md") if not SKIP_DIRS & set(p.relative_to(ROOT).parts)
     )
 
 

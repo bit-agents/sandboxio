@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not behave as the spec says it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A report without a reproduction is closed without triage.** This is stated up
+        front and applied without debate — it is what keeps the queue survivable for a
+        security-adjacent project.
+
+        Security bugs do not belong here. Report them privately through the
+        repository's Security tab, as `SECURITY.md` describes.
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The smallest script that shows the problem, runnable as-is.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+      description: Quote the spec or ADR you are relying on, if there is one.
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      options: [docker, e2b, modal, fake, "not backend-specific"]
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`sandboxio doctor --json` output"
+      description: Required for anything environment-related. It carries no secrets.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: sandboxio version
+    validations:
+      required: true
