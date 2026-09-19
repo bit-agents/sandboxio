@@ -21,7 +21,7 @@ in `docs/adr/`.
 | [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | **DECIDED** |
 | [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | **DECIDED** |
 | [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | **DECIDED** |
-| [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | OPEN |
+| [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | **DECIDED** |
 | [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | **DECIDED** |
 
 ---
@@ -224,20 +224,17 @@ Purpose-built-image approaches are rejected outright. Rationale in
 
 ## Q12 — v0.1 scope cut
 
-**Priority:** P2 · **Status:** OPEN · **Source:** `docs/input/10-roadmap.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/10-roadmap.md`
 
-v0.1 as scoped for weeks 2-10: three real adapters (Docker, E2B, Modal) + FakeBackend +
-contract suite + CI matrix + MCP server + two framework adapters + OTel + audit + CLI
-(`demo`, `doctor`) + full Diátaxis docs + llms.txt + attestations. That is not an eight-week
-scope, and the parts that slip will be the docs and the contract suite — the two things the
-whole bet rests on.
+Three real adapters plus the suite, CI matrix, MCP server, two framework adapters, OTel,
+audit, CLI and full docs is not an eight-week scope. What slips under pressure is
+documentation and test depth — the two things the differentiation rests on.
 
-**Recommendation:** cut to **Docker + E2B + Fake**; Modal moves to v0.1.1. Two backends fully
-carry the "swap with one line" launch narrative. Keep the MCP server (it is the distribution
-channel) and exactly one framework adapter (LangGraph). Everything else in `10`'s v0.1 list
-stays.
-
-**Decision:** _pending_
+**Decision:** v0.1 ships **Docker + E2B + Fake**; **Modal moves to v0.1.1**. Two backends
+carry the one-line-swap narrative as well as three, and Docker↔E2B is the widest gap in the
+set, so it stresses the abstraction hardest. One framework adapter (LangGraph) in v0.1;
+"works with all four" becomes a v0.2 claim. Rationale in
+[ADR-0025](adr/0025-v01-scope-cut.md).
 
 ---
 

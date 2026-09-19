@@ -142,9 +142,13 @@ README example runs verbatim (a copied example that does not run is a **P0 bug**
 
 ## v0.1 ship
 
-**Scope cut ([Q12](open-questions.md#q12--v01-scope-cut)): Docker + E2B + Fake. Modal moves
-to v0.1.1.** Two backends fully carry the "swap with one line" narrative; three does not buy
-a better launch, it buys a later one.
+**Scope: Docker + E2B + Fake. Modal moves to v0.1.1**
+([ADR-0025](adr/0025-v01-scope-cut.md)). Two backends fully carry the "swap with one line"
+narrative; three does not buy a better launch, it buys a later one. Docker↔E2B is also the
+widest gap in the set, so it stresses the abstraction hardest.
+
+Note: no v0.1 backend represents the `GVISOR` tier. The tier stays in the enum — it is a
+property of the model, not of what shipped — but the docs must not imply Modal is available.
 
 Launch narrative: *one secure Python API for running AI-agent code in any sandbox — swap
 Docker↔E2B with one line; no network by default; test your agent tools offline with the
@@ -189,4 +193,4 @@ Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI das
 | 3 | — (Q6, Q7, Q9 decided) |
 | 4 | — (Q8, Q10, Q11 decided) |
 | 5 | Step 4 exit criteria, in full |
-| 6 | Q12 (scope) |
+| 6 | — (all decided) |
