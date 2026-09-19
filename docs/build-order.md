@@ -87,14 +87,15 @@ timeout, faked capability, leaked secret) fails it.
 
 ## Step 4 — Docker adapter to 100% (1-2 weeks)
 
-Depends on: [Q10](open-questions.md#q10--deny-by-default-vs-the-demo) network/demo story,
+Depends on: ~~Q8 sync facade~~ ([ADR-0022](adr/0022-sync-facade.md)),
+[Q10](open-questions.md#q10--deny-by-default-vs-the-demo) network/demo story,
 [Q11](open-questions.md#q11--stateful_code-on-docker) `STATEFUL_CODE`.
 
 - Full adapter: lifecycle, `run`, `run_code`, streaming, filesystem
 - `network_mode: none` by default; deny verified against a canary host
 - Ryuk-style reaper; CI asserts zero leaked containers
-- Sync facade ([Q8](open-questions.md#q8--sync-facade-mechanism)) landed and tested through
-  the same suite
+- Sync facade ([ADR-0022](adr/0022-sync-facade.md)) landed, with the parity test, and
+  exercised through the same contract suite
 
 **Threshold:** if Docker cannot pass the suite cleanly, **fix the abstraction before
 touching a cloud adapter** — a suite bent to fit Docker is worthless for E2B.
@@ -185,6 +186,6 @@ Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI das
 | 1 | Q1, Q2, Q3 |
 | 2 | — (Q4, Q5 decided) |
 | 3 | — (Q6, Q7, Q9 decided) |
-| 4 | Q8, Q10, Q11 |
+| 4 | ~~Q8~~, Q10, Q11 |
 | 5 | Step 4 exit criteria, in full |
 | 6 | Q12 (scope), Q10 (demo) |

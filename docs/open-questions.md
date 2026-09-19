@@ -17,7 +17,7 @@ in `docs/adr/`.
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | **DECIDED** |
 | [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | **DECIDED** |
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | **DECIDED** |
-| [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | OPEN |
+| [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | **DECIDED** |
 | [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | **DECIDED** |
 | [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | OPEN |
 | [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | OPEN |
@@ -147,26 +147,20 @@ The mandatory `create(timeout=...)` is the guaranteed backstop. Rationale in
 
 ## Q8 — Sync facade mechanism
 
-**Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/03-architecture.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`
 
-"Sync facade is **generated** via an anyio blocking portal" is ambiguous between build-time
-codegen and a runtime wrapper. Affects typing fidelity, wheel contents, traceback quality
-and how `sandboxio.create()` behaves when called from a sync context.
+"Generated via an anyio blocking portal" was ambiguous between build-time codegen and a
+runtime wrapper. The point that collapsed the option space: **codegen does not avoid the
+portal** — `unasync`-style generation works only when the emitted sync code calls sync
+libraries, and our adapters are async-only. Codegen decides where the delegating wrapper
+lives, not whether one exists.
 
-**Options**
-- Build-time codegen of real `.py` — best typing/IDE, adds a generation step to CI and a
-  drift risk.
-- Runtime `__getattr__`/portal wrapper + hand-written `.pyi` stubs — simplest, stubs can drift.
-- Hand-written thin sync class — most code, zero magic, best tracebacks.
-
-**Also unresolved:** `04` shows both `sandboxio.create_sync(...)` and "auto-detected `sandboxio.create()`
-in sync context". Auto-detection returning different types from one name is hostile to typing
-and to the "one obvious way" rule.
-
-**Recommendation:** runtime portal wrapper + generated-and-CI-verified stubs; drop
-auto-detection, keep `create_sync()` as the single explicit sync entry point.
-
-**Decision:** _pending_
+**Decision:** hand-written thin delegation (~30 members) with a **CI-enforced parity test**
+that introspects the async protocols and matches signatures — which removes the drift
+objection without a codegen pipeline. The portal is **per-sandbox**, started by
+`create_sync()` and stopped on exit; N sync sandboxes means N threads, documented. Sync
+streaming is offered with its per-chunk thread round-trip cost stated. Supersedes the
+runtime-proxy lean in ADR-0002. Rationale in [ADR-0022](adr/0022-sync-facade.md).
 
 ---
 

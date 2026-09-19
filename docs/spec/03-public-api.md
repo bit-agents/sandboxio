@@ -87,11 +87,29 @@ sb.native.tunnels()        # Modal-specific — outside the semver contract
 
 ## Sync facade
 
-- Mirrors the async surface 1:1: `sb = sandboxio.create_sync("docker://python:3.12-slim")`.
-- Entry is **explicit**. `create()` MUST NOT auto-detect sync context and return a different
-  type ([ADR-0002](../adr/0002-async-first-anyio.md)).
-- Errors raised through the facade MUST be the same classes with `__cause__` intact.
-- **OPEN ([Q8](../open-questions.md#q8--sync-facade-mechanism))** — derivation mechanism.
+Resolved in [ADR-0022](../adr/0022-sync-facade.md).
+
+```python
+with sandboxio.create_sync("docker://python:3.12-slim") as sb:
+    res = sb.run_code("print('hello')")
+```
+
+- Mirrors the async surface 1:1. Entry is **explicit**; `create()` MUST NOT auto-detect sync
+  context and return a different type ([ADR-0002](../adr/0002-async-first-anyio.md)).
+- Implemented as **hand-written delegation** across an anyio `BlockingPortal`. It MUST
+  contain no adapter logic — only delegation.
+- **A parity test MUST assert** that every public async member has a sync counterpart with a
+  matching `inspect.signature` once coroutine-ness is discounted. Adding an async method
+  without its sync counterpart MUST fail CI.
+- **The portal is per-sandbox**: `create_sync()` starts it, `__exit__` / `close()` stops it.
+  A shared module-level portal is forbidden as global state
+  ([ADR-0012](../adr/0012-no-telemetry-no-import-side-effects.md)).
+- **N sync sandboxes means N threads.** Docs MUST state this, and MUST name the async API as
+  the answer for heavy concurrency.
+- Sync streaming is supported. Each `OutputChunk` crosses the portal, so each chunk costs a
+  thread round-trip; the docs MUST state the cost rather than hide it.
+- Errors raised through the facade MUST be the same classes with `__cause__` intact. Portal
+  frames in the traceback are acceptable.
 
 ## Typing requirements
 

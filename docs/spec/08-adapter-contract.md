@@ -34,6 +34,7 @@ for every undeclared capability.
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
 | Isolation honesty | the backend reports a tier; an undeclared tier resolves to `UNKNOWN`; `require_isolation` above the reported tier fails **before** provisioning; `UNKNOWN` satisfies nothing |
 | Observability | one operation record per operation; secrets absent from every sink; `metadata` propagated to provider-native labels |
+| Sync parity | every public async member has a sync counterpart with a matching signature; errors through the facade are the same classes with `__cause__` intact; the per-sandbox portal is stopped on exit |
 
 ## Adapter rules
 

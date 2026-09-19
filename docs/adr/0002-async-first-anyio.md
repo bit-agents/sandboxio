@@ -3,8 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Related:** [ADR-0001](0001-ports-and-adapters.md)
-**Open questions:** [Q8 facade mechanism](../open-questions.md#q8--sync-facade-mechanism)
-**Related:** [ADR-0020](0020-cancellation-semantics.md) — cancellation and teardown semantics
+**Related:** [ADR-0020](0020-cancellation-semantics.md) — cancellation and teardown semantics · [ADR-0022](0022-sync-facade.md) — facade mechanism, which supersedes the lean recorded below
 
 ## Context
 
@@ -22,9 +21,9 @@ guarantee teardown of a remote resource.
 We will make the core async-first on **anyio**:
 
 - **Adapters implement async only.** A sync adapter implementation is not a supported thing.
-- The sync facade is **derived**, not written twice, via an anyio blocking portal. The exact
-  mechanism — build-time codegen, runtime wrapper with generated stubs, or hand-written thin
-  class — is [Q8](../open-questions.md#q8--sync-facade-mechanism).
+- The sync facade contains **no adapter logic**, only delegation across an anyio blocking
+  portal. The mechanism is settled in [ADR-0022](0022-sync-facade.md): hand-written
+  delegation with a CI-enforced parity test.
 - Sync entry is **explicit** (`create_sync`). We reject context auto-detection that returns
   different types from one call site: it defeats type checkers and violates one-obvious-way.
 - Cancellation and teardown semantics are part of the port contract, not adapter discretion,
