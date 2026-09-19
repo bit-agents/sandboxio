@@ -53,7 +53,7 @@ class AsyncSandbox(Protocol):
 
     def stream(self, cmd: str | list[str], *,
                timeout: float | None = None,
-               env: dict[str, str] | None = None) -> Process: ...   # OPEN (Q6)
+               env: dict[str, str] | None = None) -> Process: ...   # NOT a coroutine
 
     async def kill(self) -> None: ...
 
@@ -85,14 +85,53 @@ Requirements:
 
 ## `Process` (streaming)
 
-**OPEN ([Q6](../open-questions.md#q6--stream-loses-stderr-and-exit-code))** — the design
-specifies `AsyncIterator[bytes]`, which loses stderr separation and the exit code. Required
-properties whatever the final shape:
+Resolved in [ADR-0019](../adr/0019-streaming-process-handle.md).
 
-- stdout and stderr MUST be distinguishable.
-- Ordering within a single stream MUST be preserved.
-- The consumer MUST be able to obtain the terminal `ExecResult`, including `exit_code`.
-- Abandoning the iterator MUST terminate the remote process, not leak it.
+```python
+@dataclass(frozen=True)
+class OutputChunk:
+    stream: Literal["stdout", "stderr"]
+    data: bytes
+
+class Process(Protocol):
+    async def __aenter__(self) -> Process: ...
+    async def __aexit__(self, *exc) -> None: ...
+    def __aiter__(self) -> AsyncIterator[OutputChunk]: ...
+    async def wait(self) -> ExecResult: ...
+    async def kill(self) -> None: ...
+    @property
+    def returncode(self) -> int | None: ...     # None while running
+```
+
+```python
+async with sb.stream(["pytest", "-q"], timeout=300) as proc:
+    async for chunk in proc:
+        log.write(chunk.data)
+    res = await proc.wait()
+```
+
+Requirements:
+
+- `stream()` MUST be a plain function and its return value MUST NOT be awaitable, so
+  omitting `async with` fails immediately rather than leaking. The process starts on
+  `__aenter__`.
+- `__aexit__` MUST terminate the process if still running — after normal completion, an
+  early `break`, a propagating exception, or cancellation. Shielding and grace period per
+  [Q7](../open-questions.md#q7--cancellation-semantics).
+- Ordering MUST be preserved **within** each stream. Ordering **between** stdout and stderr
+  is explicitly NOT guaranteed.
+- `wait()` MUST return the terminal `ExecResult` with `streamed=True` and empty
+  `stdout`/`stderr`. It MUST be idempotent. Called with output unconsumed, it drains and
+  discards the remainder.
+- Missing `Capability.STREAMING` MUST raise `CapabilityNotSupported` from `stream()`
+  itself, before the context is entered.
+- A timeout MUST raise `ExecutionTimeout` from iteration or from `wait()`.
+- Typed keyword arguments only; no `**kwargs`.
+
+**`stream_code` is deferred.** `Process` is shaped to carry interpreter rich outputs later;
+streaming code execution lands when a second backend supports it, per the two-backend
+promotion rule ([ADR-0003](../adr/0003-no-lowest-common-denominator.md)). Until then it is
+reachable through `.native`.
 
 ## `AsyncFileSystem`
 

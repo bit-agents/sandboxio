@@ -63,6 +63,11 @@ res = await sb.run_code("import pandas; print(pandas.__version__)")
 await sb.files.upload("model.pkl", "/work/model.pkl")
 data = await sb.files.read("/work/out.json")
 
+async with sb.stream(["pytest", "-q"], timeout=300) as proc:   # async with is required
+    async for chunk in proc:
+        log.write(chunk.data)                   # OutputChunk(stream=..., data=bytes)
+    res = await proc.wait()                     # res.streamed is True; stdout/stderr empty
+
 try:
     await sb.run("sleep 999", timeout=5)
 except sandboxio.SandboxTimeout:          # NOT builtin TimeoutError — see spec/04
@@ -77,7 +82,8 @@ sb.native.tunnels()        # Modal-specific — outside the semver contract
 
 > The streaming `pip install` example from the input docs is **removed**: it cannot run
 > under the default deny-egress policy. See
-> [Q10](../open-questions.md#q10--deny-by-default-vs-the-demo).
+> [Q10](../open-questions.md#q10--deny-by-default-vs-the-demo). Streaming itself is
+> specified in [02](02-ports.md#process-streaming).
 
 ## Sync facade
 

@@ -15,7 +15,7 @@ in `docs/adr/`.
 | [Q3](#q3--license) | License | P0 | **DECIDED** |
 | [Q4](#q4--timeouterror-shadows-the-builtin) | `TimeoutError` shadows the builtin | P1 | **DECIDED** |
 | [Q5](#q5--isolationtier-needs-ordering) | `IsolationTier` needs ordering | P1 | **DECIDED** |
-| [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | OPEN |
+| [Q6](#q6--stream-loses-stderr-and-exit-code) | `stream()` loses stderr and exit code | P1 | **DECIDED** |
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | OPEN |
 | [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | OPEN |
 | [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | OPEN |
@@ -111,24 +111,18 @@ requirement, and creating on one warns. Rationale in
 
 ## Q6 — `stream()` loses stderr and exit code
 
-**Priority:** P1 · **Status:** OPEN · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
+**Priority:** P1 · **Status:** DECIDED · **Source:** `docs/input/03-architecture.md`, `04-api-design.md`
 
-`def stream(self, cmd, **kw) -> AsyncIterator[bytes]` yields undifferentiated bytes: no
-stdout/stderr split (which `ExecResult` does provide), no exit code, no terminal result. A
-caller streaming `pip install` cannot tell failure from success without a second call. The
-`**kw` also violates the "no kwargs black holes" rule in `04`.
+`AsyncIterator[bytes]` loses stdout/stderr separation and the exit code, and carries a
+`**kwargs` black hole. The decisive constraint was cleanup: breaking out of an `async for`
+does not close the iterator, so an abandoned bare iterator leaks a billing remote process.
 
-**Options**
-- Yield tagged chunks: `AsyncIterator[Chunk]` where `Chunk(stream="stdout"|"stderr", data: bytes)`.
-- Async context manager returning a handle with `.stdout`/`.stderr` iterators and an
-  awaitable `.result()` / `.wait()` → `ExecResult`.
-- Keep bytes, add an out-of-band `.result` attribute on the iterator object.
-
-**Recommendation:** option 2 — a `Process` handle (already named in the domain model but
-never given an interface) that exposes tagged streaming *and* terminates in an `ExecResult`.
-Also replace `**kw` with the same typed kwargs as `run()`.
-
-**Decision:** _pending_
+**Decision:** `stream()` is a plain, non-awaitable factory returning a **`Process`** async
+context manager that iterates `OutputChunk(stream, data)` and terminates in
+`await proc.wait()`. Ordering is guaranteed within each stream, not between them.
+`ExecResult` gains `streamed: bool`, and when set, `stdout`/`stderr` are empty by
+construction. `stream_code` is deferred until a second backend supports it. Rationale and
+the rejected alternatives in [ADR-0019](adr/0019-streaming-process-handle.md).
 
 ---
 

@@ -19,12 +19,15 @@ Lifecycle states: `creating → running → (killed | failed)`. `paused` is defe
 
 ### Process
 
-A single execution within a sandbox — a command or a code run. Produced by streaming
-execution; carries the terminal `ExecResult`.
+A single execution within a sandbox, returned by `stream()`. An async context manager that
+iterates tagged output chunks and terminates in an `ExecResult`
+([ADR-0019](../adr/0019-streaming-process-handle.md)).
 
-**OPEN ([Q6](../open-questions.md#q6--stream-loses-stderr-and-exit-code))** — `Process` is
-named in the design but has no interface. It MUST provide stdout/stderr separation and a
-terminal exit code; the shape is undecided.
+- MUST terminate the remote process on context exit if it is still running — on normal
+  completion, early `break`, exception, or cancellation.
+- MUST distinguish stdout from stderr, and MUST preserve ordering **within** each stream.
+  Ordering **between** the two streams is explicitly not guaranteed.
+- MUST expose the terminal `ExecResult`, including `exit_code`, via `wait()`.
 
 ### FileSystem
 
@@ -136,6 +139,7 @@ class ExecResult:
     stderr: str
     results: list[RichOutput] | None = None   # interpreter rich outputs; None if unsupported
     meter: Meter | None = None                # v0.2
+    streamed: bool = False                    # True → stdout/stderr empty by construction
 ```
 
 - `ok` property: `exit_code == 0`.
@@ -143,3 +147,6 @@ class ExecResult:
 - Returns MUST be dataclasses, never raw dicts — `result.stdout` must autocomplete.
 - `results` MUST be `None` when the backend lacks rich outputs, and MUST NOT be faked from
   parsed stdout.
+- `streamed` is `True` only for a result from `Process.wait()`. When set, `stdout` and
+  `stderr` MUST be empty — the caller already consumed the bytes, and streaming exists to
+  avoid buffering them twice.

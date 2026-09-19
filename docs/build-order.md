@@ -71,7 +71,7 @@ commands; catalog-to-docs generation runs in CI; import budget still green.
 The suite is written **before** any adapter, so it specifies behaviour instead of describing
 whatever Docker happened to do. This is the step that makes everything after it cheap.
 
-Depends on: [Q6](open-questions.md#q6--stream-loses-stderr-and-exit-code) streaming shape,
+Depends on: ~~Q6 streaming shape~~ (decided, [ADR-0019](adr/0019-streaming-process-handle.md)),
 [Q7](open-questions.md#q7--cancellation-semantics) cancellation,
 [Q9](open-questions.md#q9--one-event-three-sinks-audit--otel--meter) one-record design.
 
@@ -184,7 +184,7 @@ Daytona and Vercel adapters · K8s agent-sandbox adapter near CRD 1.0 · TUI das
 | 0 | — |
 | 1 | Q1, Q2, Q3 |
 | 2 | — (Q4, Q5 decided) |
-| 3 | Q6, Q7, Q9 |
+| 3 | ~~Q6~~, Q7, Q9 |
 | 4 | Q8, Q10, Q11 |
 | 5 | Step 4 exit criteria, in full |
 | 6 | Q12 (scope), Q10 (demo) |
