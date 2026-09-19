@@ -19,8 +19,8 @@ in `docs/adr/`.
 | [Q7](#q7--cancellation-semantics) | Cancellation semantics | P1 | **DECIDED** |
 | [Q8](#q8--sync-facade-mechanism) | Sync facade mechanism | P1 | **DECIDED** |
 | [Q9](#q9--one-event-three-sinks-audit--otel--meter) | Audit / OTel / Meter overlap | P1 | **DECIDED** |
-| [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | OPEN |
-| [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | OPEN |
+| [Q10](#q10--deny-by-default-vs-the-demo) | Deny-by-default vs. the demo | P2 | **DECIDED** |
+| [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | **DECIDED** |
 | [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | OPEN |
 | [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | **DECIDED** |
 
@@ -186,50 +186,39 @@ Evidence and rationale in [ADR-0021](adr/0021-observability-record.md).
 
 ## Q10 — Deny-by-default vs. the demo
 
-**Priority:** P2 · **Status:** OPEN · **Source:** `docs/input/05-security.md` vs `04-api-design.md`, `09-dx-playbook.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/05-security.md` vs `04-api-design.md`, `09-dx-playbook.md`
 
-`NetworkPolicy(egress="deny")` is the v0.1 headline default, and the Docker mapping is
-network mode `none`. But the streaming example in `04` is literally
-`pip install -r requirements.txt` inside the sandbox, and `09` requires `uvx sandboxio demo` to
-work with no account and no config. With egress denied, anything installing packages at
-runtime fails.
+Half the premise was a misreading: `network_mode: none` governs the *sandbox's* egress, while
+`docker pull` runs on the *host* daemon. The demo was never in conflict with the default. The
+real constraint is harder — **Docker Engine has no per-host egress filtering** (verified
+against the CLI: `--network` accepts only `none | bridge | host | container | <custom>`), so
+Docker cannot honour `NetworkPolicy(allow=(...))` at all.
 
-**Needs deciding**
-- Does `sandboxio demo` opt into egress (undermining the default) or run fully offline on a
-  pre-baked image?
-- Is there a blessed pattern for "install deps then lock down" — two-phase policy, or
-  build-time image prep only?
-- Replace the misleading `pip install` streaming example with one that works under defaults.
-
-**Recommendation:** demo runs offline on a pre-baked image; document image-prep as the
-supported way to get dependencies; keep the streaming example but make it something that
-runs under deny (e.g. a long local build/test), with a separate, loud how-to for egress
-allowlists.
-
-**Decision:** _pending_
+**Decision:** Docker raises `CapabilityNotSupported` for a non-empty `allow` rather than
+silently granting bridge access; allowlists are an E2B/Modal capability. Dependencies reach a
+deny-egress sandbox by **image prep** or an **offline wheelhouse**. A mutable install-then-lock
+setup window is rejected — it is unimplementable on Docker and makes the policy in effect
+time-varying in the audit record. The demo's under-60 s budget is restated as measured warm.
+Rationale in [ADR-0023](adr/0023-docker-network-and-dependencies.md).
 
 ---
 
 ## Q11 — `STATEFUL_CODE` on Docker
 
-**Priority:** P2 · **Status:** OPEN · **Source:** `docs/input/08-testing-strategy.md`, `03-architecture.md`
+**Priority:** P2 · **Status:** DECIDED · **Source:** `docs/input/08-testing-strategy.md`, `03-architecture.md`
 
-`run_code(code, context_id=...)` implies a persistent interpreter per context. E2B gets this
-free from its code-interpreter template; Docker does not — it needs a long-lived kernel in
-the container (Jupyter kernel, or a bespoke exec server) plus its own lifecycle, timeouts and
-teardown. This is plausibly the single largest piece of Docker-adapter work, and the
-capability-honesty test forces an answer rather than a fudge.
+`run_code(context_id=...)` needs a persistent interpreter, which Docker does not provide.
+Baking an exec server or Jupyter kernel into an image fails on a point that outweighs
+convenience: users bring arbitrary images, and `docker://python:3.12-slim` is the documented
+zero-config path.
 
-**Options**
-- Docker declares `STATEFUL_CODE` off in v0.1; `context_id` raises `CapabilityNotSupported`.
-- Build a minimal exec-server image shipped with the adapter.
-- Embed a Jupyter kernel (heavier image, well-trodden, rich outputs come along).
-
-**Recommendation:** v0.1 Docker declares it off and raises — honest, and keeps the adapter
-small. Revisit once the E2B adapter has pinned down what rich outputs and stateful contexts
-actually need to look like.
-
-**Decision:** _pending_
+**Decision:** Docker declares `STATEFUL_CODE` **off** in v0.1 and raises
+`CapabilityNotSupported`; stateless `run_code` is fully supported and `results` stays `None`,
+never synthesised. A runtime-injected bootstrap — upload a script, `docker exec` it, frame a
+protocol over stdin, needing only Python in the image — is recorded as the **intended path**,
+revisited after the E2B adapter reveals what stateful contexts and rich outputs really need.
+Purpose-built-image approaches are rejected outright. Rationale in
+[ADR-0024](adr/0024-stateful-code-on-docker.md).
 
 ---
 

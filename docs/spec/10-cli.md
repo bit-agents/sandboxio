@@ -9,7 +9,7 @@ progress bars are installed at the CLI entry point, never at library import
 | Command | Purpose | Ships |
 |---------|---------|-------|
 | `sandboxio doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sandboxio.doctor()`. | v0.1 |
-| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — in under 60 s with no account and no config. | v0.1 |
+| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — with no account and no config. Runs stdlib-only code under the default deny-egress policy. The **under-60 s** budget is measured **warm**: a first run also pulls ~130 MB of image, which is host-side and unaffected by the sandbox's network policy. | v0.1 |
 | `sandboxio reap` | List and kill orphaned sandboxes by `metadata` label — the operator-facing backstop when shielded teardown could not finish ([ADR-0020](../adr/0020-cancellation-semantics.md)). Dry-run by default; `--kill` to act. | v0.1 |
 | `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
 | `sandboxio bench` | Backend comparison: latency. | v0.2 |

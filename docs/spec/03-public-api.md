@@ -81,9 +81,10 @@ sb.native.tunnels()        # Modal-specific — outside the semver contract
 ```
 
 > The streaming `pip install` example from the input docs is **removed**: it cannot run
-> under the default deny-egress policy. See
-> [Q10](../open-questions.md#q10--deny-by-default-vs-the-demo). Streaming itself is
-> specified in [02](02-ports.md#process-streaming).
+> under the default deny-egress policy, and Docker cannot express an allowlist to make it
+> work ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)). Dependency patterns are
+> in [05](05-security-policy.md#getting-dependencies-into-a-deny-egress-sandbox); streaming
+> itself is specified in [02](02-ports.md#process-streaming).
 
 ## Sync facade
 

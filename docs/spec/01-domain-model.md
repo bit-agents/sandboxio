@@ -88,6 +88,15 @@ Rules:
    silent no-op, never a degraded emulation.
 3. Capabilities are discovered, not inferred from backend name. Callers branch on flags.
 
+Backend notes for v0.1:
+
+- **Docker declares `STATEFUL_CODE` off.** `run_code(context_id=...)` raises
+  `CapabilityNotSupported`; `run_code` without a context is a one-shot exec
+  ([ADR-0024](../adr/0024-stateful-code-on-docker.md)). `results` stays `None` and MUST NOT
+  be synthesised from stdout.
+- **Docker declares `NETWORK_POLICY` for deny/allow-all only.** A non-empty allowlist raises
+  ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)).
+
 ## IsolationTier
 
 ```python

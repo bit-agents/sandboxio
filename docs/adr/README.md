@@ -30,6 +30,8 @@ ADR-nnnn` rather than edited.
 | [0020](0020-cancellation-semantics.md) | Shielded teardown with a bounded grace; the mandatory timeout is the backstop | Accepted |
 | [0021](0021-observability-record.md) | One operation record, three renderings; no inline cost | Accepted |
 | [0022](0022-sync-facade.md) | Hand-written sync facade over a per-sandbox portal, with a parity test | Accepted |
+| [0023](0023-docker-network-and-dependencies.md) | Docker cannot filter egress; dependencies come from images or wheelhouses | Accepted |
+| [0024](0024-stateful-code-on-docker.md) | Docker declares `STATEFUL_CODE` off in v0.1 | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

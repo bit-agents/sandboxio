@@ -23,25 +23,41 @@ authorization.
 ## Network policy
 
 - Default is `NetworkPolicy(egress="deny")`. This applies to `create()` with no arguments.
-- Adapters map it to the provider's real control:
-
-| Backend | Mechanism |
-|---------|-----------|
-| Docker | network mode `none` |
-| E2B | `allow_internet_access=False`, `update_network` for allowlists |
-| Modal | empty `outbound_cidr_allowlist` — **not** legacy `block_network=True`, which is incompatible |
-| Vercel | deny-all `networkPolicy` |
-| Daytona | `network_block_all=True` |
-
 - A backend that cannot enforce a requested policy MUST raise `CapabilityNotSupported`.
   Accepting and ignoring a network policy is the single most dangerous possible bug in this
-  library.
+  library ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)).
 - `egress="learn"` is v0.2; in v0.1 it MUST raise rather than degrade to `deny`.
 - Where the backend reports blocked egress attempts, the count MUST appear in the audit
   record ([06](06-observability.md)).
+- **Network policy governs the sandbox's egress, not the host's image pull.** `docker pull`
+  runs on the host daemon, outside the container, so a deny-egress sandbox still starts from
+  a remote image. This distinction is what made the zero-config demo look like it conflicted
+  with the default when it never did.
 
-**OPEN ([Q10](../open-questions.md#q10--deny-by-default-vs-the-demo))** — how dependency
-installation and the zero-config demo work under this default.
+Adapters map the policy to the provider's real control:
+
+| Backend | Deny | Allowlist |
+|---------|------|-----------|
+| Docker | network mode `none` | **not supported** — Docker has no per-host egress filtering; `--network` accepts only `none \| bridge \| host \| container \| <custom>`. A non-empty `allow` MUST raise `CapabilityNotSupported` ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)) |
+| E2B | `allow_internet_access=False` | `update_network` |
+| Modal | empty `outbound_cidr_allowlist` — **not** legacy `block_network=True`, which is incompatible | `outbound_cidr_allowlist` |
+| Vercel | deny-all `networkPolicy` | `networkPolicy` |
+| Daytona | `network_block_all=True` | unverified |
+
+Per-backend docs MUST state that allowlists are an E2B/Modal capability, so nobody writes
+one against Docker and assumes it applies.
+
+### Getting dependencies into a deny-egress sandbox
+
+Two supported patterns on Docker, both working under the default policy:
+
+1. **Image prep** — dependencies baked into the image ahead of time. The primary pattern.
+2. **Offline wheelhouse** — `files.upload()` the wheels, then
+   `uv pip install --offline --find-links /wheels`. Needs no network at all.
+
+A mutable "install then lock down" setup window is **rejected**: Docker cannot change a
+running container's network mode, and a policy that varies over a sandbox's life makes the
+policy in effect time-varying in the audit record.
 
 ## Mandatory timeouts
 

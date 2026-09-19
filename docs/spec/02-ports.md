@@ -77,8 +77,8 @@ Requirements:
   success. A sandbox that has ceased to exist MUST raise `SandboxGone`, not a timeout
   ([04](04-errors.md#timeouts)).
 - `run_code` with `context_id` requires `Capability.STATEFUL_CODE`; without it, MUST raise
-  `CapabilityNotSupported`. **OPEN ([Q11](../open-questions.md#q11--stateful_code-on-docker))**
-  for Docker.
+  `CapabilityNotSupported`. Docker declares it **off** in v0.1
+  ([ADR-0024](../adr/0024-stateful-code-on-docker.md)).
 - `kill()` MUST be idempotent. A second call on a dead sandbox MUST succeed silently.
 - `native` MUST return the live provider object with nothing wrapped or hidden. It is
   **outside the semver contract** and every reference to it in docs MUST say so.
