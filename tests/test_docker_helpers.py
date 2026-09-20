@@ -8,8 +8,11 @@ env parsing — are decidable from their inputs alone, so they belong in the def
 # pyright: reportPrivateUsage=false
 from __future__ import annotations
 
+import threading
 from datetime import UTC, datetime
 
+import anyio
+import anyio.to_thread
 import pytest
 import requests
 
@@ -19,8 +22,18 @@ pytest.importorskip("sandboxio_docker")
 import docker.errors
 from docker.models.containers import Container
 
+from sandboxio.errors import SandboxWarning
 from sandboxio_docker import _reaper
-from sandboxio_docker._backend import _created_at, _gone, _managed
+from sandboxio_docker._backend import (
+    _ENV_THREADS,
+    DEFAULT_THREADS,
+    _created_at,
+    _gone,
+    _limiter,
+    _managed,
+    _thread,
+    _thread_cap,
+)
 
 
 def api_error(message: str, status: int | None = None) -> docker.errors.APIError:
@@ -33,6 +46,9 @@ def api_error(message: str, status: int | None = None) -> docker.errors.APIError
 
 def container(**attrs: object) -> Container:
     return Container(attrs=attrs)
+
+
+pytestmark = pytest.mark.anyio
 
 
 # --- _gone ----------------------------------------------------------------------------------
@@ -180,3 +196,67 @@ def test_docker_socket_strips_the_unix_scheme_and_falls_back_otherwise(
 def test_docker_socket_without_docker_host(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("DOCKER_HOST", raising=False)
     assert _reaper._docker_socket() == DEFAULT_SOCKET
+
+
+# --- the adapter's thread budget --------------------------------------------------------
+
+
+def test_thread_cap_defaults_when_the_env_says_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(_ENV_THREADS, raising=False)
+    assert _thread_cap() == DEFAULT_THREADS
+
+
+@pytest.mark.parametrize("raw", ["8", "  8  ", "128"])
+def test_thread_cap_honours_the_env_override(raw: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(_ENV_THREADS, raw)
+    assert _thread_cap() == int(raw)
+
+
+@pytest.mark.parametrize("raw", ["0", "-1", "lots", "", "6.5"])
+def test_thread_cap_warns_and_falls_back_on_nonsense(
+    raw: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A zero cap would deadlock every docker call; silently accepting it is worse."""
+    monkeypatch.setenv(_ENV_THREADS, raw)
+    with pytest.warns(SandboxWarning, match=_ENV_THREADS):
+        assert _thread_cap() == DEFAULT_THREADS
+
+
+async def test_docker_work_does_not_borrow_from_the_shared_default_pool() -> None:
+    """ADR-0027: a streamed exec parks a worker for the whole command, so on anyio's
+    default limiter a handful of streams starve every other caller in the process."""
+    default = anyio.to_thread.current_default_thread_limiter()
+    started, release = threading.Event(), threading.Event()
+
+    def blocking() -> None:
+        started.set()
+        release.wait()
+
+    async with anyio.create_task_group() as tg:
+        tg.start_soon(_thread, blocking)
+        while not started.is_set():
+            await anyio.sleep(0.001)
+        assert _limiter().borrowed_tokens == 1
+        assert default.borrowed_tokens == 0, "docker must not eat the host's thread budget"
+        release.set()
+
+
+async def test_the_limiter_is_reused_within_a_loop_and_sized_from_the_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(_ENV_THREADS, "3")
+    limiter = _limiter()
+    assert limiter.total_tokens == 3
+    assert _limiter() is limiter, "one budget per loop, not one per call"
+
+
+def test_each_event_loop_gets_its_own_limiter() -> None:
+    """The sync facade runs a portal per sandbox; a limiter cannot cross event loops."""
+    limiters: list[anyio.CapacityLimiter] = []
+
+    async def go() -> None:
+        limiters.append(_limiter())
+
+    anyio.run(go)
+    anyio.run(go)
+    assert limiters[0] is not limiters[1]

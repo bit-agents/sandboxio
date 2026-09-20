@@ -53,6 +53,7 @@ All `SBX_`-prefixed. Provider credentials use the provider's own names (`E2B_API
 | `SBX_TEARDOWN_GRACE` | seconds a kill may take before `OrphanedSandboxWarning` | `5` |
 | `SBX_AUDIT_TIMEOUT` | seconds an audit sink's `emit` may take | `5` |
 | `SBX_DOCKER_REAPER` | `0` disables the Docker reaper sidecar | on |
+| `SBX_DOCKER_THREADS` | worker threads the Docker adapter may hold; each live stream parks one ([ADR-0027](../adr/0027-adapter-thread-budget.md)) | `64` |
 | `NO_COLOR` | disables colour in the CLI | — |
 
 Nothing else changes behaviour from the environment, and nothing is read from a dotfile.

@@ -9,6 +9,10 @@ are decidable from their inputs, so they are asserted here instead.
 # pyright: reportPrivateUsage=false, reportMissingTypeStubs=false
 from __future__ import annotations
 
+from typing import Any, cast
+
+import anyio
+import anyio.lowlevel
 import pytest
 
 pytest.importorskip("e2b")
@@ -36,9 +40,14 @@ from sandboxio.errors import (
     RateLimitError,
     ResourceLimitExceeded,
     SandboxGone,
+    SandboxTimeout,
 )
+from sandboxio.models import OutputChunk
 from sandboxio_e2b._backend import (
     API_KEY_ENV,
+    POLL_MAX,
+    POLL_MIN,
+    E2BProcess,
     _is_gone,
     _lifetime,
     _line,
@@ -46,6 +55,9 @@ from sandboxio_e2b._backend import (
     _rich,
     _to_result,
 )
+
+pytestmark = pytest.mark.anyio
+
 
 # --- _lifetime ------------------------------------------------------------------------------
 
@@ -203,3 +215,82 @@ def test_to_result_carries_rich_output_from_every_result() -> None:
         ("text/plain", "one"),
         ("image/png", "QkFTRTY0"),
     ]
+
+
+# --- E2BProcess polling ---------------------------------------------------------------------
+
+
+class StubHandle:
+    exit_code: int | None = None
+
+
+class StubSandbox:
+    id = "sb-1"
+
+    async def _kill_handle(self, handle: object) -> None:
+        return None
+
+
+def process(limit: float) -> E2BProcess:
+    proc = E2BProcess(cast(Any, StubSandbox()), "sleep 1", ["sleep", "1"], None, limit)
+    proc._handle = StubHandle()
+    proc._deadline = anyio.current_time() + limit
+    return proc
+
+
+async def drain(proc: E2BProcess) -> list[OutputChunk]:
+    return [chunk async for chunk in proc]
+
+
+async def test_a_silent_stream_backs_off_to_the_cap_instead_of_spinning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fixed 20 ms polling is tens of thousands of idle wake-ups/s at high concurrency."""
+    slept: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        slept.append(seconds)
+        if len(slept) == 6:
+            proc._handle.exit_code = 0
+        await anyio.lowlevel.checkpoint()
+
+    monkeypatch.setattr(anyio, "sleep", fake_sleep)
+    proc = process(30.0)
+    assert await drain(proc) == []
+    assert slept == [POLL_MIN, 0.04, 0.08, POLL_MAX, POLL_MAX, POLL_MAX]
+
+
+async def test_output_resets_the_backoff_so_a_chatty_stream_stays_responsive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    slept: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        slept.append(seconds)
+        proc._buffer.append(OutputChunk("stdout", b"tick"))
+        if len(slept) == 4:
+            proc._handle.exit_code = 0
+        await anyio.lowlevel.checkpoint()
+
+    monkeypatch.setattr(anyio, "sleep", fake_sleep)
+    proc = process(30.0)
+    assert len(await drain(proc)) == 4
+    assert slept == [POLL_MIN] * 4, "a stream producing output must never drift to the cap"
+
+
+async def test_the_backoff_never_sleeps_past_the_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A 100 ms poll on a 10 ms budget would report the timeout 90 ms late."""
+    slept: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        slept.append(seconds)
+        await anyio.lowlevel.checkpoint()
+
+    monkeypatch.setattr(anyio, "sleep", fake_sleep)
+    proc = process(30.0)
+    proc._deadline = anyio.current_time() + 0.005
+    with pytest.raises(SandboxTimeout):
+        await drain(proc)
+    assert all(s <= 0.005 for s in slept), slept

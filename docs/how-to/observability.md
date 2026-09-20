@@ -31,7 +31,7 @@ sandboxio.register("docker", lambda: DockerBackend(audit=audit))
 |------|-----------|
 | `NoopSink` | the default; records nothing |
 | `LoggingSink(logger, level=INFO)` | `logger.log(level, <json line>, extra={"audit": {...}})`; configures no handler — your logging config decides where it goes |
-| `FileSink(path)` | opens, appends one JSON line, closes; a local write, like `logging.FileHandler` |
+| `FileSink(path)` | opens, appends one JSON line, closes, in a worker thread; a local write, like `logging.FileHandler` |
 | `QueueSink(target, maxlen=1000)` | `emit` enqueues instantly; **you** run `await sink.drain()` in your own task group; overflow drops the oldest and warns |
 
 `emit` is awaited inline and bounded by `SBX_AUDIT_TIMEOUT` (default 5 s). A sink that does

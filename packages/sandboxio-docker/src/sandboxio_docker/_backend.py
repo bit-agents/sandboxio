@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import contextlib
 import io
+import os
 import posixpath
 import queue
 import re
 import tarfile
 import threading
 import uuid
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -21,6 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import anyio
+import anyio.lowlevel
 import anyio.to_thread
 
 from sandboxio import _policy
@@ -39,6 +42,7 @@ from sandboxio.errors import (
     FileSystemError,
     PathNotFound,
     SandboxGone,
+    SandboxWarning,
 )
 from sandboxio.models import (
     Capability,
@@ -72,6 +76,12 @@ LABEL_TIMEOUT = "io.sandboxio.timeout"
 # support Docker rarely has, so disk_mb is refused rather than ignored.
 DEFAULT_CPU = 1.0
 DEFAULT_MEMORY_MB = 512
+# Ceiling on concurrent streams, since each one parks a worker until its command ends.
+DEFAULT_THREADS = 64
+_ENV_THREADS = "SBX_DOCKER_THREADS"
+_LIMITER: anyio.lowlevel.RunVar[anyio.CapacityLimiter | None] = anyio.lowlevel.RunVar(
+    "sandboxio_docker_limiter", None
+)
 CAPABILITIES = (
     Capability.RUN_COMMAND
     | Capability.RUN_CODE
@@ -89,8 +99,42 @@ class DockerConfig(BackendConfig):
     backend: ClassVar[str] = "docker"
 
 
+def _thread_cap() -> int:
+    """Worker threads this adapter may hold. ``SBX_DOCKER_THREADS`` overrides (ADR-0027)."""
+    raw = os.environ.get(_ENV_THREADS)
+    if raw is None:
+        return DEFAULT_THREADS
+    try:
+        value = int(raw)
+    except ValueError:
+        value = 0
+    if value < 1:
+        warnings.warn(
+            f"{_ENV_THREADS}={raw!r} is not a positive integer; using {DEFAULT_THREADS}",
+            SandboxWarning,
+            stacklevel=2,
+        )
+        return DEFAULT_THREADS
+    return value
+
+
+def _limiter() -> anyio.CapacityLimiter:
+    """This adapter's own thread budget, one per event loop.
+
+    A streamed exec holds a worker for the whole command, so on anyio's shared limiter a
+    handful of streams starve every other caller in the process.
+    """
+    limiter = _LIMITER.get(None)
+    if limiter is None:
+        limiter = anyio.CapacityLimiter(_thread_cap())
+        _LIMITER.set(limiter)
+    return limiter
+
+
 async def _thread(fn: Any, *args: Any, **kwargs: Any) -> Any:
-    return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs), abandon_on_cancel=True)
+    return await anyio.to_thread.run_sync(
+        partial(fn, *args, **kwargs), abandon_on_cancel=True, limiter=_limiter()
+    )
 
 
 def _gone(exc: Exception) -> bool:
@@ -417,7 +461,10 @@ class DockerSandbox:
     async def _exec_run(
         self, argv: list[str], env: Mapping[str, str] | None, limit: float
     ) -> ExecResult:
-        """Buffered exec under the deadline; a timeout or cancellation kills the process."""
+        """Buffered exec under the deadline; a timeout or cancellation kills the process.
+
+        Output is held whole in memory with no cap — ``stream()`` is the chunked path.
+        """
         client = await self._backend.client()
         exec_id = await self._exec_create(argv, env)
         try:

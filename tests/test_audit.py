@@ -1,7 +1,9 @@
+# pyright: reportPrivateUsage=false
 from __future__ import annotations
 
 import json
 import logging
+import threading
 from pathlib import Path
 
 import anyio
@@ -200,6 +202,21 @@ async def test_file_sink_appends_json_lines(tmp_path: Path) -> None:
     assert "hunter2" not in path.read_text()
     await FileSink(str(path)).emit(_event())  # a second instance appends, never truncates
     assert len(path.read_text().splitlines()) == 3
+
+
+async def test_file_sink_appends_off_the_event_loop(tmp_path: Path) -> None:
+    """spec/06: ``emit`` must return promptly, so a slow disk must not hold the loop."""
+    sink = FileSink(tmp_path / "audit.jsonl")
+    threads: list[int] = []
+    append = sink._append
+
+    def watched(line: str) -> None:
+        threads.append(threading.get_ident())
+        append(line)
+
+    sink._append = watched  # type: ignore[method-assign]
+    await sink.emit(_event())
+    assert threads and threading.get_ident() not in threads
 
 
 async def test_sinks_receive_the_redacted_event_from_a_real_operation(tmp_path: Path) -> None:

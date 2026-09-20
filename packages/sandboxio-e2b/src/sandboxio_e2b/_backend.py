@@ -13,10 +13,12 @@ import os
 import shlex
 import uuid
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 import anyio
+import anyio.to_thread
 from e2b.exceptions import (
     AuthenticationException,
     FileNotFoundException,
@@ -74,6 +76,10 @@ API_KEY_ENV = "E2B_API_KEY"
 DEFAULT_TEMPLATE = "code-interpreter-v1"
 WORKDIR = "/home/user"
 KILLED_EXIT = 137
+# The SDK hands output to callbacks, so the stream has to poll. Idle polls back off to
+# keep hundreds of concurrent streams from spinning; any output resets to the floor.
+POLL_MIN = 0.02
+POLL_MAX = 0.1
 META_MANAGED = "sandboxio_managed"
 META_SESSION = "sandboxio_session"
 SESSION_ID = uuid.uuid4().hex
@@ -106,6 +112,10 @@ class E2BConfig(BackendConfig):
     """Typed configuration: ``template`` is the E2B template name or id."""
 
     backend: ClassVar[str] = "e2b"
+
+
+async def _thread(fn: Any, *args: Any, **kwargs: Any) -> Any:
+    return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs), abandon_on_cancel=True)
 
 
 def _lifetime(seconds: float) -> int:
@@ -660,8 +670,10 @@ class E2BProcess:
 
     async def __aiter__(self) -> AsyncIterator[OutputChunk]:
         assert self._handle is not None, "enter the context first: `async with sb.stream(...)`"
+        idle = POLL_MIN
         while True:
             if self._buffer:
+                idle = POLL_MIN
                 yield self._buffer.pop(0)
                 continue
             if self._exit_code is not None:
@@ -669,16 +681,18 @@ class E2BProcess:
             if self._handle.exit_code is not None:
                 self._exit_code = int(self._handle.exit_code)
                 continue  # drain anything the last callbacks appended
-            if anyio.current_time() >= self._deadline:
+            remaining = self._deadline - anyio.current_time()
+            if remaining <= 0:
                 await self.kill()
                 raise ExecutionTimeout(
                     f"stream exceeded {self._limit}s in sandbox {self._sb.id}"
                 )
             try:
-                await anyio.sleep(0.02)
+                await anyio.sleep(min(idle, remaining))
             except anyio.get_cancelled_exc_class():
                 await self.kill()
                 raise
+            idle = min(idle * 2, POLL_MAX)
 
     async def wait(self) -> ExecResult:
         async for _ in self:  # unconsumed output is drained and discarded
@@ -740,11 +754,12 @@ class E2BFileSystem:
 
     async def upload(self, local: str | Path, remote: str) -> None:
         self._sb._need(Capability.UPLOAD_DOWNLOAD)  # pyright: ignore[reportPrivateUsage]
-        await self.write(remote, Path(local).read_bytes())
+        await self.write(remote, await _thread(Path(local).read_bytes))
 
     async def download(self, remote: str, local: str | Path) -> None:
         self._sb._need(Capability.UPLOAD_DOWNLOAD)  # pyright: ignore[reportPrivateUsage]
-        Path(local).write_bytes(await self.read(remote))
+        data = await self.read(remote)
+        await _thread(Path(local).write_bytes, data)
 
     async def ls(self, path: str = ".") -> list[FileInfo]:
         async with self._op("file_ls", path) as record:

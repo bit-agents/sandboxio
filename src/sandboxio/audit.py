@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import warnings
 from collections import deque
 from dataclasses import dataclass, field
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 import anyio
+import anyio.to_thread
 
 from sandboxio.errors import AuditSinkWarning
 
@@ -113,18 +115,26 @@ class LoggingSink:
 class FileSink:
     """Append one JSON line per event to a file. Each event is one open-append-close.
 
-    A local append, like ``logging.FileHandler``; wrap in ``QueueSink`` when the disk is
-    slow enough to matter.
+    The append runs in a worker thread, so a slow or network-mounted disk delays the
+    operation but never the event loop; wrap in ``QueueSink`` to stop delaying it at all.
 
     >>> sink = FileSink("audit.jsonl")  # doctest: +SKIP
     """
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
+        self._lock = threading.Lock()
+
+    def _append(self, line: str) -> None:
+        # Concurrent operations now reach this from different workers, not the one loop thread.
+        with self._lock, self.path.open("a", encoding="utf-8") as fh:
+            fh.write(line)
 
     async def emit(self, event: AuditEvent) -> None:
-        with self.path.open("a", encoding="utf-8") as fh:
-            fh.write(event.to_json() + "\n")
+        # Abandonable, so SBX_AUDIT_TIMEOUT still bounds emit when the disk stops answering.
+        await anyio.to_thread.run_sync(
+            self._append, event.to_json() + "\n", abandon_on_cancel=True
+        )
 
 
 class QueueSink:
