@@ -323,7 +323,10 @@ def _managed(container: Container) -> ManagedSandbox:
 
 
 def _created_at(raw: object) -> datetime | None:
-    """Docker writes nanoseconds; ``fromisoformat`` on 3.11 wants at most six digits."""
+    """Docker's ``Created`` as a datetime, or None when it is absent or unparseable.
+
+    The nanosecond and ``Z`` rewrites are belt-and-braces: 3.11+ parses both unaided.
+    """
     if not isinstance(raw, str) or not raw:
         return None
     text = re.sub(r"(\.\d{6})\d+", r"\1", raw.replace("Z", "+00:00"))
