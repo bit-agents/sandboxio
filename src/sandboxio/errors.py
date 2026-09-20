@@ -13,9 +13,7 @@ from typing import TYPE_CHECKING, ClassVar
 if TYPE_CHECKING:
     from sandboxio.models import Capability, ExecResult
 
-# TODO(placeholder): the docs domain is not chosen. `.invalid` is RFC 2606-reserved, so
-# this can never be mistaken for a live site.
-DOCS_ERRORS_URL = "https://docs.sandboxio.invalid/errors"
+DOCS_ERRORS_URL = "https://docs.sandboxio.dev/errors"
 
 __all__ = [
     "DOCS_ERRORS_URL",

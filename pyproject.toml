@@ -27,8 +27,8 @@ dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
 Homepage = "https://github.com/bit-agents/sandboxio"
 Repository = "https://github.com/bit-agents/sandboxio"
 Issues = "https://github.com/bit-agents/sandboxio/issues"
+Documentation = "https://docs.sandboxio.dev"
 Changelog = "https://github.com/bit-agents/sandboxio/blob/main/CHANGELOG.md"
-# TODO(placeholder): Documentation lands with the docs host.
 
 # Each first-party adapter is its own distribution in packages/, exactly like a third-party
 # `sandboxio-<name>`; the extra pulls it in. e2b and modal land with their adapters.
