@@ -3,9 +3,12 @@
 **One secure Python API for running AI-agent code in any sandbox.** Swap Docker ↔ E2B with
 one line; no network by default; test your agent tools offline with the built-in fake.
 
-<!-- TODO(placeholder): badges — CI, PyPI version, Python versions, OpenSSF Scorecard, license.
-     Blocked on the GitHub org/repo being chosen (ADR-0014) and CI existing (build-order Step 1). -->
-<!-- {{BADGES}} -->
+[![CI](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml/badge.svg)](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](docs/adr/0015-python-version-floor.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+<!-- TODO(placeholder): the PyPI version badge and the OpenSSF Scorecard badge need a
+     published release and the Scorecard workflow; neither exists yet. -->
 
 > [!WARNING]
 > **Pre-alpha. The core, the contract suite, `FakeBackend`, the Docker and E2B adapters, the
@@ -195,3 +198,4 @@ there is no CLA.
 
 Code is [MIT](LICENSE). Prose in `docs/` is [CC BY 4.0](LICENSE-DOCS); code samples inside
 those documents are MIT ([ADR-0026](docs/adr/0026-docs-license-cc-by.md)).
+

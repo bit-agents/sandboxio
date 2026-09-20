@@ -20,11 +20,8 @@ PLACEHOLDER = re.compile(r"\{\{[A-Z_]+\}\}")
 
 # Every unfilled placeholder in the tree. Delete a row when it is filled.
 EXPECTED: dict[str, int] = {
-    "{{BADGES}}": 4,  # README + its llms-full copy; needs a published package and a CI badge
-    "{{DOCS_URL}}": 4,  # blocked on the docs site being deployed, not on the domain
-    "{{INSTALL}}": 6,  # nothing is published yet
-    "{{ORG}}": 2,  # only inside the go-public comment block, which is deleted at the flip
-    "{{TIER}}": 2,  # same — the table itself is filled
+    "{{DOCS_URL}}": 2,  # blocked on the docs site being deployed, not on the domain
+    "{{INSTALL}}": 4,  # nothing is published to PyPI yet
 }
 
 # Files still carrying a `TODO(placeholder)` marker.
