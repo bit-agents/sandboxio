@@ -8,6 +8,10 @@ updates:
       interval: weekly
     commit-message:
       prefix: "ci"
+    groups:
+      # One PR a week, not one per action: the whole set is reviewed and pinned together.
+      actions:
+        patterns: ["*"]
 
   - package-ecosystem: uv
     directory: /
