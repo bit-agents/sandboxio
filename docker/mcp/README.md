@@ -1,6 +1,6 @@
 # sandboxio MCP server image
 
-Builds `ghcr.io/{{ORG}}/sandboxio-mcp` from this repository: `python -m sandboxio.mcp`
+Builds `ghcr.io/bit-agents/sandboxio-mcp` from this repository: `python -m sandboxio.mcp`
 in a rootless `python:3.12-slim` image with the E2B adapter installed.
 
 ```bash

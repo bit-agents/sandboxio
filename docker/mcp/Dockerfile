@@ -1,4 +1,4 @@
-# The sandboxio MCP server as a container: ghcr.io/{{ORG}}/sandboxio-mcp
+# The sandboxio MCP server as a container: ghcr.io/bit-agents/sandboxio-mcp
 #
 # Rootless; no Docker socket is mounted or reachable — the sandbox backend inside this
 # image is a cloud one (E2B by default). Configuration is fixed at process start through
