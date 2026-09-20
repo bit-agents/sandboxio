@@ -88,7 +88,8 @@ sandboxio-e2b = { workspace = true }
 minversion = "8.0"
 # examples/test_my_tool.py is a user-facing example and a real test; it runs as both.
 testpaths = ["tests", "examples"]
-addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker and not e2b'"
+# No -q here: a wrapper adding its own -q makes -qq, which drops the "N passed" line.
+addopts = "--strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker and not e2b'"
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
     "docker: needs a working Docker daemon",
