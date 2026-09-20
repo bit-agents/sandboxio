@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import inspect
 import uuid
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import anyio
 import pytest
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from sandboxio.audit import AuditEvent
-    from sandboxio.protocols import AsyncSandbox, Backend
+    from sandboxio.protocols import AsyncSandbox, Backend, ReapableBackend
 
 __all__ = ["BackendContractSuite", "RecordingSink"]
 
@@ -228,6 +228,16 @@ class BackendContractSuite:
         assert not isinstance(seen[0], SandboxError)
         await self.assert_no_orphans(sb)
 
+    async def discard(self, sb: AsyncSandbox) -> None:
+        """Remove a sandbox whose ``kill`` was sabotaged or skipped, so no test leaks one.
+
+        A non-reapable backend cannot be asked; such an adapter SHOULD override this.
+        """
+        if not hasattr(self.backend, "kill_managed"):
+            return
+        with anyio.CancelScope(shield=True):
+            await cast("ReapableBackend", self.backend).kill_managed(sb.id)
+
     # --- lifecycle --------------------------------------------------------------------------
 
     async def test_sandbox_reports_identity_capabilities_and_tier(
@@ -340,28 +350,39 @@ class BackendContractSuite:
         """spec/04 rules 1, 2 and 5: mapped, chained, and a teardown code rather than
         ``ExecutionError`` — nothing executed."""
         sb = await self.create()
-        with self.simulate_kill_failure() as native, pytest.raises(ConnectError) as info:
-            await sb.kill()
-        assert isinstance(info.value.__cause__, native), "`raise ... from exc` (spec/04 rule 2)"
-        assert "reap" in info.value.hint, "the operator needs the command that cleans it up"
+        try:
+            with self.simulate_kill_failure() as native, pytest.raises(ConnectError) as info:
+                await sb.kill()
+            assert isinstance(info.value.__cause__, native), (
+                "`raise ... from exc` (spec/04 rule 2)"
+            )
+            assert "reap" in info.value.hint, "the operator needs the command that cleans it up"
+        finally:
+            await self.discard(sb)
 
     async def test_a_failing_teardown_warns_and_keeps_the_callers_exception(self) -> None:
         """``__aexit__`` must not replace what the block raised with a teardown failure."""
         sb = await self.create(metadata={"tenant_id": "t-2"})
-        with (
-            self.simulate_kill_failure(),
-            pytest.warns(OrphanedSandboxWarning) as record,
-            pytest.raises(_Boom),
-        ):
-            async with sb:
-                raise _Boom("what the caller actually wanted to see")
-        assert sb.id in str(record[0].message)
+        try:
+            with (
+                self.simulate_kill_failure(),
+                pytest.warns(OrphanedSandboxWarning) as record,
+                pytest.raises(_Boom),
+            ):
+                async with sb:
+                    raise _Boom("what the caller actually wanted to see")
+            assert sb.id in str(record[0].message)
+        finally:
+            await self.discard(sb)
 
     async def test_a_failing_teardown_alone_warns_rather_than_raising(self) -> None:
         sb = await self.create()
-        with self.simulate_kill_failure(), pytest.warns(OrphanedSandboxWarning):
-            async with sb:
-                pass
+        try:
+            with self.simulate_kill_failure(), pytest.warns(OrphanedSandboxWarning):
+                async with sb:
+                    pass
+        finally:
+            await self.discard(sb)
 
     # --- run --------------------------------------------------------------------------------
 

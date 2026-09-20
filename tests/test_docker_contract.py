@@ -51,12 +51,32 @@ def _session_containers() -> list[Any]:
     return found
 
 
+def _describe(container: Any) -> str:
+    try:
+        attrs: Mapping[str, Any] = container.attrs
+        labels: Mapping[str, str] = attrs.get("Config", {}).get("Labels") or {}
+        session = labels.get(LABEL_SESSION, "-")
+        whose = "this session" if session == _backend.session_id else "OTHER session"
+        return (
+            f"{container.id[:12]} name={container.name} status={container.status!r} "
+            f"cmd={attrs.get('Config', {}).get('Cmd')} "
+            f"created={attrs.get('Created')} "
+            f"finished={attrs.get('State', {}).get('FinishedAt')} "
+            f"session={session[:12]} ({whose})"
+        )
+    except Exception as exc:  # pragma: no cover - diagnostics must not mask the failure
+        return f"{container.id[:12]} <undescribable: {exc!r}>"
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _no_leaks_at_session_end() -> Iterator[None]:
     yield
     _backend._reaper.close()  # pyright: ignore[reportPrivateUsage]
-    leaked = _client.containers.list(all=True, filters={"label": LABEL_MANAGED})
-    assert not leaked, f"leaked sandboxio containers: {[c.id[:12] for c in leaked]}"
+    leaked: list[Any] = _client.containers.list(all=True, filters={"label": LABEL_MANAGED})
+    if leaked:
+        # Assert now, not after a settle: the reaper's grace would hide the leak behind it.
+        detail = "\n  ".join(_describe(c) for c in leaked)
+        pytest.fail(f"leaked {len(leaked)} sandboxio containers:\n  {detail}")
 
 
 class TestDockerBackend(BackendContractSuite):
