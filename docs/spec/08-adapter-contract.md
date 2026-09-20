@@ -35,7 +35,7 @@ need the adapter constructed with an `AuditConfig` holding a `RecordingSink`, ex
 | Streaming | `stream()` is not awaitable; per-stream ordering preserved; stdout/stderr distinguishable; `wait()` returns `streamed=True` with empty stdout/stderr and is idempotent; `CapabilityNotSupported` raised from `stream()` before entry |
 | Streaming cleanup | the remote process is terminated after **each** of: full iteration, early `break`, exception inside the block, cancellation inside the block — four separate cases, each asserting no orphan remains |
 | Filesystem | read/write/upload/download/ls/mkdir/remove round-trips; binary safety; missing path raises mapped error; no host-path escape |
-| Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset |
+| Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset. An adapter whose caps come from the template sets `resource_caps_supported = False`, and the suite asserts the `ConfigurationError` refusal instead ([05](05-security-policy.md#where-caps-belong-to-the-template)) |
 | Errors | every provider exception mapped into the sandboxio tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
 | Timeouts | `create()` timeout raises `CreateTimeout`, execution timeout raises `ExecutionTimeout`, expired sandbox raises `SandboxGone`; **no bare builtin `TimeoutError` escapes any public entry point** |
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
@@ -110,6 +110,8 @@ churn-absorption log.
 
 ## Adapter authoring
 
-An **adapter template repo** wired to the contract suite ships alongside the authoring
-guide. It is the ecosystem lever: a third party should reach a conforming adapter without
-reading core's source.
+**Planned for v0.2** ([build-order](../build-order.md#v02--differentiation-roi-order)). An
+**adapter template repo** wired to the contract suite ships alongside the authoring guide.
+It is the ecosystem lever: a third party should reach a conforming adapter without reading
+core's source. Until it exists, the reference is `tests/test_fake_contract.py` and this
+page; everything above it in this document is v0.1 and normative now.

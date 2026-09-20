@@ -75,6 +75,19 @@ policy in effect time-varying in the audit record.
 - Exceeding a cap MUST surface as `ResourceLimitExceeded` naming the limit, where the
   backend reports it.
 
+### Where caps belong to the template
+
+Some providers fix CPU, memory and disk in the image or template, with no per-sandbox
+override: E2B is the v0.1 example. Such a backend still applies concrete caps — the
+template's — so the guarantee above holds, but it cannot honour a caller's `Resources`.
+
+- It MUST refuse a non-default `Resources(...)` with `ConfigurationError` naming the
+  template as the place to change them, and MUST NOT accept and ignore the value.
+- It MUST declare `resource_caps_supported = False` to the contract suite
+  ([08](08-adapter-contract.md#coverage-map)), which then asserts the refusal instead of
+  the per-sandbox cap rows.
+- A backend that can neither apply caps nor name a template that does MUST NOT create.
+
 ## Guaranteed teardown
 
 - Context-manager exit MUST kill the sandbox, including on exception and on cancellation,

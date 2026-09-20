@@ -1457,7 +1457,7 @@ async with await sandboxio.create() as sb:                      # zero-config, l
 
 sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
 sb = await sandboxio.create("e2b://code-interpreter")
-sb = await sandboxio.create("modal://base?gpu=T4")
+sb = await sandboxio.create("modal://base?gpu=T4")           # v0.1.1 — not installable yet
 
 res = await sb.run(["pytest", "-q"], timeout=120)
 res = await sb.run_code("import pandas; print(pandas.__version__)")
@@ -1479,7 +1479,7 @@ if sandboxio.Capability.GPU in sb.capabilities: ...
 if sb.isolation is not sandboxio.IsolationTier.MICROVM:
     log.warning("weaker than microVM isolation for untrusted multi-tenant code")
 
-sb.native.tunnels()        # Modal-specific — outside the semver contract
+sb.native.tunnels()        # Modal-specific (v0.1.1) — outside the semver contract
 ```
 
 > The streaming `pip install` example from the input docs is **removed**: it cannot run
@@ -1820,7 +1820,9 @@ class FileInfo:
 ```
 
 - `Resources` defaults MUST resolve to modest concrete caps, never "unlimited"
-  ([05](05-security-policy.md#resource-caps)).
+  ([05](05-security-policy.md#resource-caps)). Where the caps belong to the template rather
+  than the sandbox, a non-default `Resources(...)` is refused, never ignored
+  ([05](05-security-policy.md#where-caps-belong-to-the-template)).
 - `egress="learn"` is v0.2 and MUST raise `CapabilityNotSupported` in v0.1 rather than
   silently behaving as `deny`.
 
@@ -1867,6 +1869,10 @@ Backend notes for v0.1:
   be synthesised from stdout.
 - **Docker declares `NETWORK_POLICY` for deny/allow-all only.** A non-empty allowlist raises
   ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)).
+- **E2B takes its resource caps from the template.** `Resources(cpu=…)`, `memory_mb` and
+  `disk_mb` are refused with `ConfigurationError` rather than ignored
+  ([05](05-security-policy.md#where-caps-belong-to-the-template)). `Resources` is not a
+  `Capability`, so this is a refusal, not an undeclared flag.
 
 ## IsolationTier
 
@@ -1946,7 +1952,7 @@ assistants that need a stable token. See [ADR-0010](../adr/0010-stable-error-cod
 
 ```
 SandboxError                    base; carries .code, .hint, .url
-├── ConfigurationError          SBX_E10xx
+├── ConfigurationError          SBX_E1000   raised directly for a bad argument or DSN
 │   ├── BackendNotFound         SBX_E1001   hint: installed backends + install command
 │   └── BackendNotInstalled     SBX_E1002   hint: uv pip install "sandboxio[e2b]"
 ├── CapabilityNotSupported      SBX_E1101   hint: which backends do support it
@@ -2122,6 +2128,19 @@ policy in effect time-varying in the audit record.
 - Exceeding a cap MUST surface as `ResourceLimitExceeded` naming the limit, where the
   backend reports it.
 
+### Where caps belong to the template
+
+Some providers fix CPU, memory and disk in the image or template, with no per-sandbox
+override: E2B is the v0.1 example. Such a backend still applies concrete caps — the
+template's — so the guarantee above holds, but it cannot honour a caller's `Resources`.
+
+- It MUST refuse a non-default `Resources(...)` with `ConfigurationError` naming the
+  template as the place to change them, and MUST NOT accept and ignore the value.
+- It MUST declare `resource_caps_supported = False` to the contract suite
+  ([08](08-adapter-contract.md#coverage-map)), which then asserts the refusal instead of
+  the per-sandbox cap rows.
+- A backend that can neither apply caps nor name a template that does MUST NOT create.
+
 ## Guaranteed teardown
 
 - Context-manager exit MUST kill the sandbox, including on exception and on cancellation,
@@ -2217,7 +2236,7 @@ class AuditEvent:
     tenant_id: str | None           # from metadata
     session_id: str | None          # from metadata
     code_sha256: str
-    argv: list[str] | None
+    argv: tuple[str, ...] | None    # a tuple, like every sequence in a frozen value object
     exit_code: int | None
     duration_ms: int
     bytes_in: int
@@ -2351,10 +2370,15 @@ See [ADR-0008](../adr/0008-dsn-and-typed-config.md).
 <backend>://[<template>][?<param>=<value>&…]
 ```
 
-Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`,
-`modal://base?gpu=T4`, `fake://`.
+Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`, `fake://`, and
+— once the Modal adapter lands in v0.1.1 — `modal://base?gpu=T4`.
 
 Rules:
+
+- **`timeout` is the only parameter defined in v0.1.** A backend MAY define further scalar
+  parameters, and they arrive with that adapter, not before: `gpu` is Modal's and is not
+  accepted by any v0.1 backend. Anything not defined by the resolved backend is an unknown
+  parameter and raises.
 
 - The grammar is **public API under semver**. Adding a scheme or parameter is additive;
   changing the meaning of an existing parameter is breaking.
@@ -2400,6 +2424,12 @@ Resolution MUST be lazy and cached. Entry-point scanning counts against the impo
 ([ADR-0004](../adr/0004-thin-core-lazy-adapters.md)).
 
 ## Routing file
+
+> **Deferred to v0.2. Nothing in this section is implemented in v0.1**, and no v0.1 caller
+> can load a routing file or call `route_for()`. The design is kept here because the DSN and
+> typed-config surfaces above were shaped to leave room for it; the MUSTs below bind the
+> implementation when it lands, not v0.1 adapters
+> ([build-order](../build-order.md#v02--differentiation-roi-order)).
 
 Designed now, loadable by the **library** before any server exists
 ([ADR-0009](../adr/0009-library-first-server-later.md)). Mental model: Kubernetes
@@ -2493,7 +2523,7 @@ need the adapter constructed with an `AuditConfig` holding a `RecordingSink`, ex
 | Streaming | `stream()` is not awaitable; per-stream ordering preserved; stdout/stderr distinguishable; `wait()` returns `streamed=True` with empty stdout/stderr and is idempotent; `CapabilityNotSupported` raised from `stream()` before entry |
 | Streaming cleanup | the remote process is terminated after **each** of: full iteration, early `break`, exception inside the block, cancellation inside the block — four separate cases, each asserting no orphan remains |
 | Filesystem | read/write/upload/download/ls/mkdir/remove round-trips; binary safety; missing path raises mapped error; no host-path escape |
-| Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset |
+| Policy | **deny actually denies** — egress to a canary host fails; allowlist permits only listed hosts; resource caps applied; caps cannot be unset. An adapter whose caps come from the template sets `resource_caps_supported = False`, and the suite asserts the `ConfigurationError` refusal instead ([05](05-security-policy.md#where-caps-belong-to-the-template)) |
 | Errors | every provider exception mapped into the sandboxio tree; `__cause__` preserved; unsupported typed kwargs raise `CapabilityNotSupported`; `AuthError` names the missing env var |
 | Timeouts | `create()` timeout raises `CreateTimeout`, execution timeout raises `ExecutionTimeout`, expired sandbox raises `SandboxGone`; **no bare builtin `TimeoutError` escapes any public entry point** |
 | Capability honesty | every declared flag has a passing test; every undeclared flag raises when invoked |
@@ -2568,9 +2598,11 @@ churn-absorption log.
 
 ## Adapter authoring
 
-An **adapter template repo** wired to the contract suite ships alongside the authoring
-guide. It is the ecosystem lever: a third party should reach a conforming adapter without
-reading core's source.
+**Planned for v0.2** ([build-order](../build-order.md#v02--differentiation-roi-order)). An
+**adapter template repo** wired to the contract suite ships alongside the authoring guide.
+It is the ecosystem lever: a third party should reach a conforming adapter without reading
+core's source. Until it exists, the reference is `tests/test_fake_contract.py` and this
+page; everything above it in this document is v0.1 and normative now.
 
 
 ==============================================================================
@@ -2687,7 +2719,7 @@ only on a TTY, and `NO_COLOR` wins.
 | Command | Purpose | Ships |
 |---------|---------|-------|
 | `sandboxio doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sandboxio.doctor()`. | v0.1 |
-| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — with no account and no config. Runs stdlib-only code under the default deny-egress policy. The **under-60 s** budget is measured **warm**: a first run also pulls ~130 MB of image, which is host-side and unaffected by the sandbox's network policy. | v0.1 |
+| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, prove egress is denied, tear down — with no account and no config. Runs stdlib-only code under the default deny-egress policy. The **under-60 s** budget is measured **warm**: a first run also pulls ~130 MB of image, which is host-side and unaffected by the sandbox's network policy. | v0.1 |
 | `sandboxio reap` | List and kill orphaned sandboxes by `metadata` label — the operator-facing backstop when shielded teardown could not finish ([ADR-0020](../adr/0020-cancellation-semantics.md)). Dry-run by default; `--kill` to act. | v0.1 |
 | `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
 | `sandboxio bench` | Backend comparison: latency. | v0.2 |
@@ -2743,6 +2775,12 @@ The egress probe MUST attempt a real connection from inside the sandbox and MUST
 demo if it succeeds — a demo that shows deny-by-default not applying is a bug report, not a
 pass ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)). Without the Docker
 extra the demo prints the exact install command from `BackendNotInstalled` and exits `1`.
+
+`--backend <DSN>` runs the same five steps against another backend, defaulting to
+`docker://python:3.12-slim`; `--backend fake://` is the in-process form, and the stream step
+is skipped for a backend that does not declare `STREAMING`. The flag selects a backend and
+nothing else: it MUST NOT be able to weaken the policy the demo runs under, which is why
+there is no `--egress` on `demo`.
 
 
 ==============================================================================
@@ -3273,6 +3311,9 @@ abstraction against a genuinely different filesystem model.
 5. Pre-execution security lint hook (advisory by default).
 6. Pydantic AI + CrewAI adapters; OpenAI `SandboxClient` adapter.
 7. MCP `search_docs`; adapter authoring guide + template repo; shell completions.
+8. **Routing file** — `sandboxio-routing.yaml`, isolation classes and `route_for()`, already
+   specified in [spec/07](spec/07-configuration.md#routing-file) and marked deferred there.
+   It was written into the spec at design time and never scheduled; this is where it lands.
 
 ## v0.3+ — capability-gated and ecosystem
 

@@ -31,7 +31,7 @@ class AuditEvent:
     tenant_id: str | None           # from metadata
     session_id: str | None          # from metadata
     code_sha256: str
-    argv: list[str] | None
+    argv: tuple[str, ...] | None    # a tuple, like every sequence in a frozen value object
     exit_code: int | None
     duration_ms: int
     bytes_in: int

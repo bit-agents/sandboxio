@@ -7,7 +7,7 @@ assistants that need a stable token. See [ADR-0010](../adr/0010-stable-error-cod
 
 ```
 SandboxError                    base; carries .code, .hint, .url
-├── ConfigurationError          SBX_E10xx
+├── ConfigurationError          SBX_E1000   raised directly for a bad argument or DSN
 │   ├── BackendNotFound         SBX_E1001   hint: installed backends + install command
 │   └── BackendNotInstalled     SBX_E1002   hint: uv pip install "sandboxio[e2b]"
 ├── CapabilityNotSupported      SBX_E1101   hint: which backends do support it

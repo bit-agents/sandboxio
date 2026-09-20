@@ -75,7 +75,9 @@ class FileInfo:
 ```
 
 - `Resources` defaults MUST resolve to modest concrete caps, never "unlimited"
-  ([05](05-security-policy.md#resource-caps)).
+  ([05](05-security-policy.md#resource-caps)). Where the caps belong to the template rather
+  than the sandbox, a non-default `Resources(...)` is refused, never ignored
+  ([05](05-security-policy.md#where-caps-belong-to-the-template)).
 - `egress="learn"` is v0.2 and MUST raise `CapabilityNotSupported` in v0.1 rather than
   silently behaving as `deny`.
 
@@ -122,6 +124,10 @@ Backend notes for v0.1:
   be synthesised from stdout.
 - **Docker declares `NETWORK_POLICY` for deny/allow-all only.** A non-empty allowlist raises
   ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)).
+- **E2B takes its resource caps from the template.** `Resources(cpu=…)`, `memory_mb` and
+  `disk_mb` are refused with `ConfigurationError` rather than ignored
+  ([05](05-security-policy.md#where-caps-belong-to-the-template)). `Resources` is not a
+  `Capability`, so this is a refusal, not an undeclared flag.
 
 ## IsolationTier
 

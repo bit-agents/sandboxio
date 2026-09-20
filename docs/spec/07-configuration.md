@@ -8,10 +8,15 @@ See [ADR-0008](../adr/0008-dsn-and-typed-config.md).
 <backend>://[<template>][?<param>=<value>&…]
 ```
 
-Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`,
-`modal://base?gpu=T4`, `fake://`.
+Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`, `fake://`, and
+— once the Modal adapter lands in v0.1.1 — `modal://base?gpu=T4`.
 
 Rules:
+
+- **`timeout` is the only parameter defined in v0.1.** A backend MAY define further scalar
+  parameters, and they arrive with that adapter, not before: `gpu` is Modal's and is not
+  accepted by any v0.1 backend. Anything not defined by the resolved backend is an unknown
+  parameter and raises.
 
 - The grammar is **public API under semver**. Adding a scheme or parameter is additive;
   changing the meaning of an existing parameter is breaking.
@@ -57,6 +62,12 @@ Resolution MUST be lazy and cached. Entry-point scanning counts against the impo
 ([ADR-0004](../adr/0004-thin-core-lazy-adapters.md)).
 
 ## Routing file
+
+> **Deferred to v0.2. Nothing in this section is implemented in v0.1**, and no v0.1 caller
+> can load a routing file or call `route_for()`. The design is kept here because the DSN and
+> typed-config surfaces above were shaped to leave room for it; the MUSTs below bind the
+> implementation when it lands, not v0.1 adapters
+> ([build-order](../build-order.md#v02--differentiation-roi-order)).
 
 Designed now, loadable by the **library** before any server exists
 ([ADR-0009](../adr/0009-library-first-server-later.md)). Mental model: Kubernetes

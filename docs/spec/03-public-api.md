@@ -56,7 +56,7 @@ async with await sandboxio.create() as sb:                      # zero-config, l
 
 sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
 sb = await sandboxio.create("e2b://code-interpreter")
-sb = await sandboxio.create("modal://base?gpu=T4")
+sb = await sandboxio.create("modal://base?gpu=T4")           # v0.1.1 — not installable yet
 
 res = await sb.run(["pytest", "-q"], timeout=120)
 res = await sb.run_code("import pandas; print(pandas.__version__)")
@@ -78,7 +78,7 @@ if sandboxio.Capability.GPU in sb.capabilities: ...
 if sb.isolation is not sandboxio.IsolationTier.MICROVM:
     log.warning("weaker than microVM isolation for untrusted multi-tenant code")
 
-sb.native.tunnels()        # Modal-specific — outside the semver contract
+sb.native.tunnels()        # Modal-specific (v0.1.1) — outside the semver contract
 ```
 
 > The streaming `pip install` example from the input docs is **removed**: it cannot run

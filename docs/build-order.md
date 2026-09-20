@@ -256,6 +256,9 @@ abstraction against a genuinely different filesystem model.
 5. Pre-execution security lint hook (advisory by default).
 6. Pydantic AI + CrewAI adapters; OpenAI `SandboxClient` adapter.
 7. MCP `search_docs`; adapter authoring guide + template repo; shell completions.
+8. **Routing file** — `sandboxio-routing.yaml`, isolation classes and `route_for()`, already
+   specified in [spec/07](spec/07-configuration.md#routing-file) and marked deferred there.
+   It was written into the spec at design time and never scheduled; this is where it lands.
 
 ## v0.3+ — capability-gated and ecosystem
 

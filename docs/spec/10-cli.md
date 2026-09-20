@@ -13,7 +13,7 @@ only on a TTY, and `NO_COLOR` wins.
 | Command | Purpose | Ships |
 |---------|---------|-------|
 | `sandboxio doctor` | Per-backend availability, credentials found (**names only**), Docker reachability, versions — with a fix hint per failure. Also programmatic as `sandboxio.doctor()`. | v0.1 |
-| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, teardown — with no account and no config. Runs stdlib-only code under the default deny-egress policy. The **under-60 s** budget is measured **warm**: a first run also pulls ~130 MB of image, which is host-side and unaffected by the sandbox's network policy. | v0.1 |
+| `uvx sandboxio demo` | Self-contained Docker-backed demo — create sandbox, run code, stream output, prove egress is denied, tear down — with no account and no config. Runs stdlib-only code under the default deny-egress policy. The **under-60 s** budget is measured **warm**: a first run also pulls ~130 MB of image, which is host-side and unaffected by the sandbox's network policy. | v0.1 |
 | `sandboxio reap` | List and kill orphaned sandboxes by `metadata` label — the operator-facing backstop when shielded teardown could not finish ([ADR-0020](../adr/0020-cancellation-semantics.md)). Dry-run by default; `--kill` to act. | v0.1 |
 | `sandboxio replay <trace>` | Deterministic replay of a recorded execution trace; local static HTML viewer. | v0.2 |
 | `sandboxio bench` | Backend comparison: latency. | v0.2 |
@@ -69,3 +69,9 @@ The egress probe MUST attempt a real connection from inside the sandbox and MUST
 demo if it succeeds — a demo that shows deny-by-default not applying is a bug report, not a
 pass ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)). Without the Docker
 extra the demo prints the exact install command from `BackendNotInstalled` and exits `1`.
+
+`--backend <DSN>` runs the same five steps against another backend, defaulting to
+`docker://python:3.12-slim`; `--backend fake://` is the in-process form, and the stream step
+is skipped for a backend that does not declare `STREAMING`. The flag selects a backend and
+nothing else: it MUST NOT be able to weaken the policy the demo runs under, which is why
+there is no `--egress` on `demo`.
