@@ -7,6 +7,9 @@ signal that it is happening — and a response. Hazards are reviewed quarterly
 Unresolved *decisions* live in [open-questions.md](open-questions.md). This file is about
 risks that persist after the decisions are made.
 
+Numbers are permanent anchors — the runbook and several ADRs link to them — so a new hazard
+takes the next free number and sits with its topic, never renumbering what is above it.
+
 ---
 
 ## Product hazards (users get hurt)
@@ -60,6 +63,31 @@ on our word.
 - **Response:** every tier above `CONTAINER` carries a dated provider-documentation source;
   Daytona stays unverified; a provider's mechanism change is a **changelog entry**, not a
   footnote ([ADR-0006](adr/0006-isolation-tiers-first-class.md)).
+
+### H16 — Docker sandboxes run as root on a writable rootfs
+
+Agent code on the `CONTAINER` tier runs as uid 0 with `/` writable. Capabilities are
+dropped, `no-new-privileges` is set, PIDs are capped and swap is bounded with memory
+([ADR-0028](adr/0028-docker-container-hardening.md)), but a kernel bug reachable from an
+unprivileged syscall still lands on the host as root, and anything inside the container can
+rewrite the image's own binaries for the life of the sandbox.
+
+This is a **decided, accepted gap, not an oversight**. Setting `user` breaks writes to
+`/work` on ordinary images, and `read_only=True` breaks `tempfile` unless `/work` and
+`/tmp` become tmpfs — both measured against a real daemon, both recorded in the ADR. The
+threat model already puts "making untrusted code safe on the `CONTAINER` tier" out of scope
+([spec/05](spec/05-security-policy.md#threat-model)), so no published guarantee is broken.
+The risk is that the docs stop saying so, or that someone reads the hardening we *did* ship
+as permission to run untrusted multi-tenant code on Docker.
+
+- **Tripwire:** any doc, README or example implying Docker is safe for untrusted code;
+  a user asking for tenant isolation and being pointed at the Docker adapter; a support
+  thread that starts with an escape from a sandbox someone believed was isolated.
+- **Response:** `MICROVM` stays the documented floor for untrusted multi-tenant code, and
+  per-backend docs say so at the top. Closing the gap properly needs an image contract — a
+  non-root uid that owns `/work`, or a tmpfs mount that does — which is its own change with
+  its own ADR, not a flag added in passing. Until then the honest statement, not a better
+  default, is the control.
 
 ---
 

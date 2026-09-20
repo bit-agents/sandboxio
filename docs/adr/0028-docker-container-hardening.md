@@ -60,4 +60,5 @@ The cost: an image that relied on a capability in the default set — raw socket
 `chown` across users — stops working, and the failure surfaces as the image's own error
 rather than as a sandboxio one. Running as root inside the container remains the default,
 which is the larger of the two gaps we are leaving open; closing it needs its own change
-with an image contract behind it, not a flag.
+with an image contract behind it, not a flag. That residual risk is tracked as
+[hazard H16](../hazards.md#h16--docker-sandboxes-run-as-root-on-a-writable-rootfs).

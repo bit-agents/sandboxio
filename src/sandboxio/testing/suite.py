@@ -337,11 +337,13 @@ class BackendContractSuite:
         assert "tenant_id=t-1" in message
 
     async def test_a_failing_kill_maps_instead_of_leaking_the_provider_error(self) -> None:
-        """spec/04 mapping rule 1: no raw provider exception crosses the adapter boundary."""
+        """spec/04 rules 1, 2 and 5: mapped, chained, and a teardown code rather than
+        ``ExecutionError`` — nothing executed."""
         sb = await self.create()
-        with self.simulate_kill_failure() as native, pytest.raises(SandboxError) as info:
+        with self.simulate_kill_failure() as native, pytest.raises(ConnectError) as info:
             await sb.kill()
         assert isinstance(info.value.__cause__, native), "`raise ... from exc` (spec/04 rule 2)"
+        assert "reap" in info.value.hint, "the operator needs the command that cleans it up"
 
     async def test_a_failing_teardown_warns_and_keeps_the_callers_exception(self) -> None:
         """``__aexit__`` must not replace what the block raised with a teardown failure."""

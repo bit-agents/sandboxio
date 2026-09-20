@@ -91,6 +91,10 @@ Hints are specific, which means errors are constructed with context rather than 
    signal to add a code to this catalog, with a docs page, in the same change.
 4. Transient provider failures MUST map to `RateLimitError` or `CreationError` rather than
    being retried silently. sandboxio does not retry on the caller's behalf in v0.1.
+5. A `kill()` the provider refuses MUST map to `ConnectError`, the same code `kill_managed`
+   raises, with a hint naming `sandboxio reap --kill`. It is a teardown failure, not a
+   command that exited non-zero, so `ExecutionError` is wrong. A sandbox already gone is
+   `SandboxGone`, and an idempotent `kill()` raises neither ([02](02-ports.md#cancellation-and-teardown)).
 
 ## Catalog is generated
 

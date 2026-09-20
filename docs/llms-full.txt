@@ -555,8 +555,9 @@ for untrusted multi-tenant code pick a `MICROVM` backend
   `Resources(disk_mb=...)` is refused rather than ignored — Docker cannot enforce it.
 - Every container drops all capabilities, runs with `no-new-privileges` and a 512-process
   ceiling ([ADR-0028](../adr/0028-docker-container-hardening.md)). It still runs **as root
-  on a writable rootfs**: `CONTAINER` is for trusted, dev and CI code, not for untrusted
-  multi-tenant code — use E2B for that. An image needing a dropped capability back is a
+  on a writable rootfs** ([H16](../hazards.md#h16--docker-sandboxes-run-as-root-on-a-writable-rootfs)):
+  `CONTAINER` is for trusted, dev and CI code, not for untrusted multi-tenant code — use
+  E2B for that. An image needing a dropped capability back is a
   `.native` case.
 - The container's PID 1 is `sleep <timeout>`: the provider-side lifetime backstop. When it
   fires, Docker leaves the container **stopped**; `sandboxio reap` removes it.
@@ -1401,7 +1402,7 @@ a link to its page here. Codes are stable across releases
 | [SBX_E1002](SBX_E1002.md) | `BackendNotInstalled` | A first-party backend whose extra is not installed. |
 | [SBX_E1101](SBX_E1101.md) | `CapabilityNotSupported` | The backend does not declare the capability this call needs (spec/01 rule 2). |
 | [SBX_E1201](SBX_E1201.md) | `CreationError` | The backend failed to produce a usable sandbox. |
-| [SBX_E1202](SBX_E1202.md) | `ConnectError` | ``connect()`` was asked for an id the backend does not know or that is dead. |
+| [SBX_E1202](SBX_E1202.md) | `ConnectError` | The backend would not service a sandbox-management call. |
 | [SBX_E1203](SBX_E1203.md) | `CreateTimeout` | ``create()`` exceeded its timeout before the sandbox became usable. |
 | [SBX_E1204](SBX_E1204.md) | `SandboxGone` | The sandbox no longer exists — its lifetime ended or the backend reclaimed it. |
 | [SBX_E1301](SBX_E1301.md) | `ExecutionError` | A command exited non-zero and the caller asked for that to raise. |
@@ -2061,6 +2062,10 @@ Hints are specific, which means errors are constructed with context rather than 
    signal to add a code to this catalog, with a docs page, in the same change.
 4. Transient provider failures MUST map to `RateLimitError` or `CreationError` rather than
    being retried silently. sandboxio does not retry on the caller's behalf in v0.1.
+5. A `kill()` the provider refuses MUST map to `ConnectError`, the same code `kill_managed`
+   raises, with a hint naming `sandboxio reap --kill`. It is a teardown failure, not a
+   command that exited non-zero, so `ExecutionError` is wrong. A sandbox already gone is
+   `SandboxGone`, and an idempotent `kill()` raises neither ([02](02-ports.md#cancellation-and-teardown)).
 
 ## Catalog is generated
 
@@ -2883,6 +2888,9 @@ signal that it is happening — and a response. Hazards are reviewed quarterly
 Unresolved *decisions* live in [open-questions.md](open-questions.md). This file is about
 risks that persist after the decisions are made.
 
+Numbers are permanent anchors — the runbook and several ADRs link to them — so a new hazard
+takes the next free number and sits with its topic, never renumbering what is above it.
+
 ---
 
 ## Product hazards (users get hurt)
@@ -2936,6 +2944,31 @@ on our word.
 - **Response:** every tier above `CONTAINER` carries a dated provider-documentation source;
   Daytona stays unverified; a provider's mechanism change is a **changelog entry**, not a
   footnote ([ADR-0006](adr/0006-isolation-tiers-first-class.md)).
+
+### H16 — Docker sandboxes run as root on a writable rootfs
+
+Agent code on the `CONTAINER` tier runs as uid 0 with `/` writable. Capabilities are
+dropped, `no-new-privileges` is set, PIDs are capped and swap is bounded with memory
+([ADR-0028](adr/0028-docker-container-hardening.md)), but a kernel bug reachable from an
+unprivileged syscall still lands on the host as root, and anything inside the container can
+rewrite the image's own binaries for the life of the sandbox.
+
+This is a **decided, accepted gap, not an oversight**. Setting `user` breaks writes to
+`/work` on ordinary images, and `read_only=True` breaks `tempfile` unless `/work` and
+`/tmp` become tmpfs — both measured against a real daemon, both recorded in the ADR. The
+threat model already puts "making untrusted code safe on the `CONTAINER` tier" out of scope
+([spec/05](spec/05-security-policy.md#threat-model)), so no published guarantee is broken.
+The risk is that the docs stop saying so, or that someone reads the hardening we *did* ship
+as permission to run untrusted multi-tenant code on Docker.
+
+- **Tripwire:** any doc, README or example implying Docker is safe for untrusted code;
+  a user asking for tenant isolation and being pointed at the Docker adapter; a support
+  thread that starts with an escape from a sandbox someone believed was isolated.
+- **Response:** `MICROVM` stays the documented floor for untrusted multi-tenant code, and
+  per-backend docs say so at the top. Closing the gap properly needs an image contract — a
+  non-root uid that owns `/work`, or a tmpfs mount that does — which is its own change with
+  its own ADR, not a flag added in passing. Until then the honest statement, not a better
+  default, is the control.
 
 ---
 

@@ -31,7 +31,6 @@ from sandboxio.errors import (
     ConnectError,
     CreateTimeout,
     CreationError,
-    ExecutionError,
     ExecutionTimeout,
     PathNotFound,
     SandboxGone,
@@ -483,8 +482,9 @@ class FakeSandbox:
             await anyio.sleep_forever()
         if self._backend.simulation.kill_fails is not None:
             await anyio.lowlevel.checkpoint()
-            raise ExecutionError(
-                ExecResult(KILLED_EXIT, "", "the fake provider refused to kill the sandbox")
+            raise ConnectError(
+                f"{self._backend.name} could not kill sandbox {self.id!r}",
+                hint="The sandbox may still be running; `sandboxio reap --kill` removes it.",
             ) from self._backend.simulation.kill_fails
         if not self._alive:
             await anyio.lowlevel.checkpoint()

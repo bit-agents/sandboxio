@@ -83,6 +83,7 @@ POLL_MAX = 0.1
 META_MANAGED = "sandboxio_managed"
 META_SESSION = "sandboxio_session"
 SESSION_ID = uuid.uuid4().hex
+KILL_HINT = "The sandbox may still be running; `sandboxio reap --kill` removes it."
 CAPABILITIES = (
     Capability.RUN_COMMAND
     | Capability.RUN_CODE
@@ -322,7 +323,9 @@ class E2BBackend:
                 return False
             if mapped is not None:
                 raise mapped from exc
-            raise ConnectError(f"e2b could not kill sandbox {sandbox_id!r}") from exc
+            raise ConnectError(
+                f"e2b could not kill sandbox {sandbox_id!r}", hint=KILL_HINT
+            ) from exc
 
 
 class E2BSandbox:
@@ -375,6 +378,14 @@ class E2BSandbox:
         if mapped is not None:
             return mapped
         return ExecutionError(ExecResult(KILLED_EXIT, "", f"e2b: {exc}"))
+
+    def _map_kill(self, exc: Exception) -> Exception:
+        """Teardown is not execution: a refused kill is the same failure ``kill_managed``
+        reports, and the fix is the same operator command (spec/04)."""
+        mapped = _map_common(exc, sandbox_id=self.id)
+        if mapped is not None:
+            return mapped
+        return ConnectError(f"e2b could not kill sandbox {self.id!r}", hint=KILL_HINT)
 
     def _record(self, event: str, **fields: Any) -> OperationRecord:
         return OperationRecord(
@@ -552,7 +563,7 @@ class E2BSandbox:
             await self._native.kill()
         except Exception as exc:
             if not _is_gone(exc):
-                raise self._map(exc) from exc
+                raise self._map_kill(exc) from exc
 
     @property
     def files(self) -> E2BFileSystem:

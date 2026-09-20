@@ -11,7 +11,7 @@ a link to its page here. Codes are stable across releases
 | [SBX_E1002](SBX_E1002.md) | `BackendNotInstalled` | A first-party backend whose extra is not installed. |
 | [SBX_E1101](SBX_E1101.md) | `CapabilityNotSupported` | The backend does not declare the capability this call needs (spec/01 rule 2). |
 | [SBX_E1201](SBX_E1201.md) | `CreationError` | The backend failed to produce a usable sandbox. |
-| [SBX_E1202](SBX_E1202.md) | `ConnectError` | ``connect()`` was asked for an id the backend does not know or that is dead. |
+| [SBX_E1202](SBX_E1202.md) | `ConnectError` | The backend would not service a sandbox-management call. |
 | [SBX_E1203](SBX_E1203.md) | `CreateTimeout` | ``create()`` exceeded its timeout before the sandbox became usable. |
 | [SBX_E1204](SBX_E1204.md) | `SandboxGone` | The sandbox no longer exists — its lifetime ended or the backend reclaimed it. |
 | [SBX_E1301](SBX_E1301.md) | `ExecutionError` | A command exited non-zero and the caller asked for that to raise. |

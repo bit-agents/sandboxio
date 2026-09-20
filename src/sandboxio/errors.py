@@ -169,7 +169,11 @@ class CreationError(SandboxError):
 
 
 class ConnectError(SandboxError):
-    """``connect()`` was asked for an id the backend does not know or that is dead."""
+    """The backend would not service a sandbox-management call.
+
+    ``connect()`` given an id it does not know or that is dead, and the listing and
+    teardown calls behind ``sandboxio reap`` — never a failure of code inside a sandbox.
+    """
 
     code = "SBX_E1202"
     default_hint = "Verify the sandbox id is current; `connect()` never creates a sandbox."

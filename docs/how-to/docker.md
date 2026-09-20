@@ -35,8 +35,9 @@ for untrusted multi-tenant code pick a `MICROVM` backend
   `Resources(disk_mb=...)` is refused rather than ignored — Docker cannot enforce it.
 - Every container drops all capabilities, runs with `no-new-privileges` and a 512-process
   ceiling ([ADR-0028](../adr/0028-docker-container-hardening.md)). It still runs **as root
-  on a writable rootfs**: `CONTAINER` is for trusted, dev and CI code, not for untrusted
-  multi-tenant code — use E2B for that. An image needing a dropped capability back is a
+  on a writable rootfs** ([H16](../hazards.md#h16--docker-sandboxes-run-as-root-on-a-writable-rootfs)):
+  `CONTAINER` is for trusted, dev and CI code, not for untrusted multi-tenant code — use
+  E2B for that. An image needing a dropped capability back is a
   `.native` case.
 - The container's PID 1 is `sleep <timeout>`: the provider-side lifetime backstop. When it
   fires, Docker leaves the container **stopped**; `sandboxio reap` removes it.

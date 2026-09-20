@@ -79,6 +79,7 @@ DEFAULT_MEMORY_MB = 512
 # Hardening applied to every container (ADR-0028). Not a Capability: the CONTAINER tier
 # still does not make untrusted code safe (spec/05 threat model).
 DEFAULT_PIDS = 512
+KILL_HINT = "The sandbox may still be running; `sandboxio reap --kill` removes it."
 SECURITY_OPT = ["no-new-privileges"]
 # Ceiling on concurrent streams, since each one parks a worker until its command ends.
 DEFAULT_THREADS = 64
@@ -359,7 +360,9 @@ class DockerBackend:
             mapped = _map_common(exc, sandbox_id=sandbox_id)
             if isinstance(mapped, SandboxGone):
                 return False
-            raise ConnectError(f"docker could not kill sandbox {sandbox_id!r}") from exc
+            raise ConnectError(
+                f"docker could not kill sandbox {sandbox_id!r}", hint=KILL_HINT
+            ) from exc
         return True
 
     async def _ensure_image(self, client: docker.DockerClient, image: str) -> None:
@@ -462,6 +465,14 @@ class DockerSandbox:
         if mapped is not None:
             return mapped
         return ExecutionError(ExecResult(KILLED_EXIT, "", f"docker: {exc}"))
+
+    def _map_kill(self, exc: Exception) -> Exception:
+        """Teardown is not execution: a refused kill is the same failure ``kill_managed``
+        reports, and the fix is the same operator command (spec/04)."""
+        mapped = _map_common(exc, sandbox_id=self.id)
+        if mapped is not None:
+            return mapped
+        return ConnectError(f"docker could not kill sandbox {self.id!r}", hint=KILL_HINT)
 
     def _record(self, event: str, **fields: Any) -> OperationRecord:
         return OperationRecord(
@@ -599,7 +610,7 @@ class DockerSandbox:
             await _thread(self._container.remove, force=True)
         except Exception as exc:
             if not _gone(exc):
-                raise self._map(exc) from exc
+                raise self._map_kill(exc) from exc
 
     @property
     def files(self) -> DockerFileSystem:
