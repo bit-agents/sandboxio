@@ -49,11 +49,9 @@ def _files() -> list[Path]:
 
 
 def test_placeholder_inventory_is_unchanged() -> None:
-    found = Counter(m for p in _files() for m in PLACEHOLDER.findall(p.read_text("utf-8")))
-    assert dict(found) == EXPECTED, (
-        "the placeholder inventory moved; fill the row or update EXPECTED "
-        f"Found {dict(found)}"
-    )
+    markers = (m for p in _files() for m in PLACEHOLDER.findall(p.read_text("utf-8")))
+    found = dict(Counter(markers))
+    assert found == EXPECTED, f"the inventory moved; fill it or update EXPECTED. Found {found}"
 
 
 def test_todo_placeholder_markers_are_unchanged() -> None:
