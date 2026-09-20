@@ -192,15 +192,16 @@ Full surface, including capability discovery, `require_isolation`, audit sinks a
 
 | Backend | Status | Isolation tier |
 |---------|--------|----------------|
-| Docker | adapter built, unreleased | <!-- {{TIER}} --> |
-| E2B | adapter built, unreleased | <!-- {{TIER}} --> |
+| Docker | adapter built, unreleased | `CONTAINER` — [containers share the host kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) |
+| E2B | adapter built, unreleased | `MICROVM` — [Firecracker microVM, its own kernel](https://e2b.dev/security) |
 | `FakeBackend` | built, unreleased | n/a — in-process, for tests |
-| Modal | planned for v0.1.1 | <!-- {{TIER}} --> |
+| Modal | planned for v0.1.1 | `GVISOR` — [containerised and virtualised using gVisor](https://modal.com/docs/guide/security) |
 
-<!-- TODO(placeholder): isolation tiers stay blank until every tier above CONTAINER carries a
-     dated link to the provider's own documentation. Publishing a tier is a security claim
-     about someone else's infrastructure — see hazards H4 and ADR-0006. Do not fill these in
-     from memory. -->
+Every tier above is the mechanism the provider documents for itself, read on **2026-09-20**.
+None of those three pages carries its own revision date, so that is the date it was read, not
+a date the provider published; re-verification is a [quarterly item](docs/runbook.md).
+What the tiers mean — and why `GVISOR` is defence in depth rather than VM equivalence — is in
+[`docs/explanation/isolation-tiers.md`](docs/explanation/isolation-tiers.md).
 
 Third-party adapters are first-class: the adapter contract is
 [specified](docs/spec/08-adapter-contract.md) and enforced by a shared contract suite.
