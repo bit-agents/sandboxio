@@ -6,13 +6,15 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from typing import Any, cast
 
 import pytest
 
 from _helpers import REPO_ROOT, run_python
 from sandboxio import _doctor, cli, registry
-from sandboxio.models import ExecResult
+from sandboxio.errors import ConnectError, RateLimitError
+from sandboxio.models import ExecResult, ManagedSandbox
 from sandboxio.testing.fake import FakeBackend
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
@@ -159,6 +161,84 @@ def test_reap_rejects_a_malformed_label(capsys: pytest.CaptureFixture[str]) -> N
     with pytest.raises(SystemExit) as info:
         cli.main(["reap", "--backend", "fake", "--label", "nonsense"])
     assert info.value.code == cli.EXIT_USAGE
+
+
+class ListFails(FakeBackend):
+    """A backend whose provider is unreachable when reap asks what it holds."""
+
+    async def list_managed(
+        self, *, labels: Mapping[str, str] | None = None
+    ) -> list[ManagedSandbox]:
+        raise ConnectError("docker daemon is not reachable")
+
+
+class KillFails(FakeBackend):
+    """A backend that can see its sandboxes but is throttled when removing one."""
+
+    async def kill_managed(self, sandbox_id: str) -> bool:
+        raise RateLimitError(f"provider throttled the delete of {sandbox_id}")
+
+
+def test_reap_reports_a_backend_it_could_not_list_and_still_visits_the_others(
+    fake: FakeBackend, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import anyio
+
+    registry.register("broken", ListFails)
+    live = anyio.run(_leave_running, fake, "acme")
+    code, out, _ = run(["reap", "--backend", "broken", "--backend", "fake", "--json"], capsys)
+    payload = json.loads(out)
+    assert payload["backends"]["broken"] == (
+        "list failed: [SBX_E1202] docker daemon is not reachable"
+    )
+    assert payload["backends"]["fake"] == "1 found", "one dead backend must not abort the loop"
+    assert [row["sandbox_id"] for row in payload["sandboxes"]] == [live]
+    # Spec/10 gives reap no exit code for a backend it could not reach; tracked as a
+    # separate finding, so this pins today's behaviour rather than blessing it.
+    assert code == cli.EXIT_OK
+
+
+def test_reap_renders_the_list_failure_for_humans_too(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    registry.register("broken", ListFails)
+    _, out, _ = run(["reap", "--backend", "broken"], capsys)
+    assert "broken: list failed: [SBX_E1202] docker daemon is not reachable" in out
+
+
+def test_reap_marks_a_sandbox_it_could_not_kill_and_exits_nonzero(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import anyio
+
+    stubborn = KillFails()
+    registry.register("fake", lambda: stubborn)
+    sandbox_id = anyio.run(_leave_running, stubborn, "acme")
+    code, out, _ = run(["reap", "--backend", "fake", "--kill", "--json"], capsys)
+    row = json.loads(out)["sandboxes"][0]
+    assert row["killed"] is False
+    assert row["error"] == f"[SBX_E1502] provider throttled the delete of {sandbox_id}"
+    assert code == cli.EXIT_PROBLEM
+
+    _, human, _ = run(["reap", "--backend", "fake", "--kill"], capsys)
+    assert "NOT killed [SBX_E1502]" in human
+
+
+def test_reap_refuses_a_backend_that_cannot_list_its_sandboxes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """ReapableBackend is optional, so reap has to say which half is missing (spec/02)."""
+
+    class NotReapable:
+        name = "bare"
+
+    registry.register("bare", cast(Any, NotReapable))
+    code, out, _ = run(["reap", "--backend", "bare", "--json"], capsys)
+    error = json.loads(out)["error"]
+    assert code == cli.EXIT_PROBLEM
+    assert error["code"] == "SBX_E1000"
+    assert "cannot list its sandboxes" in error["message"]
+    assert "list_managed" in error["hint"] and "kill_managed" in error["hint"]
 
 
 # --- demo -----------------------------------------------------------------------------------
