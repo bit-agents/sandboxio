@@ -569,6 +569,17 @@ class BackendContractSuite:
         await sb.files.write("/work/blob.bin", payload)
         assert await sb.files.read("/work/blob.bin") == payload
 
+    async def test_a_relative_path_means_the_same_place_to_files_and_to_run(
+        self, sb: AsyncSandbox
+    ) -> None:
+        """spec/02: paths are sandbox-internal. One sandbox root, not one per API."""
+        self.needs(Capability.FILESYSTEM | Capability.RUN_COMMAND)
+        token = uuid.uuid4().hex
+        await sb.files.write("relative.txt", token)
+        assert (await sb.run(["cat", "relative.txt"])).stdout.strip() == token
+        assert (await sb.files.read("relative.txt")).decode().strip() == token
+        assert "relative.txt" in {i.path.rsplit("/", 1)[-1] for i in await sb.files.ls(".")}
+
     async def test_files_ls_mkdir_remove(self, sb: AsyncSandbox) -> None:
         self.needs(Capability.FILESYSTEM)
         await sb.files.mkdir("/work/d1/d2", parents=True)

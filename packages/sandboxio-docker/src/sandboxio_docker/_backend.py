@@ -76,6 +76,10 @@ LABEL_TIMEOUT = "io.sandboxio.timeout"
 # support Docker rarely has, so disk_mb is refused rather than ignored.
 DEFAULT_CPU = 1.0
 DEFAULT_MEMORY_MB = 512
+# Hardening applied to every container (ADR-0028). Not a Capability: the CONTAINER tier
+# still does not make untrusted code safe (spec/05 threat model).
+DEFAULT_PIDS = 512
+SECURITY_OPT = ["no-new-privileges"]
 # Ceiling on concurrent streams, since each one parks a worker until its command ends.
 DEFAULT_THREADS = 64
 _ENV_THREADS = "SBX_DOCKER_THREADS"
@@ -236,6 +240,7 @@ class DockerBackend:
                 hint="Drop disk_mb for Docker, or pick a backend that caps disk.",
             )
         image = template or self.image
+        memory_mb = resources.memory_mb or DEFAULT_MEMORY_MB
         container: Container | None = None
         sb: DockerSandbox | None = None
         try:
@@ -252,7 +257,12 @@ class DockerBackend:
                     init=True,
                     network_mode="none" if network.egress == "deny" else "bridge",
                     nano_cpus=int((resources.cpu or DEFAULT_CPU) * 1e9),
-                    mem_limit=f"{resources.memory_mb or DEFAULT_MEMORY_MB}m",
+                    mem_limit=f"{memory_mb}m",
+                    # Equal limits disable swap: without this the memory cap is advisory.
+                    memswap_limit=f"{memory_mb}m",
+                    pids_limit=DEFAULT_PIDS,
+                    cap_drop=["ALL"],
+                    security_opt=SECURITY_OPT,
                     environment={**(env or {}), **(secrets or {})},
                     working_dir=WORKDIR,
                     labels=self.labels(metadata, float(timeout)),
@@ -747,6 +757,14 @@ class DockerFileSystem:
             redact=self._sb._redact,  # pyright: ignore[reportPrivateUsage]
         )
 
+    def _resolve(self, path: str) -> str:
+        """The archive API resolves a relative path against ``/``; exec uses ``WORKDIR``.
+
+        Rooting both at ``WORKDIR`` is what makes write-then-read-back agree (spec/02).
+        """
+        joined = path if path.startswith("/") else posixpath.join(WORKDIR, path)
+        return posixpath.normpath(joined)
+
     def _map_fs(self, exc: Exception, path: str) -> Exception:
         import docker.errors
 
@@ -756,9 +774,10 @@ class DockerFileSystem:
         return mapped if mapped is not None else FileSystemError(f"docker: {exc}")
 
     async def read(self, path: str) -> bytes:
+        target = self._resolve(path)
         async with await self._op("file_read", path) as record:
             try:
-                stream, _stat = await _thread(self._sb.native.get_archive, path)
+                stream, _stat = await _thread(self._sb.native.get_archive, target)
                 data = await _thread(lambda: b"".join(stream))
             except Exception as exc:
                 raise self._map_fs(exc, path) from exc
@@ -774,7 +793,7 @@ class DockerFileSystem:
 
     async def write(self, path: str, data: bytes | str) -> None:
         payload = data.encode() if isinstance(data, str) else bytes(data)
-        parent, name = posixpath.split(path.rstrip("/"))
+        parent, name = posixpath.split(self._resolve(path))
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w") as tar:
             info = tarfile.TarInfo(name)

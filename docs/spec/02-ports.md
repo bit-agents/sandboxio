@@ -163,6 +163,9 @@ class AsyncFileSystem(Protocol):
 
 - All paths are **sandbox-internal**. An adapter MUST NOT resolve a path against the host
   filesystem, except for the explicit `local` arguments of `upload`/`download`.
+- A relative path MUST resolve against the **same sandbox root** the adapter gives `run()`,
+  so writing `"out.txt"` and then `cat out.txt` name one file. An adapter whose provider
+  APIs disagree resolves the path itself rather than passing it through.
 - `read` returns `bytes`; text decoding is the caller's. Round-trips MUST be binary-safe.
 - A missing path MUST raise a mapped sandboxio error, never return empty.
 - Large transfers SHOULD stream rather than buffer whole files in memory.

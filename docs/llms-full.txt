@@ -543,13 +543,21 @@ for untrusted multi-tenant code pick a `MICROVM` backend
 ## What the adapter does
 
 - One container per sandbox, `docker exec` per operation, working directory `/work`.
+  A relative path means the same file to `files.read`/`write` and to `run` — both resolve
+  under `/work`.
 - `network_mode: none` by default. `NetworkPolicy(egress="allow")` gives the bridge network.
   **Allowlists are refused** with `CapabilityNotSupported`: Docker has no per-host egress
   filtering, and granting bridge access because an allowlist was requested would be a
   security control that appears to apply and does not
   ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)). Allowlists are an E2B capability.
-- CPU and memory caps apply on every sandbox (1 CPU, 512 MB unless you raise them).
+- CPU and memory caps apply on every sandbox (1 CPU, 512 MB unless you raise them), and
+  swap is capped with memory so the limit is the limit.
   `Resources(disk_mb=...)` is refused rather than ignored — Docker cannot enforce it.
+- Every container drops all capabilities, runs with `no-new-privileges` and a 512-process
+  ceiling ([ADR-0028](../adr/0028-docker-container-hardening.md)). It still runs **as root
+  on a writable rootfs**: `CONTAINER` is for trusted, dev and CI code, not for untrusted
+  multi-tenant code — use E2B for that. An image needing a dropped capability back is a
+  `.native` case.
 - The container's PID 1 is `sleep <timeout>`: the provider-side lifetime backstop. When it
   fires, Docker leaves the container **stopped**; `sandboxio reap` removes it.
 - A call timeout or a cancellation kills **every** process in the container (Docker cannot
@@ -1719,6 +1727,9 @@ class AsyncFileSystem(Protocol):
 
 - All paths are **sandbox-internal**. An adapter MUST NOT resolve a path against the host
   filesystem, except for the explicit `local` arguments of `upload`/`download`.
+- A relative path MUST resolve against the **same sandbox root** the adapter gives `run()`,
+  so writing `"out.txt"` and then `cat out.txt` name one file. An adapter whose provider
+  APIs disagree resolves the path itself rather than passing it through.
 - `read` returns `bytes`; text decoding is the caller's. Round-trips MUST be binary-safe.
 - A missing path MUST raise a mapped sandboxio error, never return empty.
 - Large transfers SHOULD stream rather than buffer whole files in memory.
@@ -2087,6 +2098,12 @@ Explicitly out of scope, and documented as such: making untrusted code safe on t
 `CONTAINER` tier; defending against prompt injection; managing tenant identity or
 authorization.
 
+Container-tier hardening that costs no compatibility is still applied — dropped
+capabilities, `no-new-privileges`, a PID ceiling and swap bounded with memory
+([ADR-0028](../adr/0028-docker-container-hardening.md)). Running as a non-root user and a
+read-only rootfs are **not** applied, because both break ordinary images; that gap is
+recorded in the ADR rather than papered over here.
+
 ## Network policy
 
 - Default is `NetworkPolicy(egress="deny")`. This applies to `create()` with no arguments.
@@ -2139,6 +2156,9 @@ policy in effect time-varying in the audit record.
 
 - Modest CPU, memory and disk defaults MUST always be applied.
 - A caller MAY raise a cap. A caller MUST NOT be able to unset one.
+- A memory cap MUST bound memory **and swap together**, or it is advisory rather than a cap.
+- A process-count ceiling MUST be applied where the backend has one, so a fork bomb inside
+  a sandbox cannot exhaust the host ([ADR-0028](../adr/0028-docker-container-hardening.md)).
 - Exceeding a cap MUST surface as `ResourceLimitExceeded` naming the limit, where the
   backend reports it.
 
@@ -2844,6 +2864,7 @@ reversing it is an **amendment**: the earlier ADR keeps its status and gains an
 | [0025](0025-v01-scope-cut.md) | v0.1 ships Docker + E2B + Fake; Modal moves to v0.1.1 | Accepted |
 | [0026](0026-docs-license-cc-by.md) | Documentation under CC BY 4.0; code stays MIT | Accepted |
 | [0027](0027-adapter-thread-budget.md) | Blocking adapters get their own thread budget, not anyio's | Accepted |
+| [0028](0028-docker-container-hardening.md) | Docker containers ship hardened, minus the flags that break images | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

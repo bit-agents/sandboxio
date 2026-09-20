@@ -15,9 +15,12 @@ from sandboxio.testing.suite import BackendContractSuite, RecordingSink
 docker = pytest.importorskip("docker")
 sandboxio_docker = pytest.importorskip("sandboxio_docker")
 from sandboxio_docker._backend import (  # noqa: E402
+    DEFAULT_MEMORY_MB,
+    DEFAULT_PIDS,
     LABEL_MANAGED,
     LABEL_META,
     LABEL_SESSION,
+    SECURITY_OPT,
     DockerBackend,
     DockerSandbox,
 )
@@ -167,3 +170,41 @@ def test_cli_reap_and_demo_on_real_docker(capsys: pytest.CaptureFixture[str]) ->
     code = cli.main(["reap", "--backend", "docker", "--json"])
     assert code == 0
     assert json.loads(capsys.readouterr().out)["backends"]["docker"].endswith("found")
+
+
+@pytest.mark.anyio
+async def test_every_container_carries_the_hardening_flags() -> None:
+    """ADR-0028. The CONTAINER tier is still not a safety guarantee (spec/05 threat model);
+    these close the cheap holes an escape does not need."""
+    sb = await _backend.create(timeout=60)
+    try:
+        host = sb.native.attrs["HostConfig"]
+        assert host["PidsLimit"] == DEFAULT_PIDS, "a fork bomb must not reach host PIDs"
+        assert host["CapDrop"] == ["ALL"]
+        assert host["SecurityOpt"] == SECURITY_OPT
+        assert host["Memory"] == host["MemorySwap"], "unequal limits leave swap available"
+        assert host["Memory"] == DEFAULT_MEMORY_MB * 1024 * 1024
+    finally:
+        await sb.kill()
+
+
+@pytest.mark.anyio
+async def test_a_raised_memory_cap_raises_the_swap_cap_with_it() -> None:
+    sb = await _backend.create(timeout=60, resources=Resources(memory_mb=1024))
+    try:
+        host = sb.native.attrs["HostConfig"]
+        assert host["Memory"] == host["MemorySwap"] == 1024 * 1024 * 1024
+    finally:
+        await sb.kill()
+
+
+@pytest.mark.anyio
+async def test_dropping_all_capabilities_leaves_ordinary_code_working() -> None:
+    """The flags are worthless if they make the adapter unusable."""
+    sb = await _backend.create(timeout=60)
+    try:
+        assert (await sb.run(["python", "-c", "print(6*7)"])).stdout.strip() == "42"
+        await sb.files.write("probe.txt", "ok")
+        assert (await sb.files.read("probe.txt")) == b"ok"
+    finally:
+        await sb.kill()

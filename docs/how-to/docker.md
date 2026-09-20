@@ -23,13 +23,21 @@ for untrusted multi-tenant code pick a `MICROVM` backend
 ## What the adapter does
 
 - One container per sandbox, `docker exec` per operation, working directory `/work`.
+  A relative path means the same file to `files.read`/`write` and to `run` — both resolve
+  under `/work`.
 - `network_mode: none` by default. `NetworkPolicy(egress="allow")` gives the bridge network.
   **Allowlists are refused** with `CapabilityNotSupported`: Docker has no per-host egress
   filtering, and granting bridge access because an allowlist was requested would be a
   security control that appears to apply and does not
   ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)). Allowlists are an E2B capability.
-- CPU and memory caps apply on every sandbox (1 CPU, 512 MB unless you raise them).
+- CPU and memory caps apply on every sandbox (1 CPU, 512 MB unless you raise them), and
+  swap is capped with memory so the limit is the limit.
   `Resources(disk_mb=...)` is refused rather than ignored — Docker cannot enforce it.
+- Every container drops all capabilities, runs with `no-new-privileges` and a 512-process
+  ceiling ([ADR-0028](../adr/0028-docker-container-hardening.md)). It still runs **as root
+  on a writable rootfs**: `CONTAINER` is for trusted, dev and CI code, not for untrusted
+  multi-tenant code — use E2B for that. An image needing a dropped capability back is a
+  `.native` case.
 - The container's PID 1 is `sleep <timeout>`: the provider-side lifetime backstop. When it
   fires, Docker leaves the container **stopped**; `sandboxio reap` removes it.
 - A call timeout or a cancellation kills **every** process in the container (Docker cannot

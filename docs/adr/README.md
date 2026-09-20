@@ -37,6 +37,7 @@ reversing it is an **amendment**: the earlier ADR keeps its status and gains an
 | [0025](0025-v01-scope-cut.md) | v0.1 ships Docker + E2B + Fake; Modal moves to v0.1.1 | Accepted |
 | [0026](0026-docs-license-cc-by.md) | Documentation under CC BY 4.0; code stays MIT | Accepted |
 | [0027](0027-adapter-thread-budget.md) | Blocking adapters get their own thread budget, not anyio's | Accepted |
+| [0028](0028-docker-container-hardening.md) | Docker containers ship hardened, minus the flags that break images | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.

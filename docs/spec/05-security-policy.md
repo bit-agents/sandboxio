@@ -20,6 +20,12 @@ Explicitly out of scope, and documented as such: making untrusted code safe on t
 `CONTAINER` tier; defending against prompt injection; managing tenant identity or
 authorization.
 
+Container-tier hardening that costs no compatibility is still applied — dropped
+capabilities, `no-new-privileges`, a PID ceiling and swap bounded with memory
+([ADR-0028](../adr/0028-docker-container-hardening.md)). Running as a non-root user and a
+read-only rootfs are **not** applied, because both break ordinary images; that gap is
+recorded in the ADR rather than papered over here.
+
 ## Network policy
 
 - Default is `NetworkPolicy(egress="deny")`. This applies to `create()` with no arguments.
@@ -72,6 +78,9 @@ policy in effect time-varying in the audit record.
 
 - Modest CPU, memory and disk defaults MUST always be applied.
 - A caller MAY raise a cap. A caller MUST NOT be able to unset one.
+- A memory cap MUST bound memory **and swap together**, or it is advisory rather than a cap.
+- A process-count ceiling MUST be applied where the backend has one, so a fork bomb inside
+  a sandbox cannot exhaust the host ([ADR-0028](../adr/0028-docker-container-hardening.md)).
 - Exceeding a cap MUST surface as `ResourceLimitExceeded` naming the limit, where the
   backend reports it.
 
