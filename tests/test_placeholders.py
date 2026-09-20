@@ -1,4 +1,4 @@
-"""The placeholder inventory, so the gate enforces itself.
+"""The placeholder inventory, so an unfilled marker cannot reach a release unnoticed.
 
 A new `{{PLACEHOLDER}}` or `TODO(placeholder)` fails here; filling one fails here too,
 until its row is deleted. Neither can land unnoticed.
@@ -52,7 +52,7 @@ def test_placeholder_inventory_is_unchanged() -> None:
     found = Counter(m for p in _files() for m in PLACEHOLDER.findall(p.read_text("utf-8")))
     assert dict(found) == EXPECTED, (
         "the placeholder inventory moved; fill the row or update EXPECTED "
-        f"(the placeholder inventory). Found {dict(found)}"
+        f"Found {dict(found)}"
     )
 
 
