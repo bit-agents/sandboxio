@@ -255,5 +255,5 @@ one — the routing config in the original set **was not valid YAML** and was co
 the spec before a parser caught it. Fixed in [spec/07](spec/07-configuration.md#routing-file),
 which now also restructures `default_class` as a top-level mandatory key rather than a
 pseudo-route. All findings are listed as
-[corrections to the original design](readme.md#corrections-to-the-original-design). Every
+[corrections to the original design](README.md#corrections-to-the-original-design). Every
 config sample in `spec/` is now parse-tested in CI.

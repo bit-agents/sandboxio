@@ -31,7 +31,7 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 the [`how-to/`](how-to/) page for your backend →
 [`explanation/isolation-tiers.md`](explanation/isolation-tiers.md) before running untrusted code.
 
-**New contributor:** `readme.md` → [`spec/`](spec/) index → [`build-order.md`](build-order.md) → [`runbook.md`](runbook.md).
+**New contributor:** `README.md` → [`spec/`](spec/) index → [`build-order.md`](build-order.md) → [`runbook.md`](runbook.md).
 
 **Coding agent:** [`spec/`](spec/) is the contract. Where the spec is silent or marked
 `OPEN`, stop and ask — do not invent. [`adr/`](adr/) explains *why*, which matters when a

@@ -26,7 +26,7 @@ Read before writing code:
 | DSNs, config, routing | [spec/07](docs/spec/07-configuration.md) |
 | the CLI (`sandboxio.cli`, `sandboxio.doctor()`) | [spec/10](docs/spec/10-cli.md) |
 | `sandboxio.integrations.*`, `sandboxio.mcp` | [spec/09](docs/spec/09-integrations.md) |
-| user docs under `docs/` (Diátaxis), `README.md` examples | [docs/readme.md](docs/readme.md); every README Python block is executed by `tests/test_readme_examples.py` |
+| user docs under `docs/` (Diátaxis), `README.md` examples | [docs/README.md](docs/README.md); every README Python block is executed by `tests/test_readme_examples.py` |
 | runnable programs under `examples/` | [examples/README.md](examples/README.md); every script is executed by `tests/test_examples.py` with the backends faked |
 
 Why a decision is the way it is: [`docs/adr/`](docs/adr/). What is being built next, in
