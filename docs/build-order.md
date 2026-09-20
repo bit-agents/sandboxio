@@ -189,6 +189,10 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
   on PRs, Docker job on `main`, leak check
 - [x] `tests/test_readme_examples.py`: every README Python block is executed verbatim —
   scripts against fakes registered as `docker`/`e2b`, pytest-style blocks through pytester
+- [x] [`examples/`](../examples/README.md): complete runnable programs — hello world, the
+  one-line backend swap, streaming and timeouts, deny-by-default egress, a LangGraph agent
+  and an OpenAI Agents one, and `sbx_fake` for the reader's own tools. `tests/test_examples.py`
+  executes each script against the fakes; `examples/test_my_tool.py` is collected by pytest.
 
 Decisions taken here: the CLI is stdlib `argparse` in core, not the Typer app spec/10 named,
 because `uvx sandboxio demo` must run from the bare distribution and ADR-0004 forbids a new

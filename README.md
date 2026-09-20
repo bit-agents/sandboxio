@@ -165,6 +165,8 @@ Third-party adapters are first-class: the adapter contract is
 
 Until then, read the repository:
 
+- [`examples/`](examples/) — complete programs, one concept each: hello world, swapping
+  backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
 - [`docs/quickstart.md`](docs/quickstart.md) — five minutes from install to a sandboxed run.
 - [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
   allowlists, offline testing with the fake, audit sinks and tracing, CI.

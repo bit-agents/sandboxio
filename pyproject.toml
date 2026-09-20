@@ -72,7 +72,7 @@ path = "src/sandboxio/__init__.py"
 packages = ["src/sandboxio"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/", "tests/", "docs/", "scripts/", "README.md", "CHANGELOG.md", "LICENSE", "LICENSE-DOCS"]
+include = ["src/", "tests/", "docs/", "examples/", "scripts/", "README.md", "CHANGELOG.md", "LICENSE", "LICENSE-DOCS"]
 
 [tool.uv]
 required-version = ">=0.5"
@@ -86,7 +86,8 @@ sandboxio-e2b = { workspace = true }
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+# examples/test_my_tool.py is a user-facing example and a real test; it runs as both.
+testpaths = ["tests", "examples"]
 addopts = "-q --strict-markers --strict-config --disable-socket --allow-unix-socket -m 'not docker and not e2b'"
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
@@ -142,7 +143,7 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src", "tests", "scripts", "packages"]
+files = ["src", "tests", "scripts", "packages", "examples"]
 strict = true
 warn_unreachable = true
 disallow_any_explicit = false
@@ -153,8 +154,17 @@ enable_error_code = ["redundant-expr", "truthy-bool", "ignore-without-code", "po
 module = ["e2b_code_interpreter", "e2b_code_interpreter.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# examples/05 wires sandboxio into frameworks it does not depend on, so they are not
+# installed here. The example still has to type-check as the reader will write it.
+module = ["langgraph.*", "langchain_anthropic.*"]
+ignore_missing_imports = true
+
 [tool.pyright]
-include = ["src", "tests", "scripts", "packages"]
+include = ["src", "tests", "scripts", "packages", "examples"]
+# The LangGraph example imports packages sandboxio does not depend on, so strict mode sees
+# only Unknown there. mypy still checks the file (ignore_missing_imports above).
+exclude = ["examples/05_langgraph_agent.py"]
 pythonVersion = "3.11"
 typeCheckingMode = "strict"
 reportMissingTypeStubs = "error"

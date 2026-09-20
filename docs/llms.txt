@@ -7,6 +7,7 @@ Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error
 ## Start here
 
 - [README](../README.md): what it is and runnable examples
+- [Examples](../examples/README.md): complete runnable programs, one concept each, all executed by CI
 - [Quickstart](quickstart.md): install to a sandboxed run in five minutes
 - [AGENTS.md snippet](reference/agents-snippet.md): paste-ready rules for coding assistants in a project that uses sandboxio
 

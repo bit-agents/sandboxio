@@ -27,7 +27,8 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 
 ## Reading order
 
-**User:** [`quickstart.md`](quickstart.md) → the [`how-to/`](how-to/) page for your backend →
+**User:** [`quickstart.md`](quickstart.md) → [`examples/`](../examples/) →
+the [`how-to/`](how-to/) page for your backend →
 [`explanation/isolation-tiers.md`](explanation/isolation-tiers.md) before running untrusted code.
 
 **New contributor:** `readme.md` → [`spec/`](spec/) index → [`build-order.md`](build-order.md) → [`runbook.md`](runbook.md).

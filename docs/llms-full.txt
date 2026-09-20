@@ -9,6 +9,7 @@ Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error
 ## Start here
 
 - [README](../README.md): what it is and runnable examples
+- [Examples](../examples/README.md): complete runnable programs, one concept each, all executed by CI
 - [Quickstart](quickstart.md): install to a sandboxed run in five minutes
 - [AGENTS.md snippet](reference/agents-snippet.md): paste-ready rules for coding assistants in a project that uses sandboxio
 
@@ -221,6 +222,8 @@ Third-party adapters are first-class: the adapter contract is
 
 Until then, read the repository:
 
+- [`examples/`](examples/) — complete programs, one concept each: hello world, swapping
+  backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
 - [`docs/quickstart.md`](docs/quickstart.md) — five minutes from install to a sandboxed run.
 - [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
   allowlists, offline testing with the fake, audit sinks and tracing, CI.
@@ -248,6 +251,62 @@ there is no CLA.
 
 Code is [MIT](LICENSE). Prose in `docs/` is [CC BY 4.0](LICENSE-DOCS); code samples inside
 those documents are MIT ([ADR-0026](docs/adr/0026-docs-license-cc-by.md)).
+
+
+==============================================================================
+# FILE: examples/README.md
+==============================================================================
+
+# Examples
+
+Complete programs, one concept each. Every one of them is executed by CI
+([`tests/test_examples.py`](../tests/test_examples.py)) with the Docker and E2B backends
+swapped for the in-process fake, so an example that stopped working fails our build rather
+than your first attempt.
+
+| Example | Shows | Needs |
+|---------|-------|-------|
+| [`01_hello_sandbox.py`](01_hello_sandbox.py) | create → `run_code` → `run` → teardown | Docker |
+| [`02_swap_backends.py`](02_swap_backends.py) | one function, two providers, one line changed | Docker, `E2B_API_KEY` |
+| [`03_stream_and_timeout.py`](03_stream_and_timeout.py) | `stream()`, and `SandboxTimeout` (`SBX_E1302`) stopping a runaway | Docker |
+| [`04_egress_denied.py`](04_egress_denied.py) | deny-by-default egress, proven, then the explicit opt-out | Docker |
+| [`05_langgraph_agent.py`](05_langgraph_agent.py) | a LangGraph agent whose tool is a sandbox | Docker, `langgraph`, `ANTHROPIC_API_KEY` |
+| [`06_openai_agents.py`](06_openai_agents.py) | the same through the OpenAI Agents SDK | Docker, `OPENAI_API_KEY` |
+| [`test_my_tool.py`](test_my_tool.py) | testing your agent's tools with `sbx_fake` | nothing |
+
+## Running them
+
+From a clone, with the repository's own environment:
+
+```bash
+uv run --extra docker examples/01_hello_sandbox.py
+uv run pytest examples/test_my_tool.py
+```
+
+The two agent examples run their sandboxio half with no API key and print why they stopped,
+so you can see the tool work before you spend a token:
+
+```bash
+uv sync --all-extras
+uv run examples/05_langgraph_agent.py
+```
+
+<!-- TODO(placeholder): once the package is published, each script gets a PEP 723
+     `# /// script` header so `uv run https://.../01_hello_sandbox.py` works with no clone
+     and no install. It cannot be written until there is a name on PyPI to depend on. -->
+
+Every example assumes a running Docker daemon and the `python:3.12-slim` image. If something
+is off, `sandboxio doctor` says what is installed, reachable and missing — without printing
+a single secret.
+
+## What they deliberately do not show
+
+- **Per-host allowlists on Docker.** `NetworkPolicy(allow=...)` is refused there with
+  `SBX_E1101`, because Docker cannot enforce it and silently ignoring it would be a lie
+  about a security control. E2B can; see
+  [`docs/spec/05-security-policy.md`](../docs/spec/05-security-policy.md).
+- **Tasks rather than concepts.** Image preparation, offline wheelhouses, E2B keys, audit
+  sinks, tracing and CI each have a page under [`docs/how-to/`](../docs/how-to/).
 
 
 ==============================================================================
@@ -3147,6 +3206,10 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
   on PRs, Docker job on `main`, leak check
 - [x] `tests/test_readme_examples.py`: every README Python block is executed verbatim —
   scripts against fakes registered as `docker`/`e2b`, pytest-style blocks through pytester
+- [x] [`examples/`](../examples/README.md): complete runnable programs — hello world, the
+  one-line backend swap, streaming and timeouts, deny-by-default egress, a LangGraph agent
+  and an OpenAI Agents one, and `sbx_fake` for the reader's own tools. `tests/test_examples.py`
+  executes each script against the fakes; `examples/test_my_tool.py` is collected by pytest.
 
 Decisions taken here: the CLI is stdlib `argparse` in core, not the Typer app spec/10 named,
 because `uvx sandboxio demo` must run from the bare distribution and ADR-0004 forbids a new

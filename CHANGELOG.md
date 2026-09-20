@@ -12,6 +12,8 @@ Every absorbed provider break gets an entry here as well as in the churn-absorpt
 ### Added
 
 - Project skeleton: `uv` project, `src/` layout, `py.typed`, ruff, mypy strict, pyright strict.
+- `examples/`: six runnable programs plus a worked `sbx_fake` test, each executed by CI
+  (`tests/test_examples.py`) with the Docker and E2B backends swapped for the fake.
 - CI gates, failing closed from commit one: import budget, no sockets at import, no eager
   third-party imports, wheel contents, doc-sample parsing, doc-link checking.
 - `AGENTS.md` carrying the pinned decisions for coding agents.

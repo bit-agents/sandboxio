@@ -64,6 +64,8 @@ Full loop and release process: [`docs/runbook.md`](docs/runbook.md).
   ([ADR-0004](docs/adr/0004-thin-core-lazy-adapters.md)).
 - **No import-time side effects**, no sockets at import, nothing that pushes the import
   budget over 150 ms ([ADR-0012](docs/adr/0012-no-telemetry-no-import-side-effects.md)).
+- **A public-API change updates the examples.** Every script in [`examples/`](examples/)
+  is executed by CI against the fake, so a stale example fails the build, not a stranger.
 - **Never widen the API to the lowest common denominator.** One-backend features go behind
   `Capability` flags and `.native` ([ADR-0003](docs/adr/0003-no-lowest-common-denominator.md)).
 
