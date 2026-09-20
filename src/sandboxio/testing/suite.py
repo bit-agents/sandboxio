@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import inspect
 import uuid
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import anyio
@@ -18,6 +19,7 @@ import pytest
 
 import sandboxio
 from sandboxio import api, registry
+from sandboxio._teardown import teardown_grace
 from sandboxio.errors import (
     CapabilityNotSupported,
     ConfigurationError,
@@ -231,11 +233,15 @@ class BackendContractSuite:
     async def discard(self, sb: AsyncSandbox) -> None:
         """Remove a sandbox whose ``kill`` was sabotaged or skipped, so no test leaks one.
 
-        A non-reapable backend cannot be asked; such an adapter SHOULD override this.
+        Bounded like every other shielded teardown here, and silent: it runs in a ``finally``,
+        and under ``filterwarnings = error`` even a warning would replace the exception the
+        test was reporting. Whatever it fails to remove the adapter's end-of-session leak
+        check reports. A non-reapable backend cannot be asked; such an adapter SHOULD
+        override this.
         """
         if not hasattr(self.backend, "kill_managed"):
             return
-        with anyio.CancelScope(shield=True):
+        with anyio.move_on_after(teardown_grace(), shield=True), suppress(Exception):
             await cast("ReapableBackend", self.backend).kill_managed(sb.id)
 
     # --- lifecycle --------------------------------------------------------------------------
