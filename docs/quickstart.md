@@ -147,6 +147,8 @@ The fixture is installed with the package. More in
 
 ## Where next
 
+- [`examples/`](../examples/README.md): the same ground as complete programs you can run —
+  one concept each, every one executed by CI.
 - [Docker how-to](how-to/docker.md): images with dependencies, offline wheelhouses, the reaper.
 - [E2B how-to](how-to/e2b.md): API key, allowlists, stateful contexts, rich outputs.
 - [Audit and tracing](how-to/observability.md): sinks, OTel spans, redaction.

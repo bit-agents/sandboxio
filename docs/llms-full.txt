@@ -462,6 +462,8 @@ The fixture is installed with the package. More in
 
 ## Where next
 
+- [`examples/`](../examples/README.md): the same ground as complete programs you can run —
+  one concept each, every one executed by CI.
 - [Docker how-to](how-to/docker.md): images with dependencies, offline wheelhouses, the reaper.
 - [E2B how-to](how-to/e2b.md): API key, allowlists, stateful contexts, rich outputs.
 - [Audit and tracing](how-to/observability.md): sinks, OTel spans, redaction.
@@ -748,6 +750,9 @@ it changes when E2B changes it.
 the same contract suite as Docker and E2B, executes nothing, and needs no daemon, network or
 account. Your tool's tests run in milliseconds anywhere pytest runs.
 
+This page as a runnable file, executed by CI like every other example:
+[`examples/test_my_tool.py`](../../examples/test_my_tool.py).
+
 ## The fixture
 
 The package registers a pytest plugin, so `sbx_fake` is available with no `conftest.py`.
@@ -1033,6 +1038,11 @@ creates real sandboxes and costs real money:
 
 # How to use sandboxio from LangGraph, the OpenAI Agents SDK and MCP
 
+Both agent integrations have a complete, CI-executed program:
+[`examples/05_langgraph_agent.py`](../../examples/05_langgraph_agent.py) and
+[`examples/06_openai_agents.py`](../../examples/06_openai_agents.py). Each runs its sandboxio
+half with no API key set, so you can watch the tool work before spending a token.
+
 Each integration returns the framework's **native** tool object wrapping `run_code` or
 `run` on a sandbox you provide. The tool descriptions are written for the model: one obvious
 way, the limits stated. No integration can weaken a default — deny egress, the timeout and
@@ -1259,6 +1269,9 @@ isolation mechanism is a breaking change in this project's public data, not a fo
 `sandboxio.create()` with no arguments gives a sandbox that cannot open a single outbound
 connection. Not "a sandbox with a firewall you can configure" — one that starts closed, and
 opens only where you say so.
+
+[`examples/04_egress_denied.py`](../../examples/04_egress_denied.py) proves this on a real
+sandbox in about twenty lines, then shows the explicit opt-out.
 
 ## The threat this answers
 
@@ -3268,7 +3281,9 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks). Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
+(six blocks) — and every program under [`examples/`](../examples/README.md) runs against the
+fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
+that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five
 steps 2.5 s, create 1.3 s); `uvx --from . sandboxio demo` on the bare distribution 2.6 s to
 the install hint. The MCP image builds and runs as uid 10001 with

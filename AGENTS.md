@@ -66,7 +66,9 @@ A red gate is never worked around. If a gate is wrong, change the gate in its ow
   mutable state, no telemetry — ever, not even opt-out.
 - **Strict typing.** pyright strict and mypy strict both pass; `py.typed` ships.
 - **Every doc sample is machine-checked.** YAML and JSON samples parse, Python samples
-  compile, every relative link and anchor resolves.
+  compile, every relative link and anchor resolves. The README blocks and every program in
+  `examples/` go further: they are **executed**, with `docker`/`e2b` resolving to the fake.
+  Changing the public API means updating them in the same PR.
 - **First-party adapters are workspace distributions** under `packages/` (`sandboxio-docker`,
   `sandboxio-e2b`; import `sandboxio_docker`, `sandboxio_e2b`), the same shape a third-party
   `sandboxio-<name>` takes. The

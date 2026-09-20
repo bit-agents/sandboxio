@@ -4,6 +4,9 @@
 connection. Not "a sandbox with a firewall you can configure" — one that starts closed, and
 opens only where you say so.
 
+[`examples/04_egress_denied.py`](../../examples/04_egress_denied.py) proves this on a real
+sandbox in about twenty lines, then shows the explicit opt-out.
+
 ## The threat this answers
 
 An agent's code is at best buggy and at worst attacker-chosen through prompt injection.

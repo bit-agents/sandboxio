@@ -213,7 +213,9 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks). Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
+(six blocks) — and every program under [`examples/`](../examples/README.md) runs against the
+fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
+that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five
 steps 2.5 s, create 1.3 s); `uvx --from . sandboxio demo` on the bare distribution 2.6 s to
 the install hint. The MCP image builds and runs as uid 10001 with

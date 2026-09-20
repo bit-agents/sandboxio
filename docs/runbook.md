@@ -59,6 +59,7 @@ merge**:
 | Error catalog | every code has a page, every page a code | [spec/04](spec/04-errors.md#catalog-is-generated) |
 | Doc samples | every YAML/JSON sample in `spec/` parses; every Python sample compiles | the input set shipped a config that was not valid YAML |
 | Doc links | every relative link and heading anchor resolves (`scripts/check_doc_links.py`) | `spec/` is the contract; a dead link into it is a dead requirement |
+| Executable docs | every README Python block (`tests/test_readme_examples.py`) and every program in [`examples/`](../examples/README.md) (`tests/test_examples.py`) runs, with `docker`/`e2b` resolving to the fake | a copied example that does not run is a P0 bug; it should fail our build, not a stranger's first attempt |
 
 A red gate is not overridden. If a gate is wrong, change the gate in its own PR, with a
 reason.

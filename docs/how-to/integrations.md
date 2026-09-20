@@ -1,5 +1,10 @@
 # How to use sandboxio from LangGraph, the OpenAI Agents SDK and MCP
 
+Both agent integrations have a complete, CI-executed program:
+[`examples/05_langgraph_agent.py`](../../examples/05_langgraph_agent.py) and
+[`examples/06_openai_agents.py`](../../examples/06_openai_agents.py). Each runs its sandboxio
+half with no API key set, so you can watch the tool work before spending a token.
+
 Each integration returns the framework's **native** tool object wrapping `run_code` or
 `run` on a sandbox you provide. The tool descriptions are written for the model: one obvious
 way, the limits stated. No integration can weaken a default — deny egress, the timeout and
