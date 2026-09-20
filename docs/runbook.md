@@ -90,7 +90,7 @@ the core value proposition ([H5](hazards.md#h5--provider-churn-outpaces-maintena
 
 ### Churn-absorption log
 
-A public docs page, maintained per absorbed break. It is the marketing for the core value
+A public docs page — [`churn-log.md`](churn-log.md) — maintained per absorbed break. It is the marketing for the core value
 prop — the evidence that the abstraction pays for itself — so it is written for users, not
 as a changelog dump. Never let it go stale; an empty churn log and a busy one both tell a
 story.

@@ -1,0 +1,6 @@
+# Review is required from a maintainer on everything; there is one today.
+# The spec and the contract suite are the two places a wrong merge is most expensive.
+*                           @mszkodzinski
+/docs/spec/                 @mszkodzinski
+/src/sandboxio/testing/     @mszkodzinski
+/.github/workflows/         @mszkodzinski

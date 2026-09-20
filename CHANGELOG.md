@@ -5,7 +5,8 @@ All notable changes are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over the surface named in
 [spec/03](docs/spec/03-public-api.md#stability-contract).
 
-Every absorbed provider break gets an entry here as well as in the churn-absorption log.
+Every absorbed provider break gets an entry here as well as in the
+[churn-absorption log](docs/churn-log.md).
 
 ## [Unreleased]
 
