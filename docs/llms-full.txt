@@ -2658,7 +2658,9 @@ Decisions taken for v0.1: the adapters live in core under `sandboxio.integration
 their framework behind an extra — `sandboxio[langgraph]` (`langchain-core>=0.3`, the tool
 type is `langchain_core.tools.BaseTool`) and `sandboxio[openai-agents]` (`openai-agents>=0.1`).
 Each ships `make_code_tool()` and `make_command_tool()`, taking either a ready sandbox or a
-per-call factory. `SbxSandboxClient` is v0.2.
+per-call factory. A `SandboxError` is rendered into the tool's return string — code, fix and
+docs URL — rather than raised into the framework, so the model can read what went wrong and
+try something else, as it can on the MCP server. `SbxSandboxClient` is v0.2.
 
 | Priority | Integration | Rationale |
 |----------|-------------|-----------|
@@ -2751,9 +2753,11 @@ distribution name, and the three-letter name belongs to an unrelated PyPI packag
 - Respect `NO_COLOR`; detect non-TTY and degrade cleanly.
 - Examples inside `--help`, not only in the docs.
 - Documented exit codes, stable across releases: `0` success · `1` a problem was found or
-  the command failed (`doctor`: an installed backend has a failing check; `reap --kill`: a
-  kill failed; `demo`: a step failed, including the egress probe reaching the network) ·
-  `2` usage error · `130` interrupted. A dry-run `reap` that lists sandboxes exits `0`.
+  the command failed (`doctor`: an installed backend has a failing check; `reap`: a backend
+  could not be listed, with or without `--kill`; `reap --kill`: a kill failed; `demo`: a
+  step failed, including the egress probe reaching the network) · `2` usage error · `130`
+  interrupted. A dry-run `reap` that lists every requested backend exits `0`, however many
+  sandboxes it found.
 - Progress bars for genuinely long operations only: image pull, sandbox boot.
 - `doctor` MUST print credential **variable names**, never values, and MUST NOT make a
   provider API call that costs money.

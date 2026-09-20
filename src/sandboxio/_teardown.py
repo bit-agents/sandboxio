@@ -45,17 +45,23 @@ async def shielded_kill(
 ) -> bool:
     """Run ``kill`` where cancellation cannot reach it, for at most the grace period.
 
-    Returns False and emits ``OrphanedSandboxWarning`` if the grace expired.
+    Returns False and emits ``OrphanedSandboxWarning`` if the grace expired or ``kill``
+    raised. A failed teardown never replaces the exception the caller's block raised.
     """
+    failure: BaseException | None = None
     with anyio.move_on_after(teardown_grace(), shield=True) as scope:
-        await kill()
-    if scope.cancelled_caught:
-        tags = " ".join(f"{k}={v}" for k, v in (labels or {}).items())
-        warnings.warn(
-            f"teardown of sandbox {sandbox_id} on {backend} exceeded the grace period; "
-            f"it may still be running. labels: {tags or 'none'}",
-            OrphanedSandboxWarning,
-            stacklevel=2,
-        )
-        return False
-    return True
+        try:
+            await kill()
+        except Exception as exc:
+            failure = exc
+    if not scope.cancelled_caught and failure is None:
+        return True
+    tags = " ".join(f"{k}={v}" for k, v in (labels or {}).items())
+    reason = "exceeded the grace period" if failure is None else f"failed: {failure!r}"
+    warnings.warn(
+        f"teardown of sandbox {sandbox_id} on {backend} {reason}; "
+        f"it may still be running. labels: {tags or 'none'}",
+        OrphanedSandboxWarning,
+        stacklevel=2,
+    )
+    return False

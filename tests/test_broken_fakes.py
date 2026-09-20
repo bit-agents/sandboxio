@@ -11,6 +11,7 @@ import pytest
 BROKEN = """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Any, ClassVar
 
 import anyio
@@ -23,9 +24,21 @@ from sandboxio.testing.fake import FakeBackend, FakeSandbox
 from sandboxio.testing.suite import BackendContractSuite
 
 
+class NativeKillBoom(Exception):
+    pass
+
+
 class _Base(BackendContractSuite):
     allowlist_supported = True
     settle = 0.0
+
+    @contextmanager
+    def simulate_kill_failure(self):
+        self.backend.simulate(kill_fails=NativeKillBoom("daemon refused the remove"))
+        try:
+            yield NativeKillBoom
+        finally:
+            self.backend.simulate()
 
     async def wait_until_busy(self, sb: AsyncSandbox) -> None:
         with anyio.fail_after(5):
@@ -89,6 +102,24 @@ class LeaksSecrets(FakeBackend):
     sandbox_class = LeakySandbox
 
 
+# --- 4. lets the provider's own exception escape kill() ------------------------------------
+
+
+class LeakyKillSandbox(FakeSandbox):
+    async def kill(self):
+        if self._backend.simulation.kill_fails is not None:
+            raise NativeKillBoom("daemon refused the remove")
+        await super().kill()
+
+
+class LeaksKillError(FakeBackend):
+    sandbox_class = LeakyKillSandbox
+
+
+class TestLeaksKillError(_Base):
+    backend: ClassVar[Any] = LeaksKillError()
+
+
 from sandboxio.audit import AuditConfig
 from sandboxio.testing.suite import RecordingSink
 
@@ -110,6 +141,7 @@ EXPECTED_FAILURES = {
         "test_allowlist_permits_only_listed_hosts",
     },
     "TestLeaksSecrets": {"test_repr_is_informative_and_safe", "test_secrets_reach_no_sink"},
+    "TestLeaksKillError": {"test_a_failing_kill_maps_instead_of_leaking_the_provider_error"},
 }
 
 

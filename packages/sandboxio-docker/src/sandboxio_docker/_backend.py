@@ -149,6 +149,16 @@ def _gone(exc: Exception) -> bool:
     return False
 
 
+def _map_common(exc: Exception, *, sandbox_id: str) -> Exception | None:
+    """Map docker-py errors shared by every operation; None means 'not one of ours'.
+
+    docker-py classifies little beyond "gone", so each caller supplies its own fallback.
+    """
+    if _gone(exc):
+        return SandboxGone(f"sandbox {sandbox_id} no longer exists on docker")
+    return None
+
+
 class DockerBackend:
     """One container per sandbox, ``docker exec`` per operation, ``network: none`` by default.
 
@@ -314,9 +324,15 @@ class DockerBackend:
         client = await self.client()
         wanted = [f"{LABEL_MANAGED}=true"]
         wanted += [f"{LABEL_META}{k}={v}" for k, v in (labels or {}).items()]
-        containers: list[Container] = await _thread(
-            client.containers.list, all=True, filters={"label": wanted}
-        )
+        try:
+            containers: list[Container] = await _thread(
+                client.containers.list, all=True, filters={"label": wanted}
+            )
+        except Exception as exc:
+            raise ConnectError(
+                "docker could not list sandboxes",
+                hint="Inspect `__cause__` for the daemon's reason.",
+            ) from exc
         return [_managed(c) for c in containers]
 
     async def kill_managed(self, sandbox_id: str) -> bool:
@@ -329,6 +345,11 @@ class DockerBackend:
             await _thread(container.remove, force=True)
         except docker.errors.NotFound:
             return False
+        except Exception as exc:
+            mapped = _map_common(exc, sandbox_id=sandbox_id)
+            if isinstance(mapped, SandboxGone):
+                return False
+            raise ConnectError(f"docker could not kill sandbox {sandbox_id!r}") from exc
         return True
 
     async def _ensure_image(self, client: docker.DockerClient, image: str) -> None:
@@ -426,6 +447,12 @@ class DockerSandbox:
     def _gone(self) -> SandboxGone:
         return SandboxGone(f"sandbox {self.id} no longer exists on docker")
 
+    def _map(self, exc: Exception) -> Exception:
+        mapped = _map_common(exc, sandbox_id=self.id)
+        if mapped is not None:
+            return mapped
+        return ExecutionError(ExecResult(KILLED_EXIT, "", f"docker: {exc}"))
+
     def _record(self, event: str, **fields: Any) -> OperationRecord:
         return OperationRecord(
             event=event,
@@ -453,9 +480,7 @@ class DockerSandbox:
                 workdir=WORKDIR,
             )
         except Exception as exc:
-            if _gone(exc):
-                raise self._gone() from exc
-            raise
+            raise self._map(exc) from exc
         return str(created["Id"])
 
     async def _exec_run(
@@ -564,7 +589,7 @@ class DockerSandbox:
             await _thread(self._container.remove, force=True)
         except Exception as exc:
             if not _gone(exc):
-                raise
+                raise self._map(exc) from exc
 
     @property
     def files(self) -> DockerFileSystem:
@@ -722,19 +747,21 @@ class DockerFileSystem:
             redact=self._sb._redact,  # pyright: ignore[reportPrivateUsage]
         )
 
-    async def read(self, path: str) -> bytes:
+    def _map_fs(self, exc: Exception, path: str) -> Exception:
         import docker.errors
 
+        if isinstance(exc, docker.errors.NotFound):
+            return PathNotFound(path)
+        mapped = _map_common(exc, sandbox_id=self._sb.id)
+        return mapped if mapped is not None else FileSystemError(f"docker: {exc}")
+
+    async def read(self, path: str) -> bytes:
         async with await self._op("file_read", path) as record:
             try:
                 stream, _stat = await _thread(self._sb.native.get_archive, path)
                 data = await _thread(lambda: b"".join(stream))
-            except docker.errors.NotFound as exc:
-                raise PathNotFound(path) from exc
             except Exception as exc:
-                if _gone(exc):
-                    raise self._sb._gone() from exc  # pyright: ignore[reportPrivateUsage]
-                raise
+                raise self._map_fs(exc, path) from exc
             with tarfile.open(fileobj=io.BytesIO(data)) as tar:
                 member = next((m for m in tar.getmembers() if m.isfile()), None)
                 if member is None:
@@ -746,8 +773,6 @@ class DockerFileSystem:
         return payload
 
     async def write(self, path: str, data: bytes | str) -> None:
-        import docker.errors
-
         payload = data.encode() if isinstance(data, str) else bytes(data)
         parent, name = posixpath.split(path.rstrip("/"))
         buf = io.BytesIO()
@@ -758,12 +783,8 @@ class DockerFileSystem:
         async with await self._op("file_write", path) as record:
             try:
                 ok = await _thread(self._sb.native.put_archive, parent or "/", buf.getvalue())
-            except docker.errors.NotFound as exc:
-                raise PathNotFound(parent or "/") from exc
             except Exception as exc:
-                if _gone(exc):
-                    raise self._sb._gone() from exc  # pyright: ignore[reportPrivateUsage]
-                raise
+                raise self._map_fs(exc, parent or "/") from exc
             if not ok:
                 raise FileSystemError(f"docker refused to write {path!r}")
             record.bytes_in = len(payload)

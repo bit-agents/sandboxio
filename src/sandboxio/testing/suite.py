@@ -56,6 +56,10 @@ __all__ = ["BackendContractSuite", "RecordingSink"]
 HARD_LIMIT = 60.0
 
 
+class _Boom(Exception):
+    """Stands in for whatever the caller's ``async with`` block raises."""
+
+
 class _SkipProbe:
     """Default for probes an adapter cannot provide: entering the block skips the test."""
 
@@ -157,6 +161,10 @@ class BackendContractSuite:
 
     def simulate_kill_hang(self) -> AbstractContextManager[None]:
         return _SkipProbe("adapter cannot simulate a hanging kill")
+
+    def simulate_kill_failure(self) -> AbstractContextManager[type[BaseException]]:
+        """Yield the native exception type ``kill()`` will raise."""
+        return _SkipProbe("adapter cannot simulate a failing kill")
 
     def simulate_slow_create(self) -> AbstractContextManager[None]:
         return _SkipProbe("adapter cannot simulate a slow create")
@@ -327,6 +335,31 @@ class BackendContractSuite:
         message = str(record[0].message)
         assert sb.id in message
         assert "tenant_id=t-1" in message
+
+    async def test_a_failing_kill_maps_instead_of_leaking_the_provider_error(self) -> None:
+        """spec/04 mapping rule 1: no raw provider exception crosses the adapter boundary."""
+        sb = await self.create()
+        with self.simulate_kill_failure() as native, pytest.raises(SandboxError) as info:
+            await sb.kill()
+        assert isinstance(info.value.__cause__, native), "`raise ... from exc` (spec/04 rule 2)"
+
+    async def test_a_failing_teardown_warns_and_keeps_the_callers_exception(self) -> None:
+        """``__aexit__`` must not replace what the block raised with a teardown failure."""
+        sb = await self.create(metadata={"tenant_id": "t-2"})
+        with (
+            self.simulate_kill_failure(),
+            pytest.warns(OrphanedSandboxWarning) as record,
+            pytest.raises(_Boom),
+        ):
+            async with sb:
+                raise _Boom("what the caller actually wanted to see")
+        assert sb.id in str(record[0].message)
+
+    async def test_a_failing_teardown_alone_warns_rather_than_raising(self) -> None:
+        sb = await self.create()
+        with self.simulate_kill_failure(), pytest.warns(OrphanedSandboxWarning):
+            async with sb:
+                pass
 
     # --- run --------------------------------------------------------------------------------
 

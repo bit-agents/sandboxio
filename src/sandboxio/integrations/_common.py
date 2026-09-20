@@ -5,6 +5,8 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, TypeAlias
 
+from sandboxio.errors import SandboxError
+
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Awaitable, Callable
 
@@ -38,6 +40,31 @@ async def use(source: SandboxSource) -> AsyncGenerator[AsyncSandbox]:
             yield sb
     else:
         yield source
+
+
+async def run_tool(
+    source: SandboxSource, call: Callable[[AsyncSandbox], Awaitable[ExecResult]]
+) -> str:
+    """One tool call, rendered for the model — including when it fails.
+
+    A raw ``SandboxTimeout`` or ``SandboxGone`` in the framework's tool machinery tells the
+    model nothing; the code, fix and docs URL let it try something else (spec/09).
+    """
+    try:
+        async with use(source) as sb:
+            return render(await call(sb))
+    except SandboxError as exc:
+        return render_error(exc)
+
+
+def render_error(exc: SandboxError) -> str:
+    """The same three lines the MCP server sends: what failed, the fix, where to read more."""
+    parts = [f"[{exc.code}] {exc.message}"]
+    if exc.hint:
+        parts.append(f"Fix: {exc.hint}")
+    if exc.url:
+        parts.append(f"Docs: {exc.url}")
+    return "\n".join(parts)
 
 
 def render(result: ExecResult) -> str:

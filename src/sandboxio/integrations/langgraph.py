@@ -39,8 +39,7 @@ def make_code_tool(
         code: str = Field(description=_common.CODE_PARAM)
 
     async def run_python(code: str) -> str:
-        async with _common.use(sandbox) as sb:
-            return _common.render(await sb.run_code(code, timeout=timeout))
+        return await _common.run_tool(sandbox, lambda sb: sb.run_code(code, timeout=timeout))
 
     return StructuredTool.from_function(
         coroutine=run_python, name=name, description=description, args_schema=RunPython
@@ -62,8 +61,7 @@ def make_command_tool(
         command: str = Field(description=_common.COMMAND_PARAM)
 
     async def run_command(command: str) -> str:
-        async with _common.use(sandbox) as sb:
-            return _common.render(await sb.run(command, timeout=timeout))
+        return await _common.run_tool(sandbox, lambda sb: sb.run(command, timeout=timeout))
 
     return StructuredTool.from_function(
         coroutine=run_command, name=name, description=description, args_schema=RunCommand

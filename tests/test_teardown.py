@@ -4,7 +4,7 @@ import anyio
 import pytest
 
 from sandboxio._teardown import DEFAULT_TEARDOWN_GRACE, shielded_kill, teardown_grace
-from sandboxio.errors import OrphanedSandboxWarning
+from sandboxio.errors import ConnectError, OrphanedSandboxWarning
 
 pytestmark = pytest.mark.anyio
 
@@ -54,3 +54,30 @@ async def test_grace_expiry_warns_with_id_backend_and_labels(
     assert not ok
     text = str(record[0].message)
     assert "sb-9" in text and "fake" in text and "tenant_id=t" in text
+
+
+async def test_a_failing_kill_warns_instead_of_replacing_the_callers_exception() -> None:
+    """spec/02 teardown is shielded and bounded; a broken kill is the warning path, not
+    a second exception on top of whatever the caller's block already raised."""
+
+    async def boom() -> None:
+        raise ConnectError("daemon refused the remove")
+
+    with pytest.warns(OrphanedSandboxWarning) as record:
+        ok = await shielded_kill(
+            boom, sandbox_id="sb-7", backend="fake", labels={"tenant_id": "t"}
+        )
+    assert not ok
+    text = str(record[0].message)
+    assert "sb-7" in text and "tenant_id=t" in text
+    assert "daemon refused the remove" in text, "the swallowed reason has to survive somewhere"
+
+
+async def test_a_cancelled_kill_still_propagates_as_cancellation() -> None:
+    """ADR-0020: cancellation is never converted into a warning."""
+
+    async def kill() -> None:
+        raise anyio.get_cancelled_exc_class()()
+
+    with pytest.raises(anyio.get_cancelled_exc_class()):
+        await shielded_kill(kill, sandbox_id="sb", backend="fake")

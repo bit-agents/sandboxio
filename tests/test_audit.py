@@ -94,6 +94,25 @@ async def test_emit_is_bounded_by_the_audit_timeout(monkeypatch: pytest.MonkeyPa
     assert isinstance(info.value.__cause__, TimeoutError)
 
 
+async def test_a_failing_sink_does_not_replace_the_operations_own_exception() -> None:
+    """The caller needs the reason their command failed, not the audit plumbing's."""
+    config = AuditConfig(sinks=(Failing(),), on_sink_failure="fail")
+    with (
+        pytest.warns(AuditSinkWarning, match="already failing"),
+        pytest.raises(ValueError, match="what actually broke"),
+    ):
+        async with operation(_record(), config=config, redact=Redactor(None, None)):
+            raise ValueError("what actually broke")
+
+
+async def test_a_failing_sink_still_fails_an_operation_that_succeeded() -> None:
+    """``fail`` mode is unchanged where there is no other exception to defer to."""
+    config = AuditConfig(sinks=(Failing(),), on_sink_failure="fail")
+    with pytest.raises(AuditSinkError):
+        async with operation(_record(), config=config, redact=Redactor(None, None)) as rec:
+            rec.exit_code = 0
+
+
 async def test_operation_emits_once_even_when_the_body_raises() -> None:
     sink = Recording()
     config = AuditConfig(sinks=(sink,))

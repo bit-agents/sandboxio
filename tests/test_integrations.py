@@ -7,6 +7,7 @@ import json
 import pytest
 
 from _helpers import REPO_ROOT
+from sandboxio.errors import ExecutionTimeout
 from sandboxio.integrations import _common
 from sandboxio.models import ExecResult, RichOutput
 from sandboxio.testing.fake import FakeBackend
@@ -104,3 +105,29 @@ def test_integrations_are_not_imported_by_import_sandboxio() -> None:
         "or m in ('langchain_core', 'agents', 'mcp') for m in sys.modules))",
     )
     assert proc.stdout.strip() == "False"
+
+
+def test_render_error_gives_the_model_the_code_the_fix_and_the_docs() -> None:
+    exc = ExecutionTimeout("run exceeded 30s in sandbox sb-1")
+    lines = _common.render_error(exc).split("\n")
+    assert lines[0] == "[SBX_E1302] run exceeded 30s in sandbox sb-1"
+    assert lines[1].startswith("Fix: ") and lines[2].startswith("Docs: ")
+
+
+@pytest.mark.parametrize("module", ["langgraph", "openai_agents"])
+async def test_a_sandbox_error_reaches_the_model_as_text_not_as_a_crash(module: str) -> None:
+    """spec/09: all three integrations answer a SandboxError the same way."""
+    import importlib
+
+    fake = FakeBackend()
+    fake.on_run_code("slow", returns=ExecutionTimeout("run_code exceeded 30s in sandbox sb-1"))
+    make = importlib.import_module(f"sandboxio.integrations.{module}").make_code_tool
+    async with await fake.create() as sb:
+        tool = make(sb)
+        out = await (
+            tool.ainvoke({"code": "slow"})
+            if module == "langgraph"
+            else tool.on_invoke_tool(None, json.dumps({"code": "slow"}))
+        )
+    assert out.startswith("[SBX_E1302] ")
+    assert "Fix: " in out and "Docs: " in out

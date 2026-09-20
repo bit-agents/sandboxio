@@ -31,6 +31,7 @@ from sandboxio.errors import (
     ConnectError,
     CreateTimeout,
     CreationError,
+    ExecutionError,
     ExecutionTimeout,
     PathNotFound,
     SandboxGone,
@@ -97,6 +98,7 @@ class _Simulation:
     create_takes: float | None = None
     create_fails: BaseException | None = None
     kill_hangs: bool = False
+    kill_fails: BaseException | None = None
     auth_missing: bool = False
 
 
@@ -160,10 +162,13 @@ class FakeBackend:
         create_takes: float | None = None,
         create_fails: BaseException | None = None,
         kill_hangs: bool = False,
+        kill_fails: BaseException | None = None,
         auth_missing: bool = False,
     ) -> None:
-        """Make the provider misbehave: slow/failing creates, hanging kills, no credential."""
-        self.simulation = _Simulation(create_takes, create_fails, kill_hangs, auth_missing)
+        """Make the provider misbehave: bad creates, hanging or failing kills, no credential."""
+        self.simulation = _Simulation(
+            create_takes, create_fails, kill_hangs, kill_fails, auth_missing
+        )
 
     def expire(self, sandbox_id: str) -> None:
         """The provider reclaimed this sandbox; further use raises ``SandboxGone``."""
@@ -476,6 +481,11 @@ class FakeSandbox:
     async def kill(self) -> None:
         if self._backend.simulation.kill_hangs:
             await anyio.sleep_forever()
+        if self._backend.simulation.kill_fails is not None:
+            await anyio.lowlevel.checkpoint()
+            raise ExecutionError(
+                ExecResult(KILLED_EXIT, "", "the fake provider refused to kill the sandbox")
+            ) from self._backend.simulation.kill_fails
         if not self._alive:
             await anyio.lowlevel.checkpoint()
             return

@@ -193,9 +193,7 @@ def test_reap_reports_a_backend_it_could_not_list_and_still_visits_the_others(
     )
     assert payload["backends"]["fake"] == "1 found", "one dead backend must not abort the loop"
     assert [row["sandbox_id"] for row in payload["sandboxes"]] == [live]
-    # Spec/10 gives reap no exit code for a backend it could not reach; tracked as a
-    # separate finding, so this pins today's behaviour rather than blessing it.
-    assert code == cli.EXIT_OK
+    assert code == cli.EXIT_PROBLEM, "an incomplete list is a problem, dry run or not"
 
 
 def test_reap_renders_the_list_failure_for_humans_too(

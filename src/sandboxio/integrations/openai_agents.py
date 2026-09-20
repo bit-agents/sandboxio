@@ -45,8 +45,7 @@ def make_code_tool(
 
     async def on_invoke(_ctx: Any, arguments: str) -> str:
         code = str(json.loads(arguments)["code"])
-        async with _common.use(sandbox) as sb:
-            return _common.render(await sb.run_code(code, timeout=timeout))
+        return await _common.run_tool(sandbox, lambda sb: sb.run_code(code, timeout=timeout))
 
     return FunctionTool(
         name=name,
@@ -68,8 +67,7 @@ def make_command_tool(
 
     async def on_invoke(_ctx: Any, arguments: str) -> str:
         command = str(json.loads(arguments)["command"])
-        async with _common.use(sandbox) as sb:
-            return _common.render(await sb.run(command, timeout=timeout))
+        return await _common.run_tool(sandbox, lambda sb: sb.run(command, timeout=timeout))
 
     return FunctionTool(
         name=name,

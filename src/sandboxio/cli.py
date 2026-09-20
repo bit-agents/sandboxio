@@ -195,8 +195,11 @@ def cmd_reap(args: argparse.Namespace, console: Console) -> int:
     labels = _parse_labels(args.label or [])
     payload = anyio.run(_reap, names, labels, bool(args.kill))
     console.emit(payload, lambda p: render_reap(p, console))
+    # A backend we could not reach is a problem even in a dry run: the list is incomplete
+    # and an operator scripting reap would otherwise never learn it (spec/10).
+    unreachable = any(s.startswith("list failed") for s in payload["backends"].values())
     failed = any(row.get("killed") is False for row in payload["sandboxes"])
-    return EXIT_PROBLEM if failed else EXIT_OK
+    return EXIT_PROBLEM if failed or unreachable else EXIT_OK
 
 
 def render_reap(p: dict[str, Any], console: Console) -> str:

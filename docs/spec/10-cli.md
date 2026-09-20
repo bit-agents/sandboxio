@@ -31,9 +31,11 @@ distribution name, and the three-letter name belongs to an unrelated PyPI packag
 - Respect `NO_COLOR`; detect non-TTY and degrade cleanly.
 - Examples inside `--help`, not only in the docs.
 - Documented exit codes, stable across releases: `0` success · `1` a problem was found or
-  the command failed (`doctor`: an installed backend has a failing check; `reap --kill`: a
-  kill failed; `demo`: a step failed, including the egress probe reaching the network) ·
-  `2` usage error · `130` interrupted. A dry-run `reap` that lists sandboxes exits `0`.
+  the command failed (`doctor`: an installed backend has a failing check; `reap`: a backend
+  could not be listed, with or without `--kill`; `reap --kill`: a kill failed; `demo`: a
+  step failed, including the egress probe reaching the network) · `2` usage error · `130`
+  interrupted. A dry-run `reap` that lists every requested backend exits `0`, however many
+  sandboxes it found.
 - Progress bars for genuinely long operations only: image pull, sandbox boot.
 - `doctor` MUST print credential **variable names**, never values, and MUST NOT make a
   provider API call that costs money.

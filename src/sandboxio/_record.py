@@ -145,7 +145,19 @@ async def operation(
         # Emitting during cancellation must not be cancelled away — a regulated buyer needs
         # the record of the operation that was interrupted. Bounded, so never unkillable.
         with anyio.move_on_after(audit_timeout(), shield=True):
-            await emit(event, config)
+            try:
+                await emit(event, config)
+            except AuditSinkError:
+                # An operation that already failed keeps its own exception: the caller needs
+                # the reason their command failed, not the audit plumbing's.
+                if error is None:
+                    raise
+                warnings.warn(
+                    f"audit sink failed while {record.event} was already failing with "
+                    f"{error!r}; the operation's own exception is the one raised",
+                    AuditSinkWarning,
+                    stacklevel=2,
+                )
 
 
 def total_bytes(chunks: Iterable[bytes | str]) -> int:

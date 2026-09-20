@@ -63,6 +63,17 @@ class TestFakeBackend(BackendContractSuite):
             _fake.simulate()
 
     @contextmanager
+    def simulate_kill_failure(self) -> Generator[type[BaseException]]:
+        class NativeKillBoom(Exception):
+            pass
+
+        _fake.simulate(kill_fails=NativeKillBoom("daemon refused the remove"))
+        try:
+            yield NativeKillBoom
+        finally:
+            _fake.simulate()
+
+    @contextmanager
     def simulate_slow_create(self) -> Generator[None]:
         _fake.simulate(create_takes=3600)
         try:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import threading
 from datetime import UTC, datetime
+from typing import Any, cast
 
 import anyio
 import anyio.to_thread
@@ -22,15 +23,24 @@ pytest.importorskip("sandboxio_docker")
 import docker.errors
 from docker.models.containers import Container
 
-from sandboxio.errors import SandboxWarning
+from sandboxio.errors import (
+    ExecutionError,
+    FileSystemError,
+    PathNotFound,
+    SandboxGone,
+    SandboxWarning,
+)
 from sandboxio_docker import _reaper
 from sandboxio_docker._backend import (
     _ENV_THREADS,
     DEFAULT_THREADS,
+    DockerFileSystem,
+    DockerSandbox,
     _created_at,
     _gone,
     _limiter,
     _managed,
+    _map_common,
     _thread,
     _thread_cap,
 )
@@ -260,3 +270,48 @@ def test_each_event_loop_gets_its_own_limiter() -> None:
     anyio.run(go)
     anyio.run(go)
     assert limiters[0] is not limiters[1]
+
+
+# --- exception mapping ------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        docker.errors.NotFound("no such container"),
+        api_error("container is not running"),
+        api_error("conflict", status=409),
+    ],
+    ids=["not-found", "not-running", "conflict"],
+)
+def test_map_common_reports_a_vanished_container_as_sandbox_gone(exc: Exception) -> None:
+    mapped = _map_common(exc, sandbox_id="c0ffee")
+    assert isinstance(mapped, SandboxGone) and "c0ffee" in mapped.message
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [api_error("server error", status=500), requests.ConnectionError("daemon went away")],
+    ids=["api-error", "daemon-unreachable"],
+)
+def test_map_common_declines_what_the_caller_must_map_itself(exc: Exception) -> None:
+    """None is the 'not one of ours' signal; each caller supplies its own fallback."""
+    assert _map_common(exc, sandbox_id="c0ffee") is None
+
+
+def test_the_sandbox_fallback_never_lets_a_raw_docker_error_through() -> None:
+    """spec/04 rule 1: a raw provider exception crossing the boundary is a bug."""
+    sb = cast(Any, DockerSandbox.__new__(DockerSandbox))
+    sb.id = "c0ffee"
+    mapped = DockerSandbox._map(sb, api_error("server error", status=500))
+    assert isinstance(mapped, ExecutionError)
+    assert "docker: " in mapped.result.stderr
+
+
+def test_the_filesystem_fallback_separates_a_missing_path_from_a_dead_daemon() -> None:
+    fs = cast(Any, DockerFileSystem.__new__(DockerFileSystem))
+    fs._sb = cast(Any, type("S", (), {"id": "c0ffee"})())
+    missing = fs._map_fs(docker.errors.NotFound("no such file"), "/work/x")
+    assert isinstance(missing, PathNotFound)
+    assert isinstance(fs._map_fs(api_error("conflict", status=409), "/work/x"), SandboxGone)
+    assert isinstance(fs._map_fs(api_error("boom", status=500), "/work/x"), FileSystemError)

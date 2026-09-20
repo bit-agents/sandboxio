@@ -33,7 +33,9 @@ Decisions taken for v0.1: the adapters live in core under `sandboxio.integration
 their framework behind an extra — `sandboxio[langgraph]` (`langchain-core>=0.3`, the tool
 type is `langchain_core.tools.BaseTool`) and `sandboxio[openai-agents]` (`openai-agents>=0.1`).
 Each ships `make_code_tool()` and `make_command_tool()`, taking either a ready sandbox or a
-per-call factory. `SbxSandboxClient` is v0.2.
+per-call factory. A `SandboxError` is rendered into the tool's return string — code, fix and
+docs URL — rather than raised into the framework, so the model can read what went wrong and
+try something else, as it can on the MCP server. `SbxSandboxClient` is v0.2.
 
 | Priority | Integration | Rationale |
 |----------|-------------|-----------|
