@@ -165,18 +165,57 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
 
 ## Step 6 — Distribution surface (2 weeks)
 
-- `sandboxio doctor`, `sandboxio reap`, `uvx sandboxio demo` ([spec/10](spec/10-cli.md))
-- MCP server, containerized, published to the Docker MCP Catalog
-  ([spec/09](spec/09-integrations.md))
-- LangGraph tool adapter; OpenAI Agents tool adapter
-- OTel span mapping through `sandboxio/otel.py`; stdlib-logging and file audit sinks
-- Diátaxis docs: quickstart, per-backend how-tos, offline-testing how-to, generated error
-  reference, explanation pages; `llms.txt` + `llms-full.txt`; paste-ready `AGENTS.md`
-  snippet
-- Copy-paste GitHub Actions workflow for users: fake job on PRs, docker job on main
+- [x] `sandboxio doctor` (+ `--json`, credential names only, no paid calls; programmatic
+  `sandboxio.doctor()` → `DoctorReport`), `sandboxio reap` (dry run by default; Docker lists
+  stopped containers too; `--label`, `--kill`), `uvx sandboxio demo` (create · run · stream ·
+  egress probe · teardown) — [spec/10](spec/10-cli.md). Console scripts `sandboxio` and the
+  undocumented `sbx` alias; `python -m sandboxio`.
+- [x] MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, six tools, one sandbox per
+  process, config fixed at start; `docker/mcp/Dockerfile` (rootless, E2B backend, no socket)
+  plus the Docker MCP Catalog `server.yaml`/`tools.json` ([spec/09](spec/09-integrations.md)).
+  **Publication is blocked** on the org name and accounts: image push and the registry PR
+  are listed under the README's pre-public TODO.
+- [x] LangGraph tool (`sandboxio[langgraph]`) and OpenAI Agents tool (`sandboxio[openai-agents]`),
+  each a native tool object under 100 lines, tested against the fake
+- [x] `sandboxio/otel.py` — GenAI semconv 1.37.0 `execute_tool` spans, zero-config, every
+  attribute string in one file (a test greps for strays); `LoggingSink` and `FileSink`
+  beside `NoopSink`/`QueueSink`; `sandboxio[otel]` extra for the API
+- [x] Diátaxis docs: [`quickstart.md`](quickstart.md), [`how-to/`](how-to/) (Docker with image
+  prep and offline wheelhouse, E2B, offline testing, observability, CI, operations,
+  integrations), [`explanation/`](explanation/), the generated [`errors/`](errors/README.md),
+  `llms.txt` + generated `llms-full.txt` (`scripts/gen_llms_full.py --check` is a gate), the
+  paste-ready [`AGENTS.md` snippet](reference/agents-snippet.md)
+- [x] Copy-paste GitHub Actions workflow for users in [`how-to/ci.md`](how-to/ci.md): fake job
+  on PRs, Docker job on `main`, leak check
+- [x] `tests/test_readme_examples.py`: every README Python block is executed verbatim —
+  scripts against fakes registered as `docker`/`e2b`, pytest-style blocks through pytester
 
-**Exit:** a stranger completes the quickstart in under 5 minutes on a clean machine; every
-README example runs verbatim (a copied example that does not run is a **P0 bug**).
+Decisions taken here: the CLI is stdlib `argparse` in core, not the Typer app spec/10 named,
+because `uvx sandboxio demo` must run from the bare distribution and ADR-0004 forbids a new
+base dependency; `rich` is used only for tracebacks under `SBX_DEBUG=1` when importable.
+Exit codes are `0/1/2/130`; `doctor` exits `1` when an installed backend has a failing check.
+`uvx sandboxio demo` on the bare distribution prints the install command **and** the
+`uvx --from "sandboxio[docker]" sandboxio demo` form, since that is the stranger's next step.
+`reap` talks to an optional `ReapableBackend` port (`list_managed`/`kill_managed`) and a
+`ManagedSandbox` value object, both added to spec/01–02; every first-party backend
+implements it. `AuditEvent` gained `code: str | None`, populated only with
+`AuditConfig(capture_code=True)` and redacted; the JSON-line sinks render `as_dict()`.
+Semconv has no sandbox vocabulary, so beyond `gen_ai.operation.name`/`gen_ai.tool.name` the
+span attributes are `sandboxio.*`. `FakeBackend` now applies `NetworkPolicy` to recognised
+network calls in `run_code` (`urllib.request.urlopen`, `requests.get`, …) so the demo's
+egress probe is honest on `fake://`. Integrations live in core under
+`sandboxio.integrations.*` with the framework behind an extra; the MCP server translates
+`SandboxError` into the SDK's `ToolError` so the code and fix reach the model (the SDK hides
+other exceptions). `SbxSandboxClient` stays v0.2.
+
+**Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
+(six blocks). Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
+pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five
+steps 2.5 s, create 1.3 s); `uvx --from . sandboxio demo` on the bare distribution 2.6 s to
+the install hint. The MCP image builds and runs as uid 10001 with
+`python -m sandboxio.mcp` as entrypoint; pushing it and the catalog PR wait for the org name.
+Docker suite green including reap, zero containers left; E2B suite green including reap,
+zero sandboxes left; 3.11 and 3.14 gates green. **Done.**
 
 ---
 

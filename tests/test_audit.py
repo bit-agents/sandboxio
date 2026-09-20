@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+import logging
+from pathlib import Path
+
 import anyio
 import pytest
 
 from sandboxio._record import OperationRecord, Redactor, emit, operation
-from sandboxio.audit import AuditConfig, AuditEvent, NoopSink, QueueSink
+from sandboxio.audit import AuditConfig, AuditEvent, FileSink, LoggingSink, NoopSink, QueueSink
 from sandboxio.errors import AuditSinkError, AuditSinkWarning
 from sandboxio.models import IsolationTier
 
@@ -136,3 +140,92 @@ async def test_queue_sink_enqueues_instantly_and_drains_to_the_target() -> None:
             while len(target.events) < 3:
                 await anyio.sleep(0)
         tg.cancel_scope.cancel()
+
+
+# --- shipped sinks --------------------------------------------------------------------------
+
+
+def _event() -> AuditEvent:
+    rec = _record()
+    rec.exit_code = 0
+    return rec.close(Redactor({"T": "hunter2"}, None))
+
+
+def test_as_dict_is_json_ready_and_redacted() -> None:
+    event = _event()
+    payload = event.as_dict()
+    assert payload["isolation"] == "container"
+    assert payload["argv"] == ["echo", "***", "ok"]
+    assert "code" not in payload, "code is hashed unless capture_code=True"
+    line = event.to_json()
+    assert "\n" not in line and "hunter2" not in line
+    assert json.loads(line) == payload
+
+
+def test_capture_code_keeps_the_redacted_code() -> None:
+    rec = _record()
+    rec.code = "print('hunter2')"
+    event = rec.close(Redactor({"T": "hunter2"}, None), capture_code=True)
+    assert event.code == "print('***')"
+    assert event.as_dict()["code"] == "print('***')"
+
+
+async def test_logging_sink_writes_one_json_line_and_configures_nothing(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = logging.getLogger("test.sandboxio.audit")
+    sink = LoggingSink(logger, level=logging.INFO)
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        await sink.emit(_event())
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert json.loads(record.getMessage())["event"] == "exec"
+    assert getattr(record, "audit")["sandbox_id"] == "sb-1"  # noqa: B009 — structured extra
+    assert "hunter2" not in record.getMessage()
+    assert logger.handlers == [] and logging.getLogger("sandboxio").handlers == []
+
+
+async def test_logging_sink_accepts_a_logger_name() -> None:
+    sink = LoggingSink("test.sandboxio.named")
+    await sink.emit(_event())  # no handler configured: silently dropped, never printed
+
+
+async def test_file_sink_appends_json_lines(tmp_path: Path) -> None:
+    path = tmp_path / "audit.jsonl"
+    sink = FileSink(path)
+    await sink.emit(_event())
+    await sink.emit(_event())
+    lines = path.read_text().splitlines()
+    assert len(lines) == 2 and all(json.loads(line)["event"] == "exec" for line in lines)
+    assert "hunter2" not in path.read_text()
+    await FileSink(str(path)).emit(_event())  # a second instance appends, never truncates
+    assert len(path.read_text().splitlines()) == 3
+
+
+async def test_sinks_receive_the_redacted_event_from_a_real_operation(tmp_path: Path) -> None:
+    from sandboxio.testing.fake import FakeBackend
+
+    path = tmp_path / "audit.jsonl"
+    logger = logging.getLogger("test.sandboxio.e2e")
+    captured: list[str] = []
+
+    class Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            captured.append(record.getMessage())
+
+    logger.addHandler(Capture())
+    logger.setLevel(logging.INFO)
+    try:
+        fake = FakeBackend(
+            audit=AuditConfig(sinks=(LoggingSink(logger), FileSink(path)), capture_code=True)
+        )
+        secret = "sbx-secret-" + "x" * 8
+        async with await fake.create(secrets={"API_TOKEN": secret}) as sb:
+            await sb.run(["echo", secret])
+            await sb.run_code(f"print({secret!r})")
+    finally:
+        logger.handlers.clear()
+    text = path.read_text()
+    assert len(captured) == 2 and len(text.splitlines()) == 2
+    assert secret not in text and all(secret not in line for line in captured)
+    assert json.loads(text.splitlines()[1])["code"] == "print('***')"

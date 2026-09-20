@@ -6,6 +6,7 @@ beyond the base dependencies (ADR-0004, ADR-0012).
 
 from __future__ import annotations
 
+from sandboxio._doctor import DoctorReport, doctor
 from sandboxio.api import BackendConfig, connect, create
 from sandboxio.errors import (
     AuditSinkError,
@@ -38,6 +39,7 @@ from sandboxio.models import (
     ExecResult,
     FileInfo,
     IsolationTier,
+    ManagedSandbox,
     Meter,
     NetworkPolicy,
     OutputChunk,
@@ -62,6 +64,7 @@ __all__ = [
     "ConnectError",
     "CreateTimeout",
     "CreationError",
+    "DoctorReport",
     "ExecResult",
     "ExecutionError",
     "ExecutionTimeout",
@@ -69,6 +72,7 @@ __all__ = [
     "FileInfo",
     "FileSystemError",
     "IsolationTier",
+    "ManagedSandbox",
     "Meter",
     "NetworkPolicy",
     "NetworkPolicyViolation",
@@ -89,5 +93,6 @@ __all__ = [
     "connect_sync",
     "create",
     "create_sync",
+    "doctor",
     "register",
 ]

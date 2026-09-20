@@ -37,6 +37,7 @@ class AuditEvent:
     bytes_in: int
     bytes_out: int
     network_denials: int            # blocked egress attempts, where the backend reports them
+    code: str | None = None         # only with capture_code=True; redacted like everything else
 ```
 
 Sinks are configured per backend instance through `AuditConfig(sinks=..., on_sink_failure=...,
@@ -57,10 +58,14 @@ class AuditSink(Protocol):
   - `"warn"` (default) — emit `AuditSinkWarning`, the operation proceeds.
   - `"fail"` — raise `AuditSinkError` (`SBX_E1601`); the operation fails. For a regulated
     buyer, an unrecorded operation may be one that should not have happened.
-- Shipped sinks: **no-op (default)**, stdlib-logging JSON lines, file, and **`QueueSink`** —
-  a bounded wrapper whose `emit` enqueues instantly and whose `drain()` coroutine the
-  **host application** runs in its own task group. Overflow drops oldest and warns.
-- Code is **hashed by default**; full-code capture is opt-in.
+- Shipped sinks: **`NoopSink` (default)**, **`LoggingSink`** (one JSON line per event on a
+  stdlib logger; configures no handler), **`FileSink`** (one JSON line per event appended to
+  a file), and **`QueueSink`** — a bounded wrapper whose `emit` enqueues instantly and whose
+  `drain()` coroutine the **host application** runs in its own task group. Overflow drops
+  oldest and warns. The JSON line is `AuditEvent.as_dict()`, so every sink renders the same
+  fields.
+- Code is **hashed by default**; `AuditConfig(capture_code=True)` adds the redacted code to
+  the event and the span. Secrets are redacted from it like from everything else.
 - Secrets and env values MUST NOT appear in an event, ever, including in `argv`.
 
 ## Tracing
@@ -72,6 +77,14 @@ class AuditSink(Protocol):
   Secrets are never captured at any setting.
 - **All attribute strings live in `sandboxio/otel.py`.** No other module writes an attribute name.
   The targeted semconv version is pinned and documented; a bump is a changelog entry.
+  **Target: GenAI semconv 1.37.0** (`sandboxio.otel.SEMCONV_VERSION`). Semconv has no
+  vocabulary for a sandbox, so `gen_ai.operation.name` and `gen_ai.tool.name` come from the
+  convention and the rest — backend, tier, sandbox id, exit code, duration, bytes — are
+  `sandboxio.*` attributes.
+- The OTel **API** is the only requirement, installed by `sandboxio[otel]` or already
+  present in any traced application. It is imported on the first operation, never at
+  `import sandboxio`. A span is opened when the record opens; with no tracer provider
+  configured the span is non-recording and nothing else happens.
 - Zero-config: participate if the host app configured a tracer provider, no-op otherwise.
   sandboxio MUST NOT install exporters or start providers.
 

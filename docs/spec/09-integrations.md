@@ -29,6 +29,12 @@ Rules:
 - An integration MUST NOT weaken a security default. It inherits deny-egress, timeouts and
   caps like any other caller.
 
+Decisions taken for v0.1: the adapters live in core under `sandboxio.integrations.*` with
+their framework behind an extra — `sandboxio[langgraph]` (`langchain-core>=0.3`, the tool
+type is `langchain_core.tools.BaseTool`) and `sandboxio[openai-agents]` (`openai-agents>=0.1`).
+Each ships `make_code_tool()` and `make_command_tool()`, taking either a ready sandbox or a
+per-call factory. `SbxSandboxClient` is v0.2.
+
 | Priority | Integration | Rationale |
 |----------|-------------|-----------|
 | P0 (v0.1) | LangGraph tool, OpenAI Agents tool, MCP server | largest ecosystems + distribution |
@@ -69,6 +75,12 @@ endpoint:
 - The container runs rootless and MUST NOT have a Docker socket reachable from sandboxed
   code.
 - Bind to localhost unless explicitly configured otherwise.
+
+Behind `sandboxio[mcp]` (`mcp>=1.2`; built on the SDK's `MCPServer`). One sandbox per
+server process, created on the first tool call and killed at shutdown. A `SandboxError`
+raised by a tool reaches the model as a tool error carrying the code, the fix and the docs
+URL — the SDK hides any other exception behind a generic line. Options: `--backend`,
+`--timeout`, `--egress deny|allow`, `--transport stdio|streamable-http`, `--host`, `--port`.
 
 Distribution: publish to the Docker MCP Catalog. Containerized distribution is the launch
 centerpiece — it is the multi-language, multi-client story at a fraction of a full server's

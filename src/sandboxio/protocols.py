@@ -11,13 +11,20 @@ from typing import TYPE_CHECKING, Protocol
 from sandboxio.models import NetworkPolicy, Resources
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Mapping
     from pathlib import Path
     from types import TracebackType
 
-    from sandboxio.models import Capability, ExecResult, FileInfo, IsolationTier, OutputChunk
+    from sandboxio.models import (
+        Capability,
+        ExecResult,
+        FileInfo,
+        IsolationTier,
+        ManagedSandbox,
+        OutputChunk,
+    )
 
-__all__ = ["AsyncFileSystem", "AsyncSandbox", "Backend", "Process"]
+__all__ = ["AsyncFileSystem", "AsyncSandbox", "Backend", "Process", "ReapableBackend"]
 
 
 class Process(Protocol):
@@ -130,3 +137,17 @@ class Backend(Protocol):
     ) -> AsyncSandbox: ...
 
     async def connect(self, sandbox_id: str) -> AsyncSandbox: ...
+
+
+class ReapableBackend(Backend, Protocol):
+    """Optional: a backend ``sandboxio reap`` can ask about sandboxes it labelled (spec/10).
+
+    Every first-party backend implements it. ``list_managed`` MUST include sandboxes whose
+    lifetime already ended if the provider still holds them (Docker's stopped containers).
+    """
+
+    async def list_managed(
+        self, *, labels: Mapping[str, str] | None = None
+    ) -> list[ManagedSandbox]: ...
+
+    async def kill_managed(self, sandbox_id: str) -> bool: ...

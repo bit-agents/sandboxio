@@ -1,0 +1,48 @@
+# sandboxio
+
+> One secure Python API for running AI-agent code in any sandbox (Docker, E2B, an in-process fake). Async-first on anyio with a sync facade; deny-by-default egress; mandatory timeouts; isolation tiers reported and enforceable; stable error codes; offline testing with FakeBackend.
+
+Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error codes `SBX_E1002`, env vars `SBX_DEBUG`, fixture `sbx_fake`). Copy-paste commands use `sandboxio`, never the `sbx` alias. `.native` is outside the semver contract. The specification in `docs/spec/` is normative and wins over every other document.
+
+## Start here
+
+- [README](../README.md): what it is and runnable examples
+- [Quickstart](quickstart.md): install to a sandboxed run in five minutes
+- [AGENTS.md snippet](reference/agents-snippet.md): paste-ready rules for coding assistants in a project that uses sandboxio
+
+## How-to
+
+- [Docker](how-to/docker.md): images with dependencies, offline wheelhouses, reaper, allowlists refused
+- [E2B](how-to/e2b.md): API key, allowlists, stateful contexts, rich outputs
+- [Offline testing](how-to/offline-testing.md): sbx_fake fixture, scripting, register() so DSNs resolve to the fake
+- [Audit and tracing](how-to/observability.md): LoggingSink, FileSink, QueueSink, OTel execute_tool spans, redaction
+- [CI](how-to/ci.md): copy-paste GitHub Actions workflow, fake on PRs and Docker on main
+- [Integrations](how-to/integrations.md): LangGraph tool, OpenAI Agents tool, MCP server and its container image
+- [Operations](how-to/operations.md): sandboxio doctor, sandboxio reap, SBX_* variables, exit codes
+
+## Explanation
+
+- [Isolation tiers](explanation/isolation-tiers.md): CONTAINER is not a boundary; MICROVM is the floor for untrusted code
+- [Deny by default](explanation/deny-by-default.md): why egress is off and what it costs
+- [Why errors have codes](explanation/error-codes.md): stable codes, hints that are fixes, no builtin inheritance
+
+## Reference
+
+- [Error codes](errors/README.md): every SBX_E code, generated from the source
+- [Public API spec](spec/03-public-api.md): create(), sync facade, stability contract
+- [Ports spec](spec/02-ports.md): Backend, AsyncSandbox, Process, AsyncFileSystem, ReapableBackend
+- [Domain model spec](spec/01-domain-model.md): value objects, Capability, IsolationTier
+- [Errors spec](spec/04-errors.md): tree and rendering
+- [Security policy spec](spec/05-security-policy.md): defaults, network, secrets, tenancy
+- [Observability spec](spec/06-observability.md): the operation record, sinks, spans
+- [Configuration spec](spec/07-configuration.md): DSN grammar, typed config, routing file
+- [Adapter contract spec](spec/08-adapter-contract.md): what every adapter must do
+- [Integrations spec](spec/09-integrations.md): LangGraph, OpenAI Agents, MCP server
+- [CLI spec](spec/10-cli.md): doctor, reap, demo
+
+## Optional
+
+- [Architecture decision records](adr/README.md): why each decision was made
+- [Hazards](hazards.md): what can go wrong and the tripwires
+- [Build order](build-order.md): what is built, in what order, with exit criteria
+- [Full text](llms-full.txt): every page above concatenated, for one-shot context loading

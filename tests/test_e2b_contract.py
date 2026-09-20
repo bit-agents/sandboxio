@@ -89,3 +89,17 @@ class TestE2BBackend(BackendContractSuite):
             yield API_KEY_ENV
         finally:
             os.environ[API_KEY_ENV] = saved
+
+
+@pytest.mark.anyio
+async def test_reap_lists_and_kills_managed_sandboxes() -> None:
+    sb = await _backend.create(timeout=60, metadata={"tenant_id": "reap-test"})
+    try:
+        found = {
+            m.sandbox_id for m in await _backend.list_managed(labels={"tenant_id": "reap-test"})
+        }
+        assert sb.id in found
+        assert await _backend.kill_managed(sb.id) is True
+        assert await _backend.kill_managed(sb.id) is False
+    finally:
+        await sb.kill()

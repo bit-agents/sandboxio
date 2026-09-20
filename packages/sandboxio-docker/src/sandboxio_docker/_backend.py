@@ -10,13 +10,15 @@ import contextlib
 import io
 import posixpath
 import queue
+import re
 import tarfile
 import threading
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import anyio
 import anyio.to_thread
@@ -43,6 +45,7 @@ from sandboxio.models import (
     ExecResult,
     FileInfo,
     IsolationTier,
+    ManagedSandbox,
     NetworkPolicy,
     OutputChunk,
     Resources,
@@ -260,6 +263,30 @@ class DockerBackend:
             metadata=metadata,
         )
 
+    async def list_managed(
+        self, *, labels: Mapping[str, str] | None = None
+    ) -> list[ManagedSandbox]:
+        """Every container carrying our label, stopped ones included (spec/10 ``reap``)."""
+        client = await self.client()
+        wanted = [f"{LABEL_MANAGED}=true"]
+        wanted += [f"{LABEL_META}{k}={v}" for k, v in (labels or {}).items()]
+        containers: list[Container] = await _thread(
+            client.containers.list, all=True, filters={"label": wanted}
+        )
+        return [_managed(c) for c in containers]
+
+    async def kill_managed(self, sandbox_id: str) -> bool:
+        """Remove one container by id or prefix; False if it is already gone."""
+        import docker.errors
+
+        client = await self.client()
+        try:
+            container: Container = await _thread(client.containers.get, sandbox_id)
+            await _thread(container.remove, force=True)
+        except docker.errors.NotFound:
+            return False
+        return True
+
     async def _ensure_image(self, client: docker.DockerClient, image: str) -> None:
         import docker.errors
 
@@ -278,6 +305,32 @@ class DockerBackend:
             contextlib.suppress(Exception),
         ):
             await _thread(container.remove, force=True)
+
+
+def _managed(container: Container) -> ManagedSandbox:
+    labels = container.labels or {}
+    status = container.status
+    state: Literal["running", "stopped", "paused"] = (
+        "running" if status == "running" else "paused" if status == "paused" else "stopped"
+    )
+    return ManagedSandbox(
+        sandbox_id=(container.id or "")[:12],
+        backend="docker",
+        state=state,
+        created_at=_created_at(container.attrs.get("Created")),
+        labels={k[len(LABEL_META) :]: v for k, v in labels.items() if k.startswith(LABEL_META)},
+    )
+
+
+def _created_at(raw: object) -> datetime | None:
+    """Docker writes nanoseconds; ``fromisoformat`` on 3.11 wants at most six digits."""
+    if not isinstance(raw, str) or not raw:
+        return None
+    text = re.sub(r"(\.\d{6})\d+", r"\1", raw.replace("Z", "+00:00"))
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
 
 
 class DockerSandbox:

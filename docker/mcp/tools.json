@@ -1,0 +1,8 @@
+[
+  {"name": "run_python", "description": "Run Python code in the sandbox; returns stdout, stderr, exit_code, results.", "arguments": [{"name": "code", "type": "string", "desc": "Complete Python source to execute."}]},
+  {"name": "run_command", "description": "Run one shell command in the sandbox; same shape as run_python.", "arguments": [{"name": "cmd", "type": "string", "desc": "Command line, run through sh -c."}]},
+  {"name": "read_file", "description": "Read a file from the sandbox filesystem as text.", "arguments": [{"name": "path", "type": "string", "desc": "Sandbox-internal path."}]},
+  {"name": "write_file", "description": "Write text to a file in the sandbox filesystem.", "arguments": [{"name": "path", "type": "string", "desc": "Sandbox-internal path."}, {"name": "content", "type": "string", "desc": "File contents."}]},
+  {"name": "list_files", "description": "List a directory in the sandbox filesystem.", "arguments": [{"name": "path", "type": "string", "desc": "Directory, default /work."}]},
+  {"name": "sandbox_info", "description": "Backend, isolation tier, capabilities and the policy in effect.", "arguments": []}
+]

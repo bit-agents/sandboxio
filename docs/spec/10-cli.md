@@ -1,8 +1,12 @@
 # 10 — CLI
 
-Typer app. The CLI is the only place allowed to be pretty: `rich` tracebacks, colour and
-progress bars are installed at the CLI entry point, never at library import
-([ADR-0012](../adr/0012-no-telemetry-no-import-side-effects.md)).
+Stdlib `argparse`, in core, at `sandboxio.cli`. `uvx sandboxio demo` MUST work from the bare
+distribution, and core takes no dependency beyond `anyio` + `typing-extensions`
+([ADR-0004](../adr/0004-thin-core-lazy-adapters.md)), so a CLI framework is out. The CLI is
+the only place allowed to be pretty: `rich` tracebacks are installed at the CLI entry point
+when `rich` is importable and `SBX_DEBUG=1`, never at library import
+([ADR-0012](../adr/0012-no-telemetry-no-import-side-effects.md)). Colour is plain ANSI,
+only on a TTY, and `NO_COLOR` wins.
 
 ## Commands
 
@@ -26,7 +30,10 @@ distribution name, and the three-letter name belongs to an unrelated PyPI packag
   second code path.
 - Respect `NO_COLOR`; detect non-TTY and degrade cleanly.
 - Examples inside `--help`, not only in the docs.
-- Documented exit codes, stable across releases.
+- Documented exit codes, stable across releases: `0` success · `1` a problem was found or
+  the command failed (`doctor`: an installed backend has a failing check; `reap --kill`: a
+  kill failed; `demo`: a step failed, including the egress probe reaching the network) ·
+  `2` usage error · `130` interrupted. A dry-run `reap` that lists sandboxes exits `0`.
 - Progress bars for genuinely long operations only: image pull, sandbox boot.
 - `doctor` MUST print credential **variable names**, never values, and MUST NOT make a
   provider API call that costs money.
@@ -44,3 +51,21 @@ tier it would provide. Every failure line carries a fix hint
 This is the first thing a user runs when something is wrong, and the first thing a
 maintainer asks for in a bug report — so its output SHOULD be paste-friendly and MUST be
 free of secrets.
+
+## `reap` contract
+
+`reap` asks each backend for the sandboxes it labelled through the optional
+[`ReapableBackend`](02-ports.md#reapablebackend-optional) port. Docker MUST list **every**
+`io.sandboxio.managed` container, running or stopped — a lifetime-expired container is left
+stopped by Docker, and `reap` is its cleanup path. E2B lists every running or paused sandbox
+with `sandboxio_managed=true`. `--label key=value` narrows by `metadata`; `--backend` narrows
+by backend and defaults to `docker` and `e2b`, reporting *not installed* rather than failing
+for a missing extra.
+
+## `demo` contract
+
+Five steps, each timed and reported: create · `run_code` · stream · egress probe · teardown.
+The egress probe MUST attempt a real connection from inside the sandbox and MUST fail the
+demo if it succeeds — a demo that shows deny-by-default not applying is a bug report, not a
+pass ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)). Without the Docker
+extra the demo prints the exact install command from `BackendNotInstalled` and exits `1`.

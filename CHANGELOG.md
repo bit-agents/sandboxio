@@ -35,6 +35,29 @@ Every absorbed provider break gets an entry here as well as in the churn-absorpt
   per-sandbox portal thread, and the CI parity test against the async protocols.
 - `sandboxio-e2b`, the E2B adapter, installed by `sandboxio[e2b]`: `MICROVM` tier,
   deny-by-default egress with native allowlists, stateful code contexts, rich outputs.
+- Audit sinks `LoggingSink` (stdlib logger, JSON lines) and `FileSink`;
+  `AuditEvent.as_dict()`/`to_json()`; `AuditConfig(capture_code=True)` now populates
+  `AuditEvent.code`, redacted.
+- The `sandboxio` command (`sbx` alias, `python -m sandboxio`): `doctor` (+ `--json`,
+  credential names only, no paid calls), `reap` (dry run by default, `--kill`, `--label`),
+  `demo` (create, run, stream, prove egress is denied, tear down). Programmatic
+  `sandboxio.doctor()` returning `DoctorReport`.
+- `ReapableBackend` optional port with `list_managed()`/`kill_managed()` on every
+  first-party backend, and the `ManagedSandbox` value object.
+- `FakeBackend` applies `NetworkPolicy` to recognised network calls in `run_code`
+  (`urllib.request.urlopen`, `requests.get`, …), the way it already did for `curl`.
+- Docs: quickstart, how-to pages (Docker, E2B, offline testing, observability, CI,
+  operations, integrations), explanation pages (isolation tiers, deny by default, error
+  codes), the paste-ready `AGENTS.md` snippet, `llms.txt` + generated `llms-full.txt`, and
+  the gate that runs every README Python block verbatim.
+- `sandboxio.integrations.langgraph` and `sandboxio.integrations.openai_agents`
+  (`make_code_tool`, `make_command_tool`) behind `sandboxio[langgraph]` and
+  `sandboxio[openai-agents]`.
+- The MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, its Dockerfile and the
+  Docker MCP Catalog metadata under `docker/mcp/`.
+- OTel rendering of the operation record in `sandboxio.otel`: GenAI semconv **1.37.0**
+  `execute_tool` spans nesting under the caller's span, opt-in `sandboxio[otel]` extra for
+  the API, no-op without a configured tracer provider.
 
 Nothing is released. There is no public API yet — see
 [docs/build-order.md](docs/build-order.md).

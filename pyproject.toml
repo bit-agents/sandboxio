@@ -31,6 +31,12 @@ dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
 [project.optional-dependencies]
 docker = ["sandboxio-docker"]
 e2b = ["sandboxio-e2b"]
+# Spans need only the API; the host application brings the SDK and exporters (ADR-0011).
+otel = ["opentelemetry-api>=1.30"]
+# Integrations (spec/09): loose lower bounds; the weekly matrix catches framework churn.
+langgraph = ["langchain-core>=0.3"]
+openai-agents = ["openai-agents>=0.1"]
+mcp = ["mcp>=1.2"]
 
 [dependency-groups]
 dev = [
@@ -43,6 +49,11 @@ dev = [
     "types-PyYAML>=6.0",
     "types-docker>=7.1",
 ]
+
+# `sandboxio` is the documented command; `sbx` is a local alias only (ADR-0014).
+[project.scripts]
+sandboxio = "sandboxio.cli:main"
+sbx = "sandboxio.cli:main"
 
 [project.entry-points."sandboxio.backends"]
 fake = "sandboxio.testing.fake:FakeBackend"

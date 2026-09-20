@@ -1,16 +1,15 @@
 # sandboxio
 
-**One secure Python API for running AI-agent code in any sandbox.** Swap Docker ↔ E2B ↔
-Modal with one line; no network by default; test your agent tools offline with the built-in
-fake.
+**One secure Python API for running AI-agent code in any sandbox.** Swap Docker ↔ E2B with
+one line; no network by default; test your agent tools offline with the built-in fake.
 
 <!-- TODO(placeholder): badges — CI, PyPI version, Python versions, OpenSSF Scorecard, license.
      Blocked on the GitHub org/repo being chosen (ADR-0014) and CI existing (build-order Step 1). -->
 <!-- {{BADGES}} -->
 
 > [!WARNING]
-> **Pre-alpha. The core, the contract suite, `FakeBackend`, and the Docker and E2B adapters
-> exist and pass the suite; nothing is released.**
+> **Pre-alpha. The core, the contract suite, `FakeBackend`, the Docker and E2B adapters, the
+> CLI and the integrations exist and pass their gates; nothing is released.**
 >
 > The public API is not stable, nothing is published to PyPI, and no version is suitable for
 > any use. What *is* stable enough to build against is [`docs/spec/`](docs/spec/), which is
@@ -38,30 +37,98 @@ underneath, with the security posture that agent execution actually needs.
 
 ## Quickstart
 
+Every Python block below is executed by CI exactly as written
+([`tests/test_readme_examples.py`](tests/test_readme_examples.py)); a copied example that
+does not run is a P0 bug. The Docker-backed lines run against the built-in fake in CI, so
+they are the same code you would run — only the backend differs.
+
 <!-- TODO(placeholder): replace with the real install line once the package is published.
      `uvx sandboxio demo` is the documented entry point — never the `sbx` alias, which
      resolves to an unrelated PyPI package (ADR-0014). -->
 
 ```bash
 # {{INSTALL}} — not yet published
-uv add sandboxio            # planned
+uv add "sandboxio[docker]"     # planned
+uvx sandboxio demo             # create, run, stream, prove egress is denied, tear down
+sandboxio doctor               # what is installed, reachable and missing — no secrets printed
 ```
+
+Run code in a sandbox. `create()` with no arguments is local Docker; nothing leaves the
+sandbox unless you say so.
 
 ```python
 import sandboxio
 
-async with await sandboxio.create() as sb:                      # zero-config, local Docker
+async with await sandboxio.create() as sb:              # zero-config, local Docker
     res = await sb.run_code("print('hello')")
-    print(res.stdout)
-
-sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
-sb = await sandboxio.create("e2b://code-interpreter")
-sb = await sandboxio.create("modal://base?gpu=T4")
-
-res = await sb.run(["pytest", "-q"], timeout=120)
+    print(res.stdout)                                    # hello
+    res = await sb.run(["python", "--version"], timeout=30)
+    print(res.exit_code, res.stdout.strip())
 ```
 
-Full surface, including the sync facade, streaming, filesystem and capability discovery:
+Swap the backend with one line. The code that uses the sandbox does not change.
+
+```python
+import sandboxio
+
+async def summarise(sb: sandboxio.protocols.AsyncSandbox) -> str:
+    await sb.files.write("/work/input.txt", "3 4\n")
+    res = await sb.run_code("a, b = open('/work/input.txt').read().split(); print(int(a) * int(b))")
+    res.raise_for_status()                               # ExecutionError on a non-zero exit
+    return res.stdout.strip()
+
+async with await sandboxio.create("docker://python:3.12-slim") as sb:
+    print(await summarise(sb))
+async with await sandboxio.create("e2b://code-interpreter-v1") as sb:   # needs E2B_API_KEY
+    print(await summarise(sb))
+```
+
+Stream output while a long command runs, and rely on the timeout: a sandbox timeout is
+`sandboxio.SandboxTimeout`, never the builtin `TimeoutError`.
+
+```python
+import sandboxio
+
+async with await sandboxio.create() as sb:
+    async with sb.stream(["sh", "-c", "echo start; sleep 1; echo done"], timeout=30) as proc:
+        async for chunk in proc:
+            print(chunk.stream, chunk.data.decode(), end="")
+        res = await proc.wait()
+    try:
+        await sb.run(["sleep", "999"], timeout=1)
+    except sandboxio.SandboxTimeout as exc:
+        print(exc.code)                                  # SBX_E1302 — stable, documented
+```
+
+Sync code gets the same surface through `create_sync()`. One sandbox is one portal thread;
+use the async API for heavy concurrency.
+
+```python
+import sandboxio
+
+with sandboxio.create_sync("docker://python:3.12-slim", timeout=60) as sb:
+    print(sb.run_code("print(6 * 7)").stdout)
+```
+
+Test your agent's tools offline. `sbx_fake` is a pytest fixture installed with the package;
+it executes nothing, records everything, and passes the same contract suite as the real
+backends.
+
+```python
+import pytest
+from sandboxio import ExecResult
+
+
+@pytest.mark.anyio
+async def test_my_tool_reads_the_pandas_version(sbx_fake):
+    sbx_fake.on_run_code(match="import pandas", returns=ExecResult(0, "2.2.1\n", ""))
+    res = await sbx_fake.sandbox.run_code("import pandas; print(pandas.__version__)")
+    assert "2.2.1" in res.stdout
+    assert sbx_fake.calls[0].network.egress == "deny"     # the default, recorded
+```
+
+Full surface, including capability discovery, `require_isolation`, audit sinks and spans:
+[`docs/quickstart.md`](docs/quickstart.md) and the normative
 [`docs/spec/03-public-api.md`](docs/spec/03-public-api.md).
 
 ## Backends
@@ -70,7 +137,7 @@ Full surface, including the sync facade, streaming, filesystem and capability di
 |---------|--------|----------------|
 | Docker | adapter built, unreleased | <!-- {{TIER}} --> |
 | E2B | adapter built, unreleased | <!-- {{TIER}} --> |
-| `FakeBackend` | planned for v0.1 | n/a — in-process, for tests |
+| `FakeBackend` | built, unreleased | n/a — in-process, for tests |
 | Modal | planned for v0.1.1 | <!-- {{TIER}} --> |
 
 <!-- TODO(placeholder): isolation tiers stay blank until every tier above CONTAINER carries a
@@ -81,6 +148,16 @@ Full surface, including the sync facade, streaming, filesystem and capability di
 Third-party adapters are first-class: the adapter contract is
 [specified](docs/spec/08-adapter-contract.md) and enforced by a shared contract suite.
 
+## Integrations
+
+- **LangGraph / LangChain** — `sandboxio.integrations.langgraph.make_code_tool()` returns a
+  native `BaseTool` (`sandboxio[langgraph]`).
+- **OpenAI Agents SDK** — `sandboxio.integrations.openai_agents.make_code_tool()` returns a
+  native `FunctionTool` (`sandboxio[openai-agents]`).
+- **MCP** — `python -m sandboxio.mcp --backend docker://python:3.12-slim` serves
+  `run_python`, `run_command`, file tools and `sandbox_info` (`sandboxio[mcp]`), also as a
+  container image.
+
 ## Documentation
 
 <!-- TODO(placeholder): link the published docs site once it exists (Diátaxis, generated from docs/). -->
@@ -88,11 +165,15 @@ Third-party adapters are first-class: the adapter contract is
 
 Until then, read the repository:
 
+- [`docs/quickstart.md`](docs/quickstart.md) — five minutes from install to a sandboxed run.
+- [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
+  allowlists, offline testing with the fake, audit sinks and tracing, CI.
+- [`docs/explanation/`](docs/explanation/) — isolation tiers, deny-by-default, why errors
+  have codes.
+- [`docs/errors/`](docs/errors/README.md) — every error code, generated from the source.
 - [`docs/spec/`](docs/spec/) — the normative specification. This is the contract.
 - [`docs/adr/`](docs/adr/) — why each decision was made, including the ones that look arbitrary.
-- [`docs/hazards.md`](docs/hazards.md) — what can go wrong, for you and for this project, with tripwires.
-- [`docs/build-order.md`](docs/build-order.md) — what is being built, in what order.
-- [`docs/runbook.md`](docs/runbook.md) — how the project is operated and released.
+- [`docs/llms.txt`](docs/llms.txt) — for coding assistants; `llms-full.txt` beside it.
 
 ## Security
 

@@ -124,3 +124,46 @@ def test_sync_facade_on_real_docker() -> None:
     assert not any(c.id.startswith(sb.id) for c in _client.containers.list(all=True)), (
         "sync __exit__ must remove the container"
     )
+
+
+@pytest.mark.anyio
+async def test_reap_sees_stopped_containers_and_kill_managed_removes_them() -> None:
+    """A lifetime-expired container is left stopped; `sandboxio reap` is its cleanup path."""
+    sb = await _backend.create(timeout=60, metadata={"tenant_id": "reap-test"})
+    try:
+        assert isinstance(sb, DockerSandbox)
+        sb.native.stop(timeout=0)  # what the provider-side lifetime backstop does
+        found = {
+            m.sandbox_id: m
+            for m in await _backend.list_managed(labels={"tenant_id": "reap-test"})
+        }
+        assert found[sb.id].state == "stopped"
+        assert found[sb.id].labels == {"tenant_id": "reap-test"}
+        assert found[sb.id].created_at is not None
+        assert await _backend.kill_managed(sb.id) is True
+        assert await _backend.kill_managed(sb.id) is False
+        assert sb.id not in {m.sandbox_id for m in await _backend.list_managed()}
+    finally:
+        await sb.kill()
+
+
+def test_cli_reap_and_demo_on_real_docker(capsys: pytest.CaptureFixture[str]) -> None:
+    import json
+
+    from sandboxio import cli
+
+    code = cli.main(["demo", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0, payload
+    assert [s["step"] for s in payload["steps"]] == [
+        "create",
+        "run_code",
+        "stream",
+        "egress",
+        "teardown",
+    ]
+    assert "hello from CPython" in payload["steps"][1]["detail"]
+    assert payload["steps"][3]["ok"], "deny-by-default egress must hold on Docker"
+    code = cli.main(["reap", "--backend", "docker", "--json"])
+    assert code == 0
+    assert json.loads(capsys.readouterr().out)["backends"]["docker"].endswith("found")

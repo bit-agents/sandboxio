@@ -12,6 +12,12 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 
 | Path | Contents | Normative? |
 |------|----------|-----------|
+| [`quickstart.md`](quickstart.md) | Tutorial: install to a sandboxed run in five minutes. | no |
+| [`how-to/`](how-to/) | Task guides: Docker, E2B, offline testing, audit and tracing, CI, operations. | no |
+| [`explanation/`](explanation/) | Why: isolation tiers, deny by default, error codes. | no |
+| [`errors/`](errors/README.md) | Reference: every error code, generated from the source. | yes |
+| [`reference/`](reference/) | Reference: the paste-ready `AGENTS.md` snippet for downstream projects. | no |
+| [`llms.txt`](llms.txt) / `llms-full.txt` | Index and full text for coding assistants; the full text is generated. | no |
 | [`adr/`](adr/) | Architecture Decision Records. One file per decision, with context and consequences. | yes |
 | [`spec/`](spec/) | The normative specification: domain model, ports, public API, errors, security policy, observability, configuration, adapter contract. RFC-2119 language. | **yes** |
 | [`build-order.md`](build-order.md) | Sequenced implementation plan with per-step exit criteria. | yes |
@@ -20,6 +26,9 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 | [`runbook.md`](runbook.md) | How to operate the project: dev setup, CI gates, release, provider-churn response, security advisories. | yes |
 
 ## Reading order
+
+**User:** [`quickstart.md`](quickstart.md) → the [`how-to/`](how-to/) page for your backend →
+[`explanation/isolation-tiers.md`](explanation/isolation-tiers.md) before running untrusted code.
 
 **New contributor:** `readme.md` → [`spec/`](spec/) index → [`build-order.md`](build-order.md) → [`runbook.md`](runbook.md).
 

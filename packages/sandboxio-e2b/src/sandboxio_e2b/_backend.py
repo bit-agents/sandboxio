@@ -14,7 +14,7 @@ import shlex
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 import anyio
 from e2b.exceptions import (
@@ -55,6 +55,7 @@ from sandboxio.models import (
     ExecResult,
     FileInfo,
     IsolationTier,
+    ManagedSandbox,
     NetworkPolicy,
     OutputChunk,
     Resources,
@@ -262,6 +263,56 @@ class E2BBackend:
             timeout=remaining,
             metadata=metadata,
         )
+
+    async def list_managed(
+        self, *, labels: Mapping[str, str] | None = None
+    ) -> list[ManagedSandbox]:
+        """Every running or paused sandbox carrying ``sandboxio_managed=true`` (spec/10)."""
+        from e2b.sandbox.sandbox_api import SandboxQuery
+
+        key = self._key()
+        query = SandboxQuery(metadata={META_MANAGED: "true", **(labels or {})})
+        found: list[ManagedSandbox] = []
+        try:
+            paginator = NativeSandbox.list(query=query, api_key=key)
+            while paginator.has_next:
+                for info in await paginator.next_items():
+                    state: Literal["running", "paused"] = (
+                        "paused" if str(info.state) == "paused" else "running"
+                    )
+                    found.append(
+                        ManagedSandbox(
+                            sandbox_id=info.sandbox_id,
+                            backend=self.name,
+                            state=state,
+                            created_at=info.started_at,
+                            labels={
+                                k: v
+                                for k, v in info.metadata.items()
+                                if k not in (META_MANAGED, META_SESSION)
+                            },
+                        )
+                    )
+        except Exception as exc:
+            mapped = _map_common(exc, sandbox_id="?")
+            if mapped is not None:
+                raise mapped from exc
+            raise ConnectError(
+                "e2b could not list sandboxes", hint="Inspect `__cause__` for the API's reason."
+            ) from exc
+        return found
+
+    async def kill_managed(self, sandbox_id: str) -> bool:
+        """Kill one sandbox by id; False if the API no longer knows it."""
+        try:
+            return bool(await NativeSandbox.kill(sandbox_id, api_key=self._key()))
+        except Exception as exc:
+            mapped = _map_common(exc, sandbox_id=sandbox_id)
+            if isinstance(mapped, SandboxGone):
+                return False
+            if mapped is not None:
+                raise mapped from exc
+            raise ConnectError(f"e2b could not kill sandbox {sandbox_id!r}") from exc
 
 
 class E2BSandbox:

@@ -727,6 +727,7 @@ class BackendContractSuite:
             await sb.run(self.cmd_env("API_TOKEN"))
         for event in events:
             assert secret not in repr(event)
+            assert secret not in event.to_json(), "the JSON-line sinks render as_dict()"
 
     async def test_metadata_propagates_to_provider_labels(self) -> None:
         labels = {"tenant_id": "acme", "session_id": "s-1"}

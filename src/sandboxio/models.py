@@ -5,17 +5,21 @@ Everything here is a frozen dataclass or an enum. Compare with ``==``, never ``i
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, Flag, auto
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from sandboxio.errors import ConfigurationError, ExecutionError
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 __all__ = [
     "Capability",
     "ExecResult",
     "FileInfo",
     "IsolationTier",
+    "ManagedSandbox",
     "Meter",
     "NetworkPolicy",
     "OutputChunk",
@@ -186,3 +190,21 @@ class FileInfo:
     path: str
     size: int
     is_dir: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ManagedSandbox:
+    """A sandbox the provider still holds under sandboxio's label; what ``reap`` lists.
+
+    ``labels`` is the caller's ``metadata`` as the provider stored it. A stopped sandbox is
+    one whose lifetime ended without teardown — Docker leaves the container behind.
+
+    >>> ManagedSandbox("abc123", "docker", "stopped", None, {"tenant_id": "acme"}).state
+    'stopped'
+    """
+
+    sandbox_id: str
+    backend: str
+    state: Literal["running", "stopped", "paused"]
+    created_at: datetime | None = None
+    labels: dict[str, str] = field(default_factory=lambda: dict[str, str]())

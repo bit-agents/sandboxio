@@ -71,6 +71,12 @@ def test_base_dependencies_are_only_the_two(wheel: zipfile.ZipFile) -> None:
     assert unconditional == BASE_DEPENDENCIES, "a new base dependency needs an ADR (ADR-0004)"
 
 
+def test_console_scripts_ship_in_the_base_wheel(wheel: zipfile.ZipFile) -> None:
+    entry_points = next(n for n in wheel.namelist() if n.endswith("entry_points.txt"))
+    text = wheel.read(entry_points).decode()
+    assert "sandboxio = sandboxio.cli:main" in text and "sbx = sandboxio.cli:main" in text
+
+
 def test_license_files_ship(wheel: zipfile.ZipFile) -> None:
     names = {Path(n).name for n in wheel.namelist() if ".dist-info/licenses/" in n}
     assert {"LICENSE", "LICENSE-DOCS"} <= names

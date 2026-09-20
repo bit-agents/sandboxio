@@ -79,6 +79,21 @@ class FileInfo:
 - `egress="learn"` is v0.2 and MUST raise `CapabilityNotSupported` in v0.1 rather than
   silently behaving as `deny`.
 
+### `ManagedSandbox`
+
+```python
+@dataclass(frozen=True)
+class ManagedSandbox:
+    sandbox_id: str
+    backend: str
+    state: Literal["running", "stopped", "paused"]
+    created_at: datetime | None = None
+    labels: dict[str, str] = field(default_factory=dict)   # the caller's metadata, as stored
+```
+
+What [`ReapableBackend.list_managed()`](02-ports.md#reapablebackend-optional) returns and
+`sandboxio reap` prints. Not a `Sandbox`: nothing can be executed through it.
+
 ## Capability
 
 A `Flag` enum. Additions are backwards compatible; removals are breaking.

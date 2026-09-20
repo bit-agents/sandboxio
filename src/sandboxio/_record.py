@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 import anyio
 
+from sandboxio import otel
 from sandboxio.audit import AuditConfig, AuditEvent
 from sandboxio.errors import AuditSinkError, AuditSinkWarning
 
@@ -73,7 +74,7 @@ class OperationRecord:
     started: float = field(default_factory=time.monotonic)
     ts: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    def close(self, redact: Redactor) -> AuditEvent:
+    def close(self, redact: Redactor, *, capture_code: bool = False) -> AuditEvent:
         return AuditEvent(
             ts=self.ts,
             event=self.event,
@@ -89,6 +90,7 @@ class OperationRecord:
             bytes_in=self.bytes_in,
             bytes_out=self.bytes_out,
             network_denials=self.network_denials,
+            code=redact(self.code) if capture_code and self.code is not None else None,
         )
 
 
@@ -130,10 +132,16 @@ async def operation(
     record: OperationRecord, *, config: AuditConfig, redact: Redactor
 ) -> AsyncGenerator[OperationRecord]:
     """Open a record around an operation and emit it at close, even on error or cancellation."""
+    span = otel.start(record)
+    error: BaseException | None = None
     try:
         yield record
+    except BaseException as exc:
+        error = exc
+        raise
     finally:
-        event = record.close(redact)
+        event = record.close(redact, capture_code=config.capture_code)
+        otel.finish(span, event, error)
         # Emitting during cancellation must not be cancelled away — a regulated buyer needs
         # the record of the operation that was interrupted. Bounded, so never unkillable.
         with anyio.move_on_after(audit_timeout(), shield=True):

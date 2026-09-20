@@ -24,7 +24,9 @@ Read before writing code:
 | defaults, network, secrets | [spec/05](docs/spec/05-security-policy.md) |
 | logging, spans, audit | [spec/06](docs/spec/06-observability.md) |
 | DSNs, config, routing | [spec/07](docs/spec/07-configuration.md) |
-| the CLI | [spec/10](docs/spec/10-cli.md) |
+| the CLI (`sandboxio.cli`, `sandboxio.doctor()`) | [spec/10](docs/spec/10-cli.md) |
+| `sandboxio.integrations.*`, `sandboxio.mcp` | [spec/09](docs/spec/09-integrations.md) |
+| user docs under `docs/` (Diátaxis), `README.md` examples | [docs/readme.md](docs/readme.md); every README Python block is executed by `tests/test_readme_examples.py` |
 
 Why a decision is the way it is: [`docs/adr/`](docs/adr/). What is being built next, in
 order: [`docs/build-order.md`](docs/build-order.md).

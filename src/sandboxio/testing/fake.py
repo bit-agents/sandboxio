@@ -40,6 +40,7 @@ from sandboxio.models import (
     ExecResult,
     FileInfo,
     IsolationTier,
+    ManagedSandbox,
     NetworkPolicy,
     OutputChunk,
     Resources,
@@ -274,6 +275,26 @@ class FakeBackend:
             raise ConnectError(f"no live sandbox {sandbox_id!r} on {self.name}")
         return sb
 
+    async def list_managed(
+        self, *, labels: Mapping[str, str] | None = None
+    ) -> list[ManagedSandbox]:
+        """Live sandboxes, optionally narrowed by metadata — what ``sandboxio reap`` sees."""
+        await anyio.lowlevel.checkpoint()
+        wanted = dict(labels or {})
+        return [
+            ManagedSandbox(sb.id, self.name, "running", None, dict(sb.labels))
+            for sb in self._live.values()
+            if all(sb.labels.get(k) == v for k, v in wanted.items())
+        ]
+
+    async def kill_managed(self, sandbox_id: str) -> bool:
+        sb = self._live.get(sandbox_id)
+        if sb is None:
+            await anyio.lowlevel.checkpoint()
+            return False
+        await sb.kill()
+        return True
+
     # --- internals ----------------------------------------------------------------------------
 
     def _own(self, **kwargs: Any) -> FakeSandbox:
@@ -334,6 +355,7 @@ class FakeSandbox:
         self.template = template
         self.resources = resources
         self.network = network
+        self._code_denials = 0
         self.timeout = timeout
         self.labels: dict[str, str] = dict(metadata)
         self.capabilities = backend.capabilities
@@ -434,6 +456,7 @@ class FakeSandbox:
             record.exit_code = result.exit_code
             record.bytes_in = len(code)
             record.bytes_out = len(result.stdout) + len(result.stderr)
+            record.network_denials, self._code_denials = self._code_denials, 0
         return result
 
     def stream(
@@ -541,6 +564,14 @@ class FakeSandbox:
             return ExecResult(
                 1, "", f'  File "<fake>", line {exc.lineno}\nSyntaxError: {exc.msg}\n'
             )
+        host = _network_target(tree)
+        if host is not None and not (
+            self.network.egress == "allow" or host in self.network.allow
+        ):
+            self._code_denials += 1
+            return ExecResult(
+                1, "", f"URLError: <urlopen error {host}: egress denied by NetworkPolicy>\n"
+            )
         scope = self._contexts.setdefault(context_id, {}) if context_id is not None else {}
         out: list[str] = []
         for node in tree.body:
@@ -551,6 +582,46 @@ class FakeSandbox:
             except _CodeError as exc:
                 return ExecResult(1, "".join(out), f"Traceback (fake)\n{exc}\n")
         return ExecResult(0, "".join(out), "")
+
+
+# Calls the fake recognises as egress; the policy decides, exactly as ``curl`` does in ``run``.
+_NETWORK_CALLS = frozenset(
+    {
+        "urllib.request.urlopen",
+        "urllib.request.urlretrieve",
+        "requests.get",
+        "requests.post",
+        "requests.request",
+        "httpx.get",
+        "httpx.post",
+        "socket.create_connection",
+    }
+)
+
+
+def _dotted(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _dotted(node.value)
+        return None if base is None else f"{base}.{node.attr}"
+    return None
+
+
+def _network_target(tree: ast.AST) -> str | None:
+    """The host of the first recognised network call, or None. Nothing is executed."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or _dotted(node.func) not in _NETWORK_CALLS:
+            continue
+        first = node.args[0] if node.args else None
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            return first.value.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
+        if isinstance(first, ast.Tuple) and first.elts:
+            host = first.elts[0]
+            if isinstance(host, ast.Constant) and isinstance(host.value, str):
+                return host.value
+        return "unknown-host"
+    return None
 
 
 class _Unsupported(Exception):

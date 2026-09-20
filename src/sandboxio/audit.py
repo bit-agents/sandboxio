@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import warnings
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Protocol
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 import anyio
 
@@ -16,7 +19,15 @@ if TYPE_CHECKING:
 
     from sandboxio.models import IsolationTier
 
-__all__ = ["AuditConfig", "AuditEvent", "AuditSink", "NoopSink", "QueueSink"]
+__all__ = [
+    "AuditConfig",
+    "AuditEvent",
+    "AuditSink",
+    "FileSink",
+    "LoggingSink",
+    "NoopSink",
+    "QueueSink",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +48,35 @@ class AuditEvent:
     bytes_in: int
     bytes_out: int
     network_denials: int
+    code: str | None = None  # populated only with AuditConfig(capture_code=True); redacted
+
+    def as_dict(self) -> dict[str, Any]:
+        """JSON-ready rendering; what ``LoggingSink`` and ``FileSink`` write, one per line.
+
+        >>> sorted(event.as_dict())[:3]  # doctest: +SKIP
+        ['argv', 'backend', 'bytes_in']
+        """
+        return {
+            "ts": self.ts.isoformat(),
+            "event": self.event,
+            "sandbox_id": self.sandbox_id,
+            "backend": self.backend,
+            "isolation": self.isolation.value,
+            "tenant_id": self.tenant_id,
+            "session_id": self.session_id,
+            "code_sha256": self.code_sha256,
+            "argv": None if self.argv is None else list(self.argv),
+            "exit_code": self.exit_code,
+            "duration_ms": self.duration_ms,
+            "bytes_in": self.bytes_in,
+            "bytes_out": self.bytes_out,
+            "network_denials": self.network_denials,
+            **({"code": self.code} if self.code is not None else {}),
+        }
+
+    def to_json(self) -> str:
+        """One JSON line, no newline, keys in field order."""
+        return json.dumps(self.as_dict(), separators=(",", ":"), ensure_ascii=False)
 
 
 class AuditSink(Protocol):
@@ -50,6 +90,41 @@ class NoopSink:
 
     async def emit(self, event: AuditEvent) -> None:
         return None
+
+
+class LoggingSink:
+    """One JSON line per event on a stdlib logger. Configures nothing: the host owns handlers.
+
+    >>> import logging
+    >>> sink = LoggingSink(logging.getLogger("myapp.audit"), level=logging.INFO)
+    """
+
+    def __init__(
+        self, logger: logging.Logger | str = "sandboxio.audit", *, level: int = logging.INFO
+    ) -> None:
+        self._logger = logging.getLogger(logger) if isinstance(logger, str) else logger
+        self._level = level
+
+    async def emit(self, event: AuditEvent) -> None:
+        # ``extra`` carries the fields for structured handlers; the message is the JSON line.
+        self._logger.log(self._level, "%s", event.to_json(), extra={"audit": event.as_dict()})
+
+
+class FileSink:
+    """Append one JSON line per event to a file. Each event is one open-append-close.
+
+    A local append, like ``logging.FileHandler``; wrap in ``QueueSink`` when the disk is
+    slow enough to matter.
+
+    >>> sink = FileSink("audit.jsonl")  # doctest: +SKIP
+    """
+
+    def __init__(self, path: str | Path) -> None:
+        self.path = Path(path)
+
+    async def emit(self, event: AuditEvent) -> None:
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write(event.to_json() + "\n")
 
 
 class QueueSink:

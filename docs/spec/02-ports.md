@@ -34,6 +34,21 @@ class Backend(Protocol):
 - `metadata` MUST be propagated to provider-native labels where the provider supports them,
   so external reconciliation and reaping can find orphans.
 
+## `ReapableBackend` (optional)
+
+```python
+class ReapableBackend(Backend, Protocol):
+    async def list_managed(self, *, labels: Mapping[str, str] | None = None) -> list[ManagedSandbox]: ...
+    async def kill_managed(self, sandbox_id: str) -> bool: ...
+```
+
+What `sandboxio reap` ([10](10-cli.md#reap-contract)) talks to. Optional for third parties,
+implemented by every first-party backend including the fake. `list_managed()` MUST return
+sandboxes the provider still holds under sandboxio's label, **including ones whose lifetime
+already ended** where the provider keeps them (Docker's stopped containers); `labels` narrows
+by `metadata`. `kill_managed()` returns `False` when the id is already gone and MUST NOT
+raise for that case.
+
 ## `AsyncSandbox`
 
 ```python

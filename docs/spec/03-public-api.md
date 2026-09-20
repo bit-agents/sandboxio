@@ -11,7 +11,7 @@ sandboxio.create(...)          # async, returns AsyncSandbox
 sandboxio.create_sync(...)     # sync facade
 sandboxio.connect(...)         # async, by sandbox id
 sandboxio.register(name, path) # runtime backend registration
-sandboxio.doctor()             # programmatic environment diagnosis
+sandboxio.doctor()             # programmatic environment diagnosis -> DoctorReport
 
 sandboxio.Capability, sandboxio.IsolationTier, sandboxio.Resources, sandboxio.NetworkPolicy, sandboxio.ExecResult
 sandboxio.errors.*             # full error tree, also re-exported at top level
