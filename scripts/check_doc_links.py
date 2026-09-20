@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__"}
+SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude"}
 
 FENCE = re.compile(r"^(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*$")

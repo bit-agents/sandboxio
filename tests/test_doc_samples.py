@@ -32,9 +32,16 @@ class Sample(str):
         return self
 
 
+# `.claude` holds Claude Code worktrees: a full checkout of this repo, whose docs are not
+# this commit's docs. Scanning them makes the gate's scope depend on the local machine.
+SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude"}
+
+
 def _markdown_files() -> list[Path]:
     return sorted(
-        p for p in REPO_ROOT.rglob("*.md") if ".git" not in p.parts and ".venv" not in p.parts
+        p
+        for p in REPO_ROOT.rglob("*.md")
+        if not SKIP_DIRS & set(p.relative_to(REPO_ROOT).parts)
     )
 
 
