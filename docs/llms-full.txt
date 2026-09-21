@@ -69,9 +69,9 @@ one line; no network by default; test your agent tools offline with the built-in
 [![CI](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml/badge.svg)](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](docs/adr/0015-python-version-floor.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/bit-agents/sandboxio/badge)](https://scorecard.dev/viewer/?uri=github.com/bit-agents/sandboxio)
 
-<!-- TODO(placeholder): the PyPI version badge and the OpenSSF Scorecard badge need a
-     published release and the Scorecard workflow; neither exists yet. -->
+<!-- TODO(placeholder): the PyPI version badge needs a published release. -->
 
 > [!WARNING]
 > **Pre-alpha. The core, the contract suite, `FakeBackend`, the Docker and E2B adapters, the
@@ -254,6 +254,10 @@ hostile code, and sandboxio says so rather than implying otherwise.
 
 Report vulnerabilities privately — see [`SECURITY.md`](SECURITY.md). A report that a
 *declared control did not apply* is the highest-severity class this project has.
+
+The project's own supply-chain posture is scored weekly by
+[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/bit-agents/sandboxio) and
+published — the badge above links to the run that produced it.
 
 ## Contributing
 
