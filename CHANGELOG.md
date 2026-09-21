@@ -66,6 +66,9 @@ Every absorbed provider break gets an entry here as well as in the
   `docs.sandboxio.dev`. The Markdown stays the source.
 - [The version policy](docs/explanation/version-policy.md): what counts as breaking, how long
   a deprecation lives, and why the verdict can differ for callers and adapter authors.
+- [Why sandboxio and not something else](docs/explanation/comparisons.md): when a provider
+  SDK, a framework's sandbox layer or plain Docker is the better choice, and when not to use
+  this at all.
 
 ### Changed
 
