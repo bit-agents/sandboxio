@@ -36,5 +36,12 @@ def test_malformed_dsn_is_a_configuration_error(dsn: str) -> None:
 def test_credentials_are_refused_with_the_env_var_hint(key: str) -> None:
     with pytest.raises(ConfigurationError) as info:
         parse(f"e2b://tpl?{key}=abc")
-    assert "environment variable" in info.value.hint
+    assert "E2B_API_KEY" in info.value.hint, "the hint must name the variable, not describe it"
+    assert "abc" not in str(info.value)
+
+
+def test_a_backend_with_no_known_credential_variable_still_refuses_the_parameter() -> None:
+    with pytest.raises(ConfigurationError) as info:
+        parse("docker://img?token=abc")
+    assert "environment" in info.value.hint
     assert "abc" not in str(info.value)

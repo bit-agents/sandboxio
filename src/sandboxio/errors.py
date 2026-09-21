@@ -94,18 +94,27 @@ class BackendNotFound(ConfigurationError):
         'Pick an available backend, or `sandboxio.register("name", "pkg.module:Class")`.'
     )
 
-    def __init__(self, name: str, *, available: tuple[str, ...]) -> None:
+    def __init__(
+        self, name: str, *, available: tuple[str, ...], planned: str | None = None
+    ) -> None:
         listing = ", ".join(available) if available else "none"
-        super().__init__(
-            f"No backend named {name!r}. Available: {listing}.",
-            hint=(
+        if planned is not None:
+            message = (
+                f"The {name!r} backend is planned for {planned} and does not exist yet. "
+                f"Available: {listing}."
+            )
+            hint = f"Use one of: {listing}. There is no install command for {name} yet."
+        else:
+            message = f"No backend named {name!r}. Available: {listing}."
+            hint = (
                 f"Use one of: {listing}."
                 if available
                 else 'Install a backend extra, e.g. `uv pip install "sandboxio[docker]"`.'
-            ),
-        )
+            )
+        super().__init__(message, hint=hint)
         self.name = name
         self.available = available
+        self.planned = planned
 
 
 class BackendNotInstalled(ConfigurationError):
@@ -126,6 +135,20 @@ class BackendNotInstalled(ConfigurationError):
 # --- SBX_E11xx: capabilities --------------------------------------------------------------
 
 
+# First-party backends declaring each capability, so the hint can name them (spec/04 hint
+# quality). Third-party adapters cannot be known here; `tests/test_error_hint_maps.py` fails
+# if this drifts from what the installed backends declare.
+CAPABILITY_PROVIDERS: dict[str, tuple[str, ...]] = {
+    "RUN_COMMAND": ("docker", "e2b", "fake"),
+    "RUN_CODE": ("docker", "e2b", "fake"),
+    "STATEFUL_CODE": ("e2b", "fake"),
+    "STREAMING": ("docker", "e2b", "fake"),
+    "FILESYSTEM": ("docker", "e2b", "fake"),
+    "UPLOAD_DOWNLOAD": ("docker", "e2b", "fake"),
+    "NETWORK_POLICY": ("docker", "e2b", "fake"),
+}
+
+
 class CapabilityNotSupported(SandboxError):
     """The backend does not declare the capability this call needs (spec/01 rule 2)."""
 
@@ -142,13 +165,16 @@ class CapabilityNotSupported(SandboxError):
         supported_by: tuple[str, ...] = (),
     ) -> None:
         cap = capability.name or str(capability)
+        if not supported_by:
+            supported_by = tuple(b for b in CAPABILITY_PROVIDERS.get(cap, ()) if b != backend)
         who = f" Backends that do: {', '.join(supported_by)}." if supported_by else ""
         super().__init__(
             f"Backend {backend!r} does not support {cap}.{who}",
             hint=(
                 f"Use one of: {', '.join(supported_by)}."
                 if supported_by
-                else f"Check `Capability.{cap} in sandbox.capabilities` before calling."
+                else f"No first-party backend declares {cap} yet; branch on "
+                f"`Capability.{cap} in sandbox.capabilities`."
             ),
         )
         self.capability = capability

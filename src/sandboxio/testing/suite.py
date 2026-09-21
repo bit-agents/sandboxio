@@ -21,6 +21,7 @@ import sandboxio
 from sandboxio import api, registry
 from sandboxio._teardown import teardown_grace
 from sandboxio.errors import (
+    CAPABILITY_PROVIDERS,
     CapabilityNotSupported,
     ConfigurationError,
     ConnectError,
@@ -718,6 +719,20 @@ class BackendContractSuite:
         ):
             await self.create()
         assert var in info.value.hint
+
+    async def test_an_undeclared_capability_names_the_backends_that_have_it(self) -> None:
+        """The generic fallback used to hide which backends actually provide it."""
+        name = self.backend.name
+        for cap in Capability:
+            if self.declared(cap):
+                continue
+            label = cap.name or str(cap)
+            hint = CapabilityNotSupported(cap, backend=name).hint
+            assert hint, f"{label} on {name!r} produced no hint"
+            assert name not in hint, f"{label} on {name!r} suggests itself: {hint}"
+            others = tuple(b for b in CAPABILITY_PROVIDERS.get(label, ()) if b != name)
+            missing = [b for b in others if b not in hint]
+            assert not missing, f"{label} on {name!r} does not name {missing}: {hint}"
 
     async def test_create_timeout_raises_create_timeout(self) -> None:
         with (

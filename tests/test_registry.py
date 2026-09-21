@@ -65,7 +65,7 @@ def test_unknown_name_raises_not_found_listing_available() -> None:
     assert "stub" in info.value.hint
 
 
-@pytest.mark.parametrize("name", ["docker", "e2b", "modal"])
+@pytest.mark.parametrize("name", ["docker", "e2b"])
 def test_first_party_name_without_its_extra_raises_not_installed(
     name: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -74,6 +74,14 @@ def test_first_party_name_without_its_extra_raises_not_installed(
         registry.resolve(name)
     assert info.value.code == "SBX_E1002"
     assert info.value.hint == f'uv pip install "sandboxio[{name}]"'
+
+
+def test_a_planned_backend_is_not_offered_as_an_install_command() -> None:
+    """`sandboxio[modal]` does not exist; a hint that says to install it is a broken fix."""
+    with pytest.raises(BackendNotFound) as info:
+        registry.resolve("modal")
+    assert info.value.planned == "v0.1.1"
+    assert "sandboxio[modal]" not in info.value.hint
 
 
 def test_first_party_import_failure_is_not_installed_with_cause() -> None:
