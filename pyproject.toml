@@ -32,9 +32,11 @@ Changelog = "https://github.com/bit-agents/sandboxio/blob/main/CHANGELOG.md"
 
 # Each first-party adapter is its own distribution in packages/, exactly like a third-party
 # `sandboxio-<name>`; the extra pulls it in. e2b and modal land with their adapters.
+# The floor keeps the extra off the 0.0.0 name-reservation releases; the adapter carries the
+# upper bound on the core, because that is the pairing a third-party adapter also declares.
 [project.optional-dependencies]
-docker = ["sandboxio-docker"]
-e2b = ["sandboxio-e2b"]
+docker = ["sandboxio-docker>=0.1"]
+e2b = ["sandboxio-e2b>=0.1"]
 # Spans need only the API; the host application brings the SDK and exporters (ADR-0011).
 otel = ["opentelemetry-api>=1.30"]
 # Integrations (spec/09). Each bound is the oldest version the weekly framework matrix

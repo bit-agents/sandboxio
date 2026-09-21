@@ -13,7 +13,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dynamic = ["version"]
-dependencies = ["sandboxio", "docker>=7.1"]
+# The core bound is the port contract (spec/02, spec/08): a major there rewrites this adapter.
+dependencies = ["sandboxio>=0.1,<0.2", "docker>=7.1"]
 
 [project.entry-points."sandboxio.backends"]
 docker = "sandboxio_docker:DockerBackend"
