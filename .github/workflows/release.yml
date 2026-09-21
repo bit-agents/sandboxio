@@ -134,3 +134,43 @@ jobs:
           subject-name: ghcr.io/${{ github.repository_owner }}/sandboxio-mcp
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  # The only step of this chain a human sees. It runs last: a release that failed to push
+  # its image is not announced.
+  announce:
+    needs: [publish, image]
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      # PEP 440 again, as in `image`: anything but digits and dots is a pre-release.
+      - id: ver
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          case "$v" in *[!0-9.]*) pre=--prerelease ;; *) pre= ;; esac
+          echo "pre=$pre" >> "$GITHUB_OUTPUT"
+      # A pre-release has no changelog section of its own; fall back to generated notes.
+      - id: notes
+        run: |
+          awk -v v="${GITHUB_REF_NAME#v}" '
+            $0 ~ "^## \\[" v "\\]" {p=1; next} p && /^## \[/ {exit} p
+          ' CHANGELOG.md > notes.md
+          if [ -s notes.md ]; then
+            echo "flag=--notes-file notes.md" >> "$GITHUB_OUTPUT"
+          else
+            echo "flag=--generate-notes" >> "$GITHUB_OUTPUT"
+          fi
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            ${{ steps.notes.outputs.flag }} ${{ steps.ver.outputs.pre }}
