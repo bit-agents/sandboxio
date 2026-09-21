@@ -3,10 +3,9 @@
 **One secure Python API for running AI-agent code in any sandbox.** Swap Docker ↔ E2B with
 one line; no network by default; test your agent tools offline with the built-in fake.
 
-> **Pre-alpha — nothing is released.** The core, the contract suite, `FakeBackend`, the
-> Docker and E2B adapters, the CLI and the integrations exist and pass their gates, but the
-> public API is not stable and nothing is published to PyPI. What is stable enough to build
-> against is the [specification](spec/README.md), which is normative and CI-enforced.
+> **v0.1 — the API is not stable until 1.0.** A patch release never breaks the surface the
+> [specification](spec/README.md) covers, and a minor release may. What counts as a break is
+> the [version policy](explanation/version-policy.md); the spec itself is CI-enforced.
 
 ## Run code in a sandbox
 

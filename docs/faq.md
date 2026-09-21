@@ -90,8 +90,11 @@ Privately, through the Security tab — never an issue
 ## The project
 
 **Is it production-ready?**
-No. It is pre-alpha and nothing is released to PyPI. What is stable enough to build against
-is [the specification](spec/README.md), which is normative and CI-enforced.
+v0.1 is released, the contract suite gates every backend, and the behaviour you build
+against is the normative, CI-enforced [specification](spec/README.md). What v0.1 does not
+give you is a frozen API: a minor release may break the covered surface until 1.0
+([version policy](explanation/version-policy.md)), so pin a minor. It is also young — judge
+the code, not the adjective.
 
 **What does it depend on?**
 `anyio` and `typing-extensions`, and nothing else. Every provider SDK sits behind an extra

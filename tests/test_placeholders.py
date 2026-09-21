@@ -33,7 +33,6 @@ EXPECTED: dict[str, int] = {}
 
 # Files still carrying a `TODO(placeholder)` marker.
 EXPECTED_TODO = {
-    "README.md",
     "docs/llms-full.txt",
     "examples/README.md",
 }
