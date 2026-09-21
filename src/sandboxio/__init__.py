@@ -49,7 +49,7 @@ from sandboxio.models import (
 from sandboxio.registry import register
 from sandboxio.sync import connect_sync, create_sync
 
-__version__ = "0.1.0rc3"
+__version__ = "0.1.0rc4"
 
 __all__ = [
     "AuditSinkError",
