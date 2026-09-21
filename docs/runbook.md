@@ -71,10 +71,16 @@ reason.
 The nightly latest-SDK canary is the early-warning system, and absorbing what it catches is
 the core value proposition ([H5](hazards.md#h5--provider-churn-outpaces-maintenance)).
 
+It is the `latest-SDK canary` job in [`ci.yml`](../.github/workflows/ci.yml): it installs
+every provider SDK unpinned, then runs `tests/test_sdk_surface.py` — the symbols and methods
+each adapter binds to — plus the whole credential-free suite. The live E2B contract suite
+runs on top of that only when `E2B_API_KEY` is set, so a rename upstream is caught with or
+without a provider account.
+
 **When the canary goes red:**
 
-1. It auto-opens a `provider-churn` issue. Triage within one working day — silence here is
-   the failure mode.
+1. It opens a `provider-churn` issue, or comments on the open one rather than filing a fresh
+   issue every night. Triage within one working day — silence here is the failure mode.
 2. Reproduce against the pinned SDK version to confirm it is upstream, not us.
 3. Classify:
    - **Breaking API change** → absorb it in the adapter. Users should not need to change

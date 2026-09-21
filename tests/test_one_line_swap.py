@@ -30,7 +30,16 @@ async def agent_tool(sb: AsyncSandbox) -> str:
 
 DSNS = [
     pytest.param("fake://", id="fake"),
-    pytest.param("docker://python:3.12-slim", id="docker", marks=pytest.mark.docker),
+    pytest.param(
+        "docker://python:3.12-slim",
+        id="docker",
+        marks=[
+            pytest.mark.docker,
+            # docker-py leaves response sockets to the GC; that is its hygiene, not ours.
+            pytest.mark.filterwarnings("ignore::ResourceWarning"),
+            pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning"),
+        ],
+    ),
     pytest.param(
         "e2b://",
         id="e2b",
