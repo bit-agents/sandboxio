@@ -12,7 +12,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude"}
+DOCS = ROOT / "docs"
+SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude", "site"}
 
 FENCE = re.compile(r"^(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*$")
@@ -80,6 +81,11 @@ def main() -> int:
                     dest = (path.parent / rel).resolve()
                     if not dest.exists():
                         problems.append(f"{where}: no such path -> {target}")
+                        continue
+                    # docs/ is the site root, so a relative link out of it 404s once
+                    # published (ADR-0029). Link to the repository by URL instead.
+                    if DOCS in path.parents and dest != DOCS and DOCS not in dest.parents:
+                        problems.append(f"{where}: leaves docs/ -> {target}")
                         continue
 
                 if not fragment or dest.is_dir():

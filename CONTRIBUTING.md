@@ -48,6 +48,7 @@ Before pushing, run what CI runs:
 ```bash
 make check                              # lint, types, tests, Docker suite, Actions lint, links
 make test-e2b                           # nightly in CI; needs E2B_API_KEY in a git-ignored .env
+make site                               # the docs site, built exactly as Pages publishes it
 ```
 
 `make help` lists every target, and each one is a single line you can run by hand instead.

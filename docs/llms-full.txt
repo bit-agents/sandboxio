@@ -221,9 +221,9 @@ Third-party adapters are first-class: the adapter contract is
 
 ## Documentation
 
-A built site at `docs.sandboxio.dev` ships with v0.1. It is not serving yet, which is why
-that is not a link. The Markdown under [`docs/`](docs/) is its source and stays the source,
-so nothing below moves when the site goes up. Read it here in the meantime:
+**[docs.sandboxio.dev](https://docs.sandboxio.dev)** — the Markdown under
+[`docs/`](docs/) is its source and stays the source, so nothing below moves. Read it here
+or there:
 
 - [`examples/`](examples/) — complete programs, one concept each: hello world, swapping
   backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
@@ -465,7 +465,7 @@ The fixture is installed with the package. More in
 
 ## Where next
 
-- [`examples/`](../examples/README.md): the same ground as complete programs you can run —
+- [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md): the same ground as complete programs you can run —
   one concept each, every one executed by CI.
 - [Docker how-to](how-to/docker.md): images with dependencies, offline wheelhouses, the reaper.
 - [E2B how-to](how-to/e2b.md): API key, allowlists, stateful contexts, rich outputs.
@@ -763,7 +763,7 @@ the same contract suite as Docker and E2B, executes nothing, and needs no daemon
 account. Your tool's tests run in milliseconds anywhere pytest runs.
 
 This page as a runnable file, executed by CI like every other example:
-[`examples/test_my_tool.py`](../../examples/test_my_tool.py).
+[`examples/test_my_tool.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/test_my_tool.py).
 
 ## The fixture
 
@@ -1051,8 +1051,8 @@ creates real sandboxes and costs real money:
 # How to use sandboxio from LangGraph, the OpenAI Agents SDK and MCP
 
 Both agent integrations have a complete, CI-executed program:
-[`examples/05_langgraph_agent.py`](../../examples/05_langgraph_agent.py) and
-[`examples/06_openai_agents.py`](../../examples/06_openai_agents.py). Each runs its sandboxio
+[`examples/05_langgraph_agent.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/05_langgraph_agent.py) and
+[`examples/06_openai_agents.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/06_openai_agents.py). Each runs its sandboxio
 half with no API key set, so you can watch the tool work before spending a token.
 
 Each integration returns the framework's **native** tool object wrapping `run_code` or
@@ -1144,7 +1144,7 @@ docker run -i --rm -e E2B_API_KEY sandboxio-mcp --backend e2b://code-interpreter
 
 The image is rootless, mounts no Docker socket, and defaults to the E2B backend because a
 sandbox provider inside the container must be a cloud one. Catalog metadata lives in
-[`docker/mcp/`](../../docker/mcp/README.md).
+[`docker/mcp/`](https://github.com/bit-agents/sandboxio/blob/main/docker/mcp/README.md).
 
 
 ==============================================================================
@@ -1283,7 +1283,7 @@ isolation mechanism is a breaking change in this project's public data, not a fo
 connection. Not "a sandbox with a firewall you can configure" — one that starts closed, and
 opens only where you say so.
 
-[`examples/04_egress_denied.py`](../../examples/04_egress_denied.py) proves this on a real
+[`examples/04_egress_denied.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/04_egress_denied.py) proves this on a real
 sandbox in about twenty lines, then shows the explicit opt-out.
 
 ## The threat this answers
@@ -2873,6 +2873,7 @@ reversing it is an **amendment**: the earlier ADR keeps its status and gains an
 | [0026](0026-docs-license-cc-by.md) | Documentation under CC BY 4.0; code stays MIT | Accepted |
 | [0027](0027-adapter-thread-budget.md) | Blocking adapters get their own thread budget, not anyio's | Accepted |
 | [0028](0028-docker-container-hardening.md) | Docker containers ship hardened, minus the flags that break images | Accepted |
+| [0029](0029-docs-site-mkdocs.md) | Docs site: MkDocs Material on GitHub Pages at docs.sandboxio.dev | Accepted |
 
 Decisions not yet made live in [`../open-questions.md`](../open-questions.md) and graduate
 to an ADR here when settled.
@@ -3165,7 +3166,7 @@ an import budget added in month three is a week of untangling.
 - [x] `LICENSE` (MIT), `LICENSE-DOCS` (CC BY 4.0, [ADR-0026](adr/0026-docs-license-cc-by.md)), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound
 - [x] PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md` — the release workflow
   is token-free and attesting; the PyPI-side publisher entry is configured at first release
-- [x] `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
+- [x] `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/README.md)
 - [x] Issue templates requiring reproduction; stated triage policy
 
 Adapter extras (`sandboxio[docker]`, `[e2b]`, `[modal]`) are deliberately **not** declared
@@ -3311,16 +3312,19 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
 - [x] `sandboxio/otel.py` — GenAI semconv 1.37.0 `execute_tool` spans, zero-config, every
   attribute string in one file (a test greps for strays); `LoggingSink` and `FileSink`
   beside `NoopSink`/`QueueSink`; `sandboxio[otel]` extra for the API
-- [x] Diátaxis docs: [`quickstart.md`](quickstart.md), [`how-to/`](how-to/) (Docker with image
+- [x] Diátaxis docs: [`quickstart.md`](quickstart.md), [`how-to/`](how-to/README.md) (Docker with image
   prep and offline wheelhouse, E2B, offline testing, observability, CI, operations,
-  integrations), [`explanation/`](explanation/), the generated [`errors/`](errors/README.md),
+  integrations), [`explanation/`](explanation/README.md), the generated [`errors/`](errors/README.md),
   `llms.txt` + generated `llms-full.txt` (`scripts/gen_llms_full.py --check` is a gate), the
   paste-ready [`AGENTS.md` snippet](reference/agents-snippet.md)
+- [x] The same Markdown published at `docs.sandboxio.dev` — MkDocs Material, GitHub Pages,
+  strict build, `tests/test_docs_site.py` proving every `SBX_E` code resolves at the URL
+  the exception prints ([ADR-0029](adr/0029-docs-site-mkdocs.md))
 - [x] Copy-paste GitHub Actions workflow for users in [`how-to/ci.md`](how-to/ci.md): fake job
   on PRs, Docker job on `main`, leak check
 - [x] `tests/test_readme_examples.py`: every README Python block is executed verbatim —
   scripts against fakes registered as `docker`/`e2b`, pytest-style blocks through pytester
-- [x] [`examples/`](../examples/README.md): complete runnable programs — hello world, the
+- [x] [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md): complete runnable programs — hello world, the
   one-line backend swap, streaming and timeouts, deny-by-default egress, a LangGraph agent
   and an OpenAI Agents one, and `sbx_fake` for the reader's own tools. `tests/test_examples.py`
   executes each script against the fakes; `examples/test_my_tool.py` is collected by pytest.
@@ -3344,7 +3348,7 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks) — and every program under [`examples/`](../examples/README.md) runs against the
+(six blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
 fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
 that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five
