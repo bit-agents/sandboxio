@@ -32,9 +32,9 @@ uv sync --all-extras
 uv run examples/05_langgraph_agent.py
 ```
 
-<!-- TODO(placeholder): once the package is published, each script gets a PEP 723
-     `# /// script` header so `uv run https://.../01_hello_sandbox.py` works with no clone
-     and no install. It cannot be written until there is a name on PyPI to depend on. -->
+<!-- TODO(placeholder): a PEP 723 `# /// script` header per script would make
+     `uv run https://.../01_hello_sandbox.py` work with no clone. Deferred, with the
+     trade-off and the trigger, as Q14 in docs/open-questions.md. -->
 
 Every example assumes a running Docker daemon and the `python:3.12-slim` image. If something
 is off, `sandboxio doctor` says what is installed, reachable and missing — without printing
