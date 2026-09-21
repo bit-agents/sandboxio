@@ -151,26 +151,17 @@ jobs:
         with:
           name: dist
           path: dist/
-      # PEP 440 again, as in `image`: anything but digits and dots is a pre-release.
-      - id: ver
-        run: |
-          v="${GITHUB_REF_NAME#v}"
-          case "$v" in *[!0-9.]*) pre=--prerelease ;; *) pre= ;; esac
-          echo "pre=$pre" >> "$GITHUB_OUTPUT"
-      # A pre-release has no changelog section of its own; fall back to generated notes.
-      - id: notes
-        run: |
-          awk -v v="${GITHUB_REF_NAME#v}" '
-            $0 ~ "^## \\[" v "\\]" {p=1; next} p && /^## \[/ {exit} p
-          ' CHANGELOG.md > notes.md
-          if [ -s notes.md ]; then
-            echo "flag=--notes-file notes.md" >> "$GITHUB_OUTPUT"
-          else
-            echo "flag=--generate-notes" >> "$GITHUB_OUTPUT"
-          fi
+      # One step, so nothing interpolates a step output into a shell (zizmor
+      # template-injection). A pre-release has no changelog section of its own.
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --title "$GITHUB_REF_NAME" \
-            ${{ steps.notes.outputs.flag }} ${{ steps.ver.outputs.pre }}
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '
+            $0 ~ "^## \\[" v "\\]" {p=1; next} p && /^## \[/ {exit} p
+          ' CHANGELOG.md > notes.md
+          args=(--title "$GITHUB_REF_NAME")
+          if [ -s notes.md ]; then args+=(--notes-file notes.md); else args+=(--generate-notes); fi
+          # PEP 440 again, as in `image`: anything but digits and dots is a pre-release.
+          case "$v" in *[!0-9.]*) args+=(--prerelease) ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* "${args[@]}"
