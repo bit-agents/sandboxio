@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="sandboxio">
+  <rect width="512" height="512" rx="112" fill="#1f2430"/>
+  <path d="M142 158 L262 256 L142 354" fill="none" stroke="#ffffff" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M300 354 L392 354" fill="none" stroke="#5c6bc0" stroke-width="46" stroke-linecap="round"/>
+</svg>
