@@ -5,6 +5,7 @@ GitHub surfaces this file from the issue tracker, so the routing lives here as w
 
 | You have | Go to |
 |----------|-------|
+| Something failing, and no idea why | [Troubleshooting](docs/how-to/troubleshooting.md) — diagnosis by symptom — then the [FAQ](docs/faq.md) |
 | A question, or an idea to discuss | [Discussions](https://github.com/bit-agents/sandboxio/discussions) — not issues |
 | A bug you can reproduce | An [issue](https://github.com/bit-agents/sandboxio/issues/new/choose). **No repro, no triage**, applied without debate |
 | A security vulnerability | The Security tab, privately. See [`SECURITY.md`](SECURITY.md). **Never an issue** |

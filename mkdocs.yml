@@ -88,13 +88,16 @@ nav:
       - CI: how-to/ci.md
       - Integrations: how-to/integrations.md
       - Operations: how-to/operations.md
+      - Troubleshooting: how-to/troubleshooting.md
   - Explanation:
       - explanation/README.md
+      - The security model: explanation/security-model.md
       - Isolation tiers: explanation/isolation-tiers.md
       - Deny by default: explanation/deny-by-default.md
       - Why errors have codes: explanation/error-codes.md
       - Version policy: explanation/version-policy.md
       - Why sandboxio and not something else: explanation/comparisons.md
+  - FAQ: faq.md
   - Error codes: errors/README.md
   - Reference:
       - reference/README.md

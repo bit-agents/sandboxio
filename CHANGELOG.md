@@ -69,6 +69,13 @@ Every absorbed provider break gets an entry here as well as in the
 - [Why sandboxio and not something else](docs/explanation/comparisons.md): when a provider
   SDK, a framework's sandbox layer or plain Docker is the better choice, and when not to use
   this at all.
+- [Troubleshooting](docs/how-to/troubleshooting.md): diagnosis by symptom rather than by
+  error code — the deny-egress failure that surfaces inside your own process, the three
+  different timeouts, why a failed command does not raise, and leaked containers.
+- [The security model](docs/explanation/security-model.md): the threat model in and out of
+  scope, the five defaults, the tier decision table, and what the project does not claim.
+- [FAQ](docs/faq.md): the questions a newcomer asks first, each answered short with a link
+  to the long version.
 
 ### Changed
 

@@ -172,10 +172,13 @@ or there:
   backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
 - [`docs/quickstart.md`](docs/quickstart.md) — five minutes from install to a sandboxed run.
 - [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
-  allowlists, offline testing with the fake, audit sinks and tracing, CI.
-- [`docs/explanation/`](docs/explanation/) — isolation tiers, deny-by-default, why errors
-  have codes, the [version policy](docs/explanation/version-policy.md) and
+  allowlists, offline testing with the fake, audit sinks and tracing, CI, and
+  [troubleshooting by symptom](docs/how-to/troubleshooting.md).
+- [`docs/explanation/`](docs/explanation/) — [the security model](docs/explanation/security-model.md),
+  isolation tiers, deny-by-default, why errors have codes, the
+  [version policy](docs/explanation/version-policy.md) and
   [why sandboxio and not something else](docs/explanation/comparisons.md).
+- [`docs/faq.md`](docs/faq.md) — the questions a newcomer asks first, answered short.
 - [`docs/errors/`](docs/errors/README.md) — every error code, generated from the source.
 - [`docs/spec/`](docs/spec/) — the normative specification. This is the contract.
 - [`docs/adr/`](docs/adr/) — why each decision was made, including the ones that look arbitrary.

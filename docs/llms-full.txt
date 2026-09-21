@@ -22,14 +22,18 @@ Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error
 - [CI](how-to/ci.md): copy-paste GitHub Actions workflow, fake on PRs and Docker on main
 - [Integrations](how-to/integrations.md): LangGraph tool, OpenAI Agents tool, MCP server and its container image
 - [Operations](how-to/operations.md): sandboxio doctor, sandboxio reap, SBX_* variables, exit codes
+- [Troubleshooting](how-to/troubleshooting.md): diagnosis by symptom — no network inside the sandbox, three timeouts, refusals, leaked containers
 
 ## Explanation
 
+- [The security model](explanation/security-model.md): threat model in and out of scope, the five defaults, what is not claimed
 - [Isolation tiers](explanation/isolation-tiers.md): CONTAINER is not a boundary; MICROVM is the floor for untrusted code
 - [Deny by default](explanation/deny-by-default.md): why egress is off and what it costs
 - [Why errors have codes](explanation/error-codes.md): stable codes, hints that are fixes, no builtin inheritance
 - [Version policy](explanation/version-policy.md): what breaks, what a deprecation window is, why `.native` is exempt
 - [Why sandboxio and not something else](explanation/comparisons.md): provider SDKs, framework sandbox layers, plain Docker, and when not to use this
+
+- [FAQ](faq.md): short answers with a link to the long one
 
 ## Reference
 
@@ -231,10 +235,13 @@ or there:
   backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
 - [`docs/quickstart.md`](docs/quickstart.md) — five minutes from install to a sandboxed run.
 - [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
-  allowlists, offline testing with the fake, audit sinks and tracing, CI.
-- [`docs/explanation/`](docs/explanation/) — isolation tiers, deny-by-default, why errors
-  have codes, the [version policy](docs/explanation/version-policy.md) and
+  allowlists, offline testing with the fake, audit sinks and tracing, CI, and
+  [troubleshooting by symptom](docs/how-to/troubleshooting.md).
+- [`docs/explanation/`](docs/explanation/) — [the security model](docs/explanation/security-model.md),
+  isolation tiers, deny-by-default, why errors have codes, the
+  [version policy](docs/explanation/version-policy.md) and
   [why sandboxio and not something else](docs/explanation/comparisons.md).
+- [`docs/faq.md`](docs/faq.md) — the questions a newcomer asks first, answered short.
 - [`docs/errors/`](docs/errors/README.md) — every error code, generated from the source.
 - [`docs/spec/`](docs/spec/) — the normative specification. This is the contract.
 - [`docs/adr/`](docs/adr/) — why each decision was made, including the ones that look arbitrary.
@@ -1236,6 +1243,429 @@ interrupted. Stable across releases ([spec/10](../spec/10-cli.md)).
 
 
 ==============================================================================
+# FILE: docs/how-to/troubleshooting.md
+==============================================================================
+
+# Troubleshooting
+
+Diagnosis by **symptom**, for when you do not already have an `SBX_E` code to look up. If
+you do have one, go straight to the [error reference](../errors/README.md) — every code has
+a page, and every exception already carries the fix in its `hint`.
+
+Before anything else:
+
+```bash
+sandboxio doctor          # what is installed, reachable and missing, with a fix per line
+sandboxio doctor --json   # the same, paste-friendly; prints credential names, never values
+```
+
+`doctor` exits `0` when every installed backend is healthy. It makes no provider API call,
+so it costs nothing to run twice.
+
+## Symptom index
+
+| What you saw | Go to |
+|--------------|-------|
+| `ModuleNotFoundError`, or an error naming an extra you have not installed | [Nothing is installed yet](#nothing-is-installed-yet) |
+| `cannot reach the Docker daemon` | [Docker is not reachable](#docker-is-not-reachable) |
+| Code inside the sandbox cannot resolve a hostname or connect | [The sandbox has no network — by design](#the-sandbox-has-no-network--by-design) |
+| The command clearly failed, but no exception was raised | [A failed command is not an exception](#a-failed-command-is-not-an-exception) |
+| A call raised after roughly 300 seconds | [Three different timeouts](#three-different-timeouts) |
+| `except TimeoutError:` did not catch a sandbox timeout | [Three different timeouts](#three-different-timeouts) |
+| `CapabilityNotSupported`, for a call that works on another backend | [The backend refuses instead of pretending](#the-backend-refuses-instead-of-pretending) |
+| `ConfigurationError` about `Resources(...)` | [The backend refuses instead of pretending](#the-backend-refuses-instead-of-pretending) |
+| Containers still on the host after the process exited | [Sandboxes that outlived the process](#sandboxes-that-outlived-the-process) |
+| `OrphanedSandboxWarning` | [Sandboxes that outlived the process](#sandboxes-that-outlived-the-process) |
+| `UnverifiedIsolationWarning`, or `create()` refusing a tier | [Isolation warnings and refusals](#isolation-warnings-and-refusals) |
+| `AuthError`, `RateLimitError` | [Provider credentials](#provider-credentials) |
+| A secret you passed is not visible inside the sandbox | [Secrets are not `env`](#secrets-are-not-env) |
+| A test passes but nothing actually ran | [The fake executes nothing](#the-fake-executes-nothing) |
+
+## Nothing is installed yet
+
+The core package contains no backend. Two different errors say so:
+
+| Code | Means | Fix |
+|------|-------|-----|
+| [`SBX_E1002`](../errors/SBX_E1002.md) `BackendNotInstalled` | a first-party backend whose extra is missing | `uv pip install "sandboxio[docker]"` |
+| [`SBX_E1001`](../errors/SBX_E1001.md) `BackendNotFound` | no backend is registered under that name at all | check the spelling; the hint lists what *is* registered |
+
+A third-party adapter is `BackendNotFound` rather than `BackendNotInstalled` — sandboxio
+cannot know its install command, so the hint names what it does know.
+
+## Docker is not reachable
+
+```text
+sandboxio.errors.CreationError: [SBX_E1201] cannot reach the Docker daemon
+  Fix:  Start Docker, or set DOCKER_HOST; `sandboxio doctor` explains.
+```
+
+The adapter creates its client on first use, never at import, so this surfaces at
+`create()` rather than at `import sandboxio`. Work through it in this order:
+
+1. `docker info` — if that fails, this is a Docker problem, not a sandboxio one.
+2. `sandboxio doctor` — it reports reachability and the engine version.
+3. A non-default socket (Colima, Rancher Desktop, a remote engine) needs `DOCKER_HOST`
+   exported in the same shell that runs your program.
+
+## The sandbox has no network — by design
+
+This is the single most common surprise, and it usually does **not** raise a sandboxio
+error. `create()` denies egress by default, so the failure happens *inside* your code: a
+DNS resolution error, a connection refused, a `pip install` that cannot reach PyPI. What
+comes back is an `ExecResult` with a non-zero `exit_code` and the real reason in `stderr`.
+
+```python
+import sandboxio
+
+async with await sandboxio.create() as sb:
+    res = await sb.run(["python", "-c", "import urllib.request; urllib.request.urlopen('https://example.com')"])
+    print(res.exit_code, res.stderr)   # non-zero, and a socket error — not an SBX code
+```
+
+That is the deny-by-default policy working ([why](../explanation/deny-by-default.md)). Your
+options, in order of preference:
+
+1. **Bake the dependencies into the image**, or upload an **offline wheelhouse** — both
+   work under the default policy
+   ([Docker how-to](docker.md#getting-dependencies-into-a-deny-egress-sandbox)).
+2. **Allowlist the hosts you need**, on a backend that can enforce one
+   ([E2B how-to](e2b.md#network-allowlists)). Docker cannot, and says so rather than
+   granting full access.
+3. **Open egress explicitly** with `NetworkPolicy(egress="allow")`, when the code is
+   trusted and you have decided that is acceptable.
+
+Two things this is *not*:
+
+- **Not an image-pull problem.** `docker pull` runs on the host daemon, outside the
+  container's network namespace, so a deny-egress sandbox still starts from a remote image.
+- **Not** [`SBX_E1401`](../errors/SBX_E1401.md) `NetworkPolicyViolation` in most cases. That
+  code is raised where the backend itself reports a blocked attempt; a container with
+  `network: none` has nothing to report, because there is no network stack to block.
+
+## A failed command is not an exception
+
+`run()` and `run_code()` return an `ExecResult`. A non-zero exit is data, not a raise —
+the same shape as `subprocess.run()` without `check=True`:
+
+```python
+import sandboxio
+
+async with await sandboxio.create() as sb:
+    res = await sb.run(["pytest", "-q"])
+    if not res.ok:                 # exit_code != 0
+        print(res.stderr)
+    res.raise_for_status()         # ExecutionError (SBX_E1301) with the result attached
+```
+
+If a step in your pipeline "silently did nothing", check `res.ok` first. When it did raise,
+[`SBX_E1301`](../errors/SBX_E1301.md) carries the whole result: `exc.result.stderr` and
+`exc.result.exit_code`.
+
+## Three different timeouts
+
+They look alike and have different fixes:
+
+| Raised | Code | What ran out | Fix |
+|--------|------|--------------|-----|
+| `CreateTimeout` | [`SBX_E1203`](../errors/SBX_E1203.md) | the sandbox did not become usable in time | raise `timeout=` on `create()`, or use a warmer image/template |
+| `ExecutionTimeout` | [`SBX_E1302`](../errors/SBX_E1302.md) | one `run()`, `run_code()` or stream | raise `timeout=` on the call, or make the code finish sooner |
+| `SandboxGone` | [`SBX_E1204`](../errors/SBX_E1204.md) | the sandbox's whole lifetime, while you were using it | raise `timeout=` on `create()` — this is the sandbox-level budget, not the call's |
+
+`SandboxGone` is deliberately **not** a timeout subclass: the fix is a different parameter.
+
+`timeout=None` on a call means *inherit the sandbox timeout*, never *unbounded*, and
+`timeout=None` on `create()` is refused outright. There is no way to ask for forever.
+
+**`except TimeoutError:` will not catch any of these.** On Python 3.11+ the builtin is what
+`asyncio` raises, so inheriting from it would make "my deadline fired" and "the sandbox's
+limit fired" indistinguishable ([ADR-0017](../adr/0017-timeout-error-naming.md)). Catch the
+library's own base instead:
+
+```python
+import sandboxio
+
+try:
+    async with await sandboxio.create() as sb:
+        await sb.run("sleep 999", timeout=5)
+except sandboxio.SandboxTimeout as exc:     # CreateTimeout and ExecutionTimeout
+    print(exc.code, exc.hint)
+```
+
+## The backend refuses instead of pretending
+
+A backend that cannot honour a typed argument raises rather than quietly ignoring it. This
+is the rule that makes the defaults worth trusting, and it is also why a call that works on
+one backend can fail on another:
+
+| You asked for | On | Result |
+|---------------|-----|--------|
+| `NetworkPolicy(allow=[...])` | Docker | `CapabilityNotSupported` — Docker has no per-host egress filtering ([ADR-0023](../adr/0023-docker-network-and-dependencies.md)). Allowlists are an E2B/Modal capability |
+| `run_code(context_id=...)` | Docker | `CapabilityNotSupported` — `STATEFUL_CODE` is off for Docker in v0.1 ([ADR-0024](../adr/0024-stateful-code-on-docker.md)) |
+| `Resources(disk_mb=...)` | Docker | `ConfigurationError` — Docker cannot cap disk; drop it or pick a backend that can |
+| `Resources(...)` | E2B | `ConfigurationError` — caps belong to the template; pick a template with the resources you need |
+| `egress="learn"` | anything | raises in v0.1 rather than degrading to `deny` |
+
+Never write a `try/except` that swallows one of these into a fallback: the refusal is the
+feature. Discover instead of guessing:
+
+```python
+import sandboxio
+from sandboxio import Capability
+
+async with await sandboxio.create() as sb:
+    if Capability.STATEFUL_CODE in sb.capabilities:
+        await sb.run_code("x = 41", context_id="session-1")
+```
+
+## Sandboxes that outlived the process
+
+Normal teardown happens on context-manager exit, including on exception and on
+cancellation. What survives that is visible and removable:
+
+```bash
+sandboxio reap                          # lists, running and stopped — dry run by default
+sandboxio reap --label tenant_id=acme   # narrowed by your own metadata
+sandboxio reap --kill                   # removes what was listed
+```
+
+Three ways a container is still there:
+
+- **The process crashed with the reaper disabled** (`SBX_DOCKER_REAPER=0`). The Ryuk-style
+  sidecar normally removes the session's containers when the process dies.
+- **The lifetime expired.** The container's PID 1 is `sleep <timeout>`; when it fires,
+  Docker leaves the container *stopped*, not removed.
+- **Teardown exceeded its grace.** You will have seen `OrphanedSandboxWarning` with the id
+  and labels — that warning exists precisely so `reap` has something to go on. Raise
+  `SBX_TEARDOWN_GRACE` if a slow host makes 5 seconds too tight.
+
+Always ran under `async with`, and still leaking? That is a bug worth an issue — CI asserts
+zero `io.sandboxio.managed` containers remain after every Docker job, so a reproduction is
+actionable ([H2](../hazards.md#h2--leaked-sandboxes)).
+
+## Isolation warnings and refusals
+
+`UnverifiedIsolationWarning` means the backend reports `UNKNOWN` — its adapter has not
+verified what it isolates with. It is emitted once per backend, and an `UNKNOWN` backend
+satisfies no `require_isolation=` requirement at all.
+
+`create(require_isolation=...)` raising `ConfigurationError` is the feature working: the
+check runs **before** provisioning, so nothing was created and nothing was billed. Either
+point at a backend that meets the tier, or lower the requirement deliberately —
+`require_isolation=UNKNOWN` is meaningless and raises.
+
+Read [isolation tiers](../explanation/isolation-tiers.md) before deciding which way to go.
+`CONTAINER` is not a boundary against hostile code.
+
+## Provider credentials
+
+[`SBX_E1501`](../errors/SBX_E1501.md) `AuthError` names the exact environment variable it
+wanted — export that one, in the shell that runs your program, and re-run
+`sandboxio doctor` to confirm it is seen. `doctor` reports variables by name with set/unset
+and never prints a value.
+
+[`SBX_E1502`](../errors/SBX_E1502.md) `RateLimitError` is the provider throttling you.
+sandboxio does not retry on your behalf in v0.1 — back off in your own code.
+
+## Secrets are not `env`
+
+`secrets=` and `env=` are separate parameters on purpose. Values passed as `secrets=` are
+redacted everywhere they could surface: messages, notes, reprs, audit events, spans and CLI
+output. If you are grepping logs for a secret to confirm it arrived, you will not find it —
+that is the redaction, not a delivery failure.
+
+Credentials in a DSN are refused: the DSN carries a backend, a template and `timeout`, and
+nothing else. Use typed configuration and the provider's environment variable
+([spec/05](../spec/05-security-policy.md#secrets)).
+
+## The fake executes nothing
+
+`fake://` and the `sbx_fake` fixture run no code at all. A test that asserts on real output
+without scripting a result first is asserting on a default, not on your logic:
+
+```python
+import pytest
+from sandboxio import ExecResult
+
+
+@pytest.mark.anyio
+async def test_tool(sbx_fake):
+    sbx_fake.on_run_code(match="import pandas", returns=ExecResult(0, "2.2.1\n", ""))
+    res = await sbx_fake.sandbox.run_code("import pandas; print(pandas.__version__)")
+    assert "2.2.1" in res.stdout
+```
+
+The fake reports `CONTAINER` while isolating nothing, because it is for tests — never use
+it as a stand-in for a security boundary. More in
+[offline testing](offline-testing.md).
+
+## Still stuck
+
+- Include `sandboxio doctor --json` in any report; it is built for pasting and prints no
+  secrets.
+- A reproducible bug goes to [issues](https://github.com/bit-agents/sandboxio/issues/new/choose);
+  a question goes to [discussions](https://github.com/bit-agents/sandboxio/discussions)
+  ([SUPPORT.md](https://github.com/bit-agents/sandboxio/blob/main/SUPPORT.md)).
+- A security vulnerability goes privately through the Security tab, never an issue
+  ([SECURITY.md](https://github.com/bit-agents/sandboxio/blob/main/SECURITY.md)).
+- A default that appears to apply and does not is the highest-severity bug this project can
+  have ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)). Report it as
+  one.
+
+
+==============================================================================
+# FILE: docs/explanation/security-model.md
+==============================================================================
+
+# The security model
+
+What sandboxio protects you from, what it does not, and what remains your job. Read this
+before running code you did not write.
+
+The normative version is [spec/05](../spec/05-security-policy.md), written as a contract in
+RFC-2119 language. This page is the same model in the order a reader needs it, and where
+the two disagree the spec wins.
+
+## The one-sentence version
+
+sandboxio bounds the blast radius of code an agent generates. It does not make that code
+safe, and no library can — what it can do is make the bound explicit, apply it by default,
+and fail loudly when a backend cannot honour it.
+
+## What is in scope
+
+1. **Malicious or buggy agent-generated code** — exfiltration, resource exhaustion, escape
+   attempts.
+2. **Prompt-injected agents** invoking tools with attacker-chosen code or arguments.
+   sandboxio cannot prevent the injection; it bounds what the injected code can reach.
+3. **Cross-tenant leakage** — tenant A's code, files or state reaching tenant B.
+4. **Credential leakage** into sandboxes, logs, traces or audit events.
+5. **Supply-chain compromise of sandboxio itself** — a tiny dependency surface, lazy
+   adapter imports, and a release path with no long-lived token.
+
+## What is explicitly out of scope
+
+Stated plainly, because a security tool that is vague about its limits is worse than none:
+
+- **Making untrusted code safe on the `CONTAINER` tier.** A shared kernel is not a boundary
+  against hostile code. Docker is for trusted, dev and CI workloads.
+- **Defending against prompt injection.** That is your agent's problem, upstream of the
+  sandbox. sandboxio assumes the injection already succeeded.
+- **Tenant identity and authorization.** sandboxio labels and separates sandboxes; deciding
+  who may ask for one is your application's job.
+
+## The five defaults that do the work
+
+| Default | What it stops | Escape hatch |
+|---------|---------------|--------------|
+| **Egress denied** on `create()` with no arguments | exfiltration, second-stage fetches, calls to APIs with found credentials | `NetworkPolicy(egress="allow")`, or an allowlist where the backend enforces one |
+| **Mandatory timeouts** on `create()`, `run()` and `run_code()` | runaway cost, hung executions, denial of service | raise the value; `None` means *inherit*, never *unbounded* |
+| **Resource caps always applied** — CPU, memory bounded together with swap, and a process ceiling where the backend has one | fork bombs, memory exhaustion of the host | a caller may raise a cap, never unset one |
+| **Guaranteed teardown**, shielded and bounded by a grace period, on exception and on cancellation | sandboxes and bills that outlive the process | `sandboxio reap` for whatever still survives, with a warning naming it |
+| **Isolation tier reported and enforceable** | a silent downgrade between environments | `require_isolation=`, checked *before* provisioning |
+
+## The rule that makes them trustworthy
+
+**A backend that cannot enforce what you asked for raises.** It does not approximate, warn
+and continue, or degrade to something weaker.
+
+A `NetworkPolicy(allow=[...])` against Docker raises `CapabilityNotSupported` instead of
+granting full bridge access, because Docker has no per-host egress filtering. `egress="learn"`
+raises in v0.1 rather than falling back to `deny`. `Resources(disk_mb=...)` on Docker is
+refused rather than ignored. A security control that appears to apply and does not is the
+highest-severity bug this project can ship
+([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)), and the contract suite
+proves deny-by-default against a canary host on every real backend.
+
+## Choosing a tier
+
+The tier measures one property: resistance to kernel escape by an adversarial tenant
+([isolation tiers](isolation-tiers.md)).
+
+| Your code is | Use | Why |
+|--------------|-----|-----|
+| yours, reviewed, or CI's own | `CONTAINER` (Docker) | a shared kernel is fine when nothing in the sandbox is trying to leave it |
+| agent-generated, single-tenant, low-value data | `CONTAINER` with egress denied, or better | the network default is doing most of the work here |
+| untrusted, multi-tenant, or touching other people's data | `MICROVM` (E2B) as the floor | a dedicated guest kernel; a kernel bug is not immediately a host compromise |
+
+Make it enforceable rather than documented:
+
+```python
+import sandboxio
+from sandboxio import IsolationTier
+
+sb = await sandboxio.create("e2b://", require_isolation=IsolationTier.MICROVM)
+```
+
+A weaker backend fails before anything is provisioned or billed. An `UNKNOWN`-tier backend
+satisfies no requirement at all, and creating on one warns.
+
+## What the container tier does and does not harden
+
+Everything that costs no compatibility is applied: all capabilities dropped,
+`no-new-privileges`, a process ceiling, and swap bounded together with memory
+([ADR-0028](../adr/0028-docker-container-hardening.md)).
+
+Two things are **not** applied, because both break ordinary images: running as a non-root
+user, and a read-only root filesystem. So a Docker sandbox runs as root on a writable
+rootfs inside the container ([H16](../hazards.md#h16--docker-sandboxes-run-as-root-on-a-writable-rootfs)).
+That gap is recorded rather than papered over, and it is one more reason `CONTAINER` is not
+the tier for hostile code.
+
+## Secrets
+
+`secrets=` is a separate parameter from `env=` so that redaction has something to act on.
+Values passed there are removed from messages, notes, reprs, audit events, spans and CLI
+output before anything is rendered, which means an exception you log is safe to log.
+
+sandboxio persists no credential anywhere. Secrets in a DSN are refused with a
+`ConfigurationError` pointing at the environment-variable convention — a DSN carries a
+backend, a template and `timeout`, and is safe to put in a config file. For your own
+provider credentials, use short-lived, least-privilege keys.
+
+## Tenancy
+
+One sandbox per session or tenant-run, labelled with your own metadata:
+
+```python
+import sandboxio
+
+sb = await sandboxio.create(metadata={"tenant_id": "acme", "session_id": "s-1"})
+```
+
+Labels propagate to provider-native labels where the backend supports them, which is what
+makes an orphan findable later by `sandboxio reap --label tenant_id=acme`. **sandboxio will
+not silently share a sandbox across tenants under any circumstance.** Warm pools and
+fork-per-tenant are opt-in patterns you choose, never a default you get.
+
+## Your side of the contract
+
+Before running untrusted code:
+
+- [ ] Pick the tier deliberately, and state it in code with `require_isolation=`.
+- [ ] Leave egress denied, or allowlist specific hosts — not `egress="allow"` because a
+      dependency was missing ([the dependency patterns are here](../how-to/docker.md#getting-dependencies-into-a-deny-egress-sandbox)).
+- [ ] Pass credentials as `secrets=`, and only the ones that sandbox actually needs.
+- [ ] Label sandboxes with tenant and session, so an orphan is attributable.
+- [ ] Turn on an audit sink, so what ran is a record rather than a memory
+      ([audit and tracing](../how-to/observability.md)).
+- [ ] Put your own authorization in front of sandbox creation. sandboxio does not do it.
+
+## What this project does not claim
+
+- No third-party security audit has been performed.
+- It is **pre-alpha**, with nothing released; the API is not stable yet.
+- No v0.1 backend provides the `GVISOR` tier — the tier exists in the model, not in what
+  shipped.
+- Isolation tiers are claims about someone else's infrastructure, published only with a
+  dated link to the provider's own documentation and re-verified quarterly
+  ([ADR-0006](../adr/0006-isolation-tiers-first-class.md)).
+
+Vulnerabilities go privately through the Security tab, never an issue
+([SECURITY.md](https://github.com/bit-agents/sandboxio/blob/main/SECURITY.md)).
+
+
+==============================================================================
 # FILE: docs/explanation/isolation-tiers.md
 ==============================================================================
 
@@ -1605,6 +2035,143 @@ fastest. The snapshot behind them is from **2026-09-19**
 ([ADR-0013](../adr/0013-complement-openai-sandboxclient.md)), and re-reading it is a quarterly
 item in the [runbook](../runbook.md). If something here is out of date, that is a bug worth an
 issue.
+
+
+==============================================================================
+# FILE: docs/faq.md
+==============================================================================
+
+# FAQ
+
+Short answers with a link to the long one. If your question is "why does X fail", start at
+[troubleshooting](how-to/troubleshooting.md) instead.
+
+## What it is
+
+**Is this a framework?**
+No. It is a library with no runtime of its own, no server and no opinion about how you
+build your agent — one async API over sandbox providers, plus a sync facade
+([ADR-0009](adr/0009-library-first-server-later.md)).
+
+**Does it replace the provider SDKs?**
+It sits in front of them and keeps them reachable. Provider-specific features stay
+available through `Capability` flags and `sb.native`, so using sandboxio is not a decision
+to give up the E2B or Docker API ([ADR-0003](adr/0003-no-lowest-common-denominator.md)).
+
+**Why not just Docker plus `subprocess`?**
+For one provider and one script, that is the right answer. The case for this library starts
+when you need a second backend, a security default you can prove, or tests that run without
+Docker — laid out with the counter-cases in
+[why sandboxio and not something else](explanation/comparisons.md).
+
+**How does it relate to OpenAI's `SandboxClient`?**
+Complement, not competitor: framework sandbox layers are a distribution channel for this
+one ([ADR-0013](adr/0013-complement-openai-sandboxclient.md)).
+
+## Using it
+
+**Which backends exist?**
+Docker, E2B and an in-process fake in v0.1; Modal in v0.1.1
+([ADR-0025](adr/0025-v01-scope-cut.md)). Third-party adapters install as
+`sandboxio-<name>` and register under the same entry-point group as the first-party ones.
+
+**Do I have to write async code?**
+No. `create_sync()` gives the same API, blocking — it is a thin facade over the async core,
+not a second implementation. Each sync sandbox holds one portal thread for its lifetime, so
+heavy concurrency is a reason to use the async API ([ADR-0022](adr/0022-sync-facade.md)).
+
+**How do I install dependencies if the sandbox has no network?**
+Bake them into the image, or upload an offline wheelhouse — both work under the default
+policy ([Docker how-to](how-to/docker.md#getting-dependencies-into-a-deny-egress-sandbox)).
+On E2B you can also allowlist the hosts you need.
+
+**Can I turn the network on?**
+Yes, explicitly: `NetworkPolicy(egress="allow")`. What you cannot do is get it by accident
+([deny by default](explanation/deny-by-default.md)).
+
+**Can I run without a timeout?**
+No. `timeout=None` on a call means *inherit the sandbox timeout*; on `create()` it is
+refused. Unbounded execution is a cost and an availability problem, not only a security one
+([spec/05](spec/05-security-policy.md#mandatory-timeouts)).
+
+**How do I test code that uses sandboxio?**
+`fake://` and the `sbx_fake` fixture, which ship with the base package: no Docker, no
+network, no provider account ([offline testing](how-to/offline-testing.md)).
+
+**Does it work with LangGraph, the OpenAI Agents SDK or MCP?**
+Yes, with the supported version ranges published and proven by a weekly CI matrix
+([integrations](how-to/integrations.md#supported-framework-versions)).
+
+## Security
+
+**Is a Docker sandbox safe for untrusted code?**
+No. `CONTAINER` shares the host kernel and is not a boundary against hostile code — it is
+for trusted, dev and CI code. `MICROVM` is the recommended floor for untrusted or
+multi-tenant work ([the security model](explanation/security-model.md),
+[isolation tiers](explanation/isolation-tiers.md)).
+
+**Then what does sandboxio actually give me?**
+A blast radius you chose on purpose, and defaults that fail loudly rather than silently:
+egress denied, timeouts mandatory, caps always applied, teardown guaranteed, and the
+isolation tier reported and enforceable. The full in-scope and out-of-scope list is on
+[the security model page](explanation/security-model.md).
+
+**What happens if a backend cannot honour a security argument?**
+It raises. Accepting and ignoring a network policy is the single most dangerous bug this
+library could ship, so an unsupported allowlist or cap is refused, never approximated
+([H1](hazards.md#h1--a-security-default-silently-does-not-apply)).
+
+**Are my secrets safe in logs?**
+Values passed as `secrets=` are redacted from messages, reprs, audit events, spans and CLI
+output before rendering, and sandboxio persists no credential anywhere. Secrets in a DSN are
+refused ([spec/05](spec/05-security-policy.md#secrets)).
+
+**How do I report a vulnerability?**
+Privately, through the Security tab — never an issue
+([SECURITY.md](https://github.com/bit-agents/sandboxio/blob/main/SECURITY.md)).
+
+## The project
+
+**Is it production-ready?**
+No. It is pre-alpha and nothing is released to PyPI. What is stable enough to build against
+is [the specification](spec/README.md), which is normative and CI-enforced.
+
+**What does it depend on?**
+`anyio` and `typing-extensions`, and nothing else. Every provider SDK sits behind an extra
+and is imported the first time that backend is used; `import sandboxio` has a 150 ms budget
+that CI enforces ([ADR-0004](adr/0004-thin-core-lazy-adapters.md)).
+
+**Does it phone home?**
+No telemetry, ever, not even opt-out — and no import side effects at all: no sockets, no
+logging configuration, no global state ([ADR-0012](adr/0012-no-telemetry-no-import-side-effects.md)).
+
+**Which Python versions?**
+3.11 and newer ([ADR-0015](adr/0015-python-version-floor.md)).
+
+**What counts as a breaking change?**
+More than you would expect, because there are two audiences: callers and adapter authors. A
+new required contract-suite test breaks adapter authors even though callers see nothing, and
+the version number takes the stricter verdict. `sb.native` is outside the contract by design
+([version policy](explanation/version-policy.md)).
+
+**What happens when a provider ships a breaking change?**
+A nightly canary installs every provider SDK unpinned and opens an issue when it breaks;
+what was absorbed is written down in the [churn log](churn-log.md). Absorbing that churn
+publicly is the point of the project, not a chore beside it.
+
+**What is the licence?**
+MIT for code, CC BY 4.0 for the prose in `docs/`. Contributions are under the DCO, with no
+CLA ([ADR-0016](adr/0016-license-mit.md), [ADR-0026](adr/0026-docs-license-cc-by.md)).
+
+**Why `sandboxio` and not `sbx`?**
+`sbx` on PyPI is an unrelated package. `SBX` survives as the short code — error codes,
+`SBX_` environment variables, the `sbx_fake` fixture — and copy-paste commands always use
+the full name ([ADR-0014](adr/0014-project-name.md)).
+
+**Where do I ask something that is not here?**
+[Discussions](https://github.com/bit-agents/sandboxio/discussions) for questions and ideas,
+[issues](https://github.com/bit-agents/sandboxio/issues/new/choose) for a bug you can
+reproduce ([SUPPORT.md](https://github.com/bit-agents/sandboxio/blob/main/SUPPORT.md)).
 
 
 ==============================================================================

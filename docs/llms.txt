@@ -20,14 +20,18 @@ Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error
 - [CI](how-to/ci.md): copy-paste GitHub Actions workflow, fake on PRs and Docker on main
 - [Integrations](how-to/integrations.md): LangGraph tool, OpenAI Agents tool, MCP server and its container image
 - [Operations](how-to/operations.md): sandboxio doctor, sandboxio reap, SBX_* variables, exit codes
+- [Troubleshooting](how-to/troubleshooting.md): diagnosis by symptom — no network inside the sandbox, three timeouts, refusals, leaked containers
 
 ## Explanation
 
+- [The security model](explanation/security-model.md): threat model in and out of scope, the five defaults, what is not claimed
 - [Isolation tiers](explanation/isolation-tiers.md): CONTAINER is not a boundary; MICROVM is the floor for untrusted code
 - [Deny by default](explanation/deny-by-default.md): why egress is off and what it costs
 - [Why errors have codes](explanation/error-codes.md): stable codes, hints that are fixes, no builtin inheritance
 - [Version policy](explanation/version-policy.md): what breaks, what a deprecation window is, why `.native` is exempt
 - [Why sandboxio and not something else](explanation/comparisons.md): provider SDKs, framework sandbox layers, plain Docker, and when not to use this
+
+- [FAQ](faq.md): short answers with a link to the long one
 
 ## Reference
 
