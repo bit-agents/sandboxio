@@ -6,6 +6,9 @@ on:
   pull_request:
   schedule:
     - cron: "17 3 * * *"  # nightly: cloud contract suites and the latest-SDK canary
+  # The same two jobs on demand. Runbook step 1 asks for a green cloud suite before a
+  # release, and waiting for the cron puts that answer after the tag rather than before it.
+  workflow_dispatch:
 
 # The `cache-poisoning` ignores below: this workflow publishes nothing, so there is no
 # runtime artifact to poison. No tag trigger: the release gate is a job inside release.yml,
@@ -142,8 +145,8 @@ jobs:
           retention-days: 14
 
   e2b:
-    name: e2b contract suite (nightly)
-    if: github.event_name == 'schedule'
+    name: e2b contract suite (nightly + on demand)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
@@ -165,7 +168,7 @@ jobs:
   # only — framework churn is the weekly matrix, and Modal lands in v0.1.1.
   canary:
     name: latest-SDK canary
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
