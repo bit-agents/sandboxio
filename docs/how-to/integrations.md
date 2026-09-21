@@ -71,6 +71,12 @@ sandboxio backends *as* an OpenAI `SandboxClient` is planned for v0.2
 
 ## MCP server
 
+Use this when the consumer is an MCP client — Claude Desktop, Cursor, your own agent in
+another language — rather than your own Python code. The client gets code execution against a
+sandbox it cannot reconfigure: the backend, the egress policy and the timeout are fixed when
+you start the process, and no tool runs anything on the host. If you are writing the agent in
+Python, call `sandboxio.create()` directly; the protocol hop buys you nothing.
+
 ```bash
 uv add "sandboxio[mcp,docker]"
 python -m sandboxio.mcp --backend docker://python:3.12-slim

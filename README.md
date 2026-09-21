@@ -36,6 +36,9 @@ underneath, with the security posture that agent execution actually needs.
   behind an extra and is imported lazily.
 - **Offline-testable.** `FakeBackend` and a pytest fixture, so your agent's tools have tests
   that need no Docker, no network and no provider account.
+- **Usable without writing Python.** The same sandbox and the same defaults are served over
+  MCP, so a client like Claude Desktop or Cursor gets code execution it cannot reconfigure
+  at runtime.
 - **Provider churn is absorbed publicly.** Upstream breaking changes are tracked, absorbed
   and written down.
 

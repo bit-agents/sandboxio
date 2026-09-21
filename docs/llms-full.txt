@@ -99,6 +99,9 @@ underneath, with the security posture that agent execution actually needs.
   behind an extra and is imported lazily.
 - **Offline-testable.** `FakeBackend` and a pytest fixture, so your agent's tools have tests
   that need no Docker, no network and no provider account.
+- **Usable without writing Python.** The same sandbox and the same defaults are served over
+  MCP, so a client like Claude Desktop or Cursor gets code execution it cannot reconfigure
+  at runtime.
 - **Provider churn is absorbed publicly.** Upstream breaking changes are tracked, absorbed
   and written down.
 
@@ -1136,6 +1139,12 @@ sandboxio backends *as* an OpenAI `SandboxClient` is planned for v0.2
 
 ## MCP server
 
+Use this when the consumer is an MCP client — Claude Desktop, Cursor, your own agent in
+another language — rather than your own Python code. The client gets code execution against a
+sandbox it cannot reconfigure: the backend, the egress policy and the timeout are fixed when
+you start the process, and no tool runs anything on the host. If you are writing the agent in
+Python, call `sandboxio.create()` directly; the protocol hop buys you nothing.
+
 ```bash
 uv add "sandboxio[mcp,docker]"
 python -m sandboxio.mcp --backend docker://python:3.12-slim
@@ -1952,7 +1961,7 @@ deletes it, and PyPI filenames are never reused.
 
 # Why sandboxio and not something else
 
-Three things already solve part of this problem. Each is the right answer sometimes, and this
+Four things already solve part of this problem. Each is the right answer sometimes, and this
 page says when — including the cases where the answer is "not sandboxio".
 
 ## A single provider's SDK
@@ -1992,6 +2001,27 @@ layer changes and the execution layer should not.
 
 You are not choosing between them. `sandboxio.integrations` returns each framework's **native**
 tool object, so sandboxio runs *inside* those ecosystems rather than beside them.
+
+## A sandbox provider's own MCP server
+
+Sandbox providers ship MCP servers for their own products, and a coding assistant may already
+have code execution built in. This is the alternative to
+[`python -m sandboxio.mcp`](../how-to/integrations.md#mcp-server), not to the library.
+
+**Use theirs when** the assistant is the only consumer and you are already that provider's
+customer. One less layer.
+
+**Use sandboxio's when** the same policy has to hold in more than one place. The server is this
+library with a protocol in front, so the sandbox your assistant talks to is the sandbox your
+tests and your production agent get — same defaults, same error codes, same
+[contract suite](../spec/08-adapter-contract.md). Moving from Docker to a microVM is the
+`--backend` flag, not a different server with a different tool surface.
+
+The rest of the difference is what the server refuses to do. Configuration is fixed at process
+start with deliberately no tool to change it, no tool executes on the host, and the image is
+rootless with no Docker socket reachable from sandboxed code
+([spec/09](../spec/09-integrations.md)). That shape is a response to the 2026 LiteLLM CVE
+chain, where the worst unauthenticated RCE sat in an MCP endpoint ([hazards](../hazards.md)).
 
 ## Docker and `subprocess`, yourself
 
