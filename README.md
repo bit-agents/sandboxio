@@ -174,7 +174,8 @@ or there:
 - [`docs/how-to/`](docs/how-to/) — Docker images and offline wheelhouses, E2B keys and
   allowlists, offline testing with the fake, audit sinks and tracing, CI.
 - [`docs/explanation/`](docs/explanation/) — isolation tiers, deny-by-default, why errors
-  have codes, and the [version policy](docs/explanation/version-policy.md).
+  have codes, the [version policy](docs/explanation/version-policy.md) and
+  [why sandboxio and not something else](docs/explanation/comparisons.md).
 - [`docs/errors/`](docs/errors/README.md) — every error code, generated from the source.
 - [`docs/spec/`](docs/spec/) — the normative specification. This is the contract.
 - [`docs/adr/`](docs/adr/) — why each decision was made, including the ones that look arbitrary.

@@ -94,6 +94,7 @@ nav:
       - Deny by default: explanation/deny-by-default.md
       - Why errors have codes: explanation/error-codes.md
       - Version policy: explanation/version-policy.md
+      - Why sandboxio and not something else: explanation/comparisons.md
   - Error codes: errors/README.md
   - Reference:
       - reference/README.md

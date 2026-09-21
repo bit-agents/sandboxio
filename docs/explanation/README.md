@@ -9,3 +9,4 @@ code.
 | [Deny by default](deny-by-default.md) | Why egress is off, and what that costs |
 | [Why errors have codes](error-codes.md) | Why every failure carries a stable `SBX_E` code and a hint that is a fix |
 | [Version policy](version-policy.md) | What counts as a breaking change, how long a deprecation lives, and why `.native` is exempt |
+| [Why sandboxio and not something else](comparisons.md) | When a provider SDK, a framework's sandbox layer or plain Docker is the better answer — and when it is not |
