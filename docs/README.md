@@ -38,7 +38,9 @@ sb = await sandboxio.create("fake://")                     # tests; executes not
 |----------|------|
 | Install to a sandboxed run in five minutes | [Quickstart](quickstart.md) |
 | A task guide for your backend | [Docker](how-to/docker.md) · [E2B](how-to/e2b.md) · [Offline testing](how-to/offline-testing.md) |
-| To run untrusted code safely | [Isolation tiers](explanation/isolation-tiers.md) |
+| To run untrusted code safely | [The security model](explanation/security-model.md) · [Isolation tiers](explanation/isolation-tiers.md) |
+| To work out why something fails | [Troubleshooting](how-to/troubleshooting.md) |
+| A short answer to a common question | [FAQ](faq.md) |
 | The meaning of an `SBX_E` code you just hit | [Error codes](errors/README.md) |
 | The normative contract | [Specification](spec/README.md) |
 | Why a decision is the way it is | [Decisions](adr/README.md) |
@@ -62,8 +64,9 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 | Path | Contents | Normative? |
 |------|----------|-----------|
 | [`quickstart.md`](quickstart.md) | Tutorial: install to a sandboxed run in five minutes. | no |
-| [`how-to/`](how-to/README.md) | Task guides: Docker, E2B, offline testing, audit and tracing, CI, operations. | no |
-| [`explanation/`](explanation/README.md) | Why: isolation tiers, deny by default, error codes. | no |
+| [`how-to/`](how-to/README.md) | Task guides: Docker, E2B, offline testing, audit and tracing, CI, operations, troubleshooting. | no |
+| [`explanation/`](explanation/README.md) | Why: the security model, isolation tiers, deny by default, error codes. | no |
+| [`faq.md`](faq.md) | Short answers to the questions a newcomer asks first. | no |
 | [`errors/`](errors/README.md) | Reference: every error code, generated from the source. | yes |
 | [`reference/`](reference/README.md) | Reference: the paste-ready `AGENTS.md` snippet for downstream projects. | no |
 | [`llms.txt`](llms.txt) / `llms-full.txt` | Index and full text for coding assistants; the full text is generated. | no |
@@ -78,7 +81,7 @@ ports/adapters; capability discovery; security-first defaults; native escape hat
 
 **User:** [`quickstart.md`](quickstart.md) → [`examples/`](https://github.com/bit-agents/sandboxio/tree/main/examples) →
 the [`how-to/`](how-to/README.md) page for your backend →
-[`explanation/isolation-tiers.md`](explanation/isolation-tiers.md) before running untrusted code.
+[`explanation/security-model.md`](explanation/security-model.md) before running untrusted code.
 
 **New contributor:** `README.md` → [`spec/`](spec/README.md) index → [`build-order.md`](build-order.md) → [`runbook.md`](runbook.md).
 

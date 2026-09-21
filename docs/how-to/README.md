@@ -12,3 +12,4 @@ the [quickstart](../quickstart.md).
 | [CI](ci.md) | A workflow that runs the fake on pull requests and Docker on main |
 | [Integrations](integrations.md) | LangGraph, OpenAI Agents, the MCP server |
 | [Operations](operations.md) | `sandboxio doctor`, `sandboxio reap`, `SBX_*` variables, exit codes |
+| [Troubleshooting](troubleshooting.md) | Diagnosis by symptom, for when you do not have an `SBX_E` code yet |
