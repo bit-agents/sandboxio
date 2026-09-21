@@ -2334,7 +2334,7 @@ requires-dist = [
 provides-extras = ["docker", "e2b", "langgraph", "mcp", "openai-agents", "otel"]
 
 [package.metadata.requires-dev]
-cov = [{ name = "coverage", extras = ["toml"], specifier = ">=7.6" }]
+cov = [{ name = "coverage", extras = ["toml"], specifier = ">=7.16.1" }]
 dev = [
     { name = "mypy", specifier = ">=1.14" },
     { name = "pyright", specifier = ">=1.1.390" },
