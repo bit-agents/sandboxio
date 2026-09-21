@@ -7,6 +7,7 @@ one line; no network by default; test your agent tools offline with the built-in
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](docs/adr/0015-python-version-floor.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/bit-agents/sandboxio/badge)](https://scorecard.dev/viewer/?uri=github.com/bit-agents/sandboxio)
+[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25-green)](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml)
 
 <!-- TODO(placeholder): the PyPI version badge needs a published release. -->
 
