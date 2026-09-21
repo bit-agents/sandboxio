@@ -115,6 +115,10 @@ filterwarnings = [
     # docker-py leaves response sockets to the GC; scoped to its socket so nothing else hides.
     "ignore:unclosed <socket.socket.*docker.sock:ResourceWarning",
     "ignore:.*docker.sock.*:pytest.PytestUnraisableExceptionWarning",
+    # Same hygiene, but finalised after the session ends, where it exits non-zero with every
+    # test already green. The filter above never matched it: the message names urllib3, not
+    # the socket. Narrow to that one finaliser so a response we leak still surfaces.
+    "ignore:Exception ignored while finalizing file <urllib3\\.response\\.HTTPResponse:pytest.PytestUnraisableExceptionWarning",
 ]
 
 [tool.ruff]
