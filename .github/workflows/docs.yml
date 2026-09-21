@@ -3,6 +3,15 @@ name: Docs
 on:
   push:
     branches: [main]
+    # Deploy only when the published site can actually differ. Deliberately absent from
+    # `pull_request`: a run skipped by a path filter never reports, so it would block a
+    # PR the moment this build becomes a required check.
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/docs.yml
   pull_request:
   workflow_dispatch:
 
