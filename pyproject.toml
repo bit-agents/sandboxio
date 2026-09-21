@@ -56,7 +56,7 @@ docs = [
 # pytest imports sandboxio while loading plugins — before pytest-cov starts measuring, which
 # reads every module-level line as a miss (61% against the real 76%).
 cov = [
-    "coverage[toml]>=7.6",
+    "coverage[toml]>=7.16.1",
 ]
 dev = [
     "pytest>=8.0",
