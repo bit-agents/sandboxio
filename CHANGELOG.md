@@ -9,6 +9,15 @@ Every absorbed provider break gets an entry here as well as in the
 [churn-absorption log](docs/churn-log.md). How to write an entry is in
 [CONTRIBUTING.md](CONTRIBUTING.md#changelog-entries).
 
+## [Unreleased]
+
+### Fixed
+
+- The links in every package's PyPI description are absolute, so they resolve. On
+  `sandboxio-docker` and `sandboxio-e2b` the link to the project in "The … adapter for
+  sandboxio" was a relative path and led nowhere; on `sandboxio` the links into the docs,
+  the licences and `SECURITY.md` were dead the same way.
+
 ## [0.1.0] - 2026-09-21
 
 First release. Docker, E2B and `FakeBackend`; Modal lands in 0.1.1

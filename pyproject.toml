@@ -1,7 +1,6 @@
 [project]
 name = "sandboxio"
 description = "One secure Python API for running AI-agent code in any sandbox."
-readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE", "LICENSE-DOCS"]
@@ -18,7 +17,7 @@ classifiers = [
     "Topic :: Security",
     "Typing :: Typed",
 ]
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 
 # Core stays at these two. Any further base dependency needs an ADR (ADR-0004).
 dependencies = ["anyio>=4.0", "typing-extensions>=4.12"]
@@ -85,11 +84,44 @@ fake = "sandboxio.testing.fake:FakeBackend"
 sandboxio = "sandboxio.testing.pytest_plugin"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-fancy-pypi-readme>=24.1"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/sandboxio/__init__.py"
+
+# PyPI does not resolve a relative link, so the README's own links — the ones
+# scripts/check_doc_links.py validates on disk — are rewritten into absolute URLs for the
+# long description only. README.md stays relative: it is the repository's own front page.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+# docs/ is the site root (ADR-0029) and use_directory_urls is on, so a page is <path>/ and
+# an index is its directory. Order matters: pages, then files, then directories.
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(docs/([^)#]*?)(?:/?README)?\.md(#[^)]+)?\)'
+replacement = '](https://docs.sandboxio.dev/\1/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(docs/([^)]*\.[a-z0-9]+)\)'
+replacement = '](https://docs.sandboxio.dev/\1)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(docs/([^)]*)\)'
+replacement = '](https://docs.sandboxio.dev/\1)'
+
+# Everything else lives in the repository, not on the site: a directory needs tree/, a file
+# blob/.
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?:|mailto:|#)([^)]*/)\)'
+replacement = '](https://github.com/bit-agents/sandboxio/tree/main/\1)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?:|mailto:|#)([^)]+)\)'
+replacement = '](https://github.com/bit-agents/sandboxio/blob/main/\1)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sandboxio"]

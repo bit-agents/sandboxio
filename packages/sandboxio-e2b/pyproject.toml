@@ -1,7 +1,6 @@
 [project]
 name = "sandboxio-e2b"
 description = "E2B adapter for sandboxio."
-readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 classifiers = [
@@ -12,19 +11,52 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
 ]
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 # The core bound is the port contract (spec/02, spec/08): a major there rewrites this adapter.
 dependencies = ["sandboxio>=0.1.0a0,<0.2", "e2b-code-interpreter>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/bit-agents/sandboxio"
+Repository = "https://github.com/bit-agents/sandboxio"
+Issues = "https://github.com/bit-agents/sandboxio/issues"
+Documentation = "https://docs.sandboxio.dev/how-to/e2b/"
+Changelog = "https://github.com/bit-agents/sandboxio/blob/main/CHANGELOG.md"
 
 [project.entry-points."sandboxio.backends"]
 e2b = "sandboxio_e2b:E2BBackend"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-fancy-pypi-readme>=24.1"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/sandboxio_e2b/__init__.py"
+
+# PyPI does not resolve a relative link, so the README's links out of packages/ — dead on
+# the project page before this — are rewritten into absolute URLs for the long description
+# only. README.md stays relative, the form scripts/check_doc_links.py validates.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+# docs/ is the site root (ADR-0029) with use_directory_urls on, so a page is <path>/.
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(\.\./\.\./docs/([^)#]*?)(?:/?README)?\.md(#[^)]+)?\)'
+replacement = '](https://docs.sandboxio.dev/\1/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(\.\./\.\./README\.md\)'
+replacement = '](https://github.com/bit-agents/sandboxio)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(\.\./\.\./([^)]*/)\)'
+replacement = '](https://github.com/bit-agents/sandboxio/tree/main/\1)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\(\.\./\.\./([^)]+)\)'
+replacement = '](https://github.com/bit-agents/sandboxio/blob/main/\1)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sandboxio_e2b"]
