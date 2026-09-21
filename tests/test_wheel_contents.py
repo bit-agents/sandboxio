@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import zipfile
@@ -44,6 +45,10 @@ def _metadata(wheel: zipfile.ZipFile) -> list[str]:
     name = next(n for n in wheel.namelist() if n.endswith(".dist-info/METADATA"))
     parsed = message_from_string(wheel.read(name).decode())
     return parsed.get_all("Requires-Dist") or []
+
+
+def _names(wheel: zipfile.ZipFile) -> set[str]:
+    return {re.split(r"[<>=!~;\[\s]", r, maxsplit=1)[0].strip() for r in _metadata(wheel)}
 
 
 def test_ships_py_typed(wheel: zipfile.ZipFile) -> None:
@@ -93,7 +98,7 @@ def test_docker_adapter_ships_as_its_own_distribution(
     }
     entry_points = next(n for n in names if n.endswith("entry_points.txt"))
     assert "docker = sandboxio_docker:DockerBackend" in docker_wheel.read(entry_points).decode()
-    deps = {r.split(">")[0].split(";")[0].strip() for r in _metadata(docker_wheel)}
+    deps = _names(docker_wheel)
     assert deps == {"sandboxio", "docker"}
 
 
@@ -103,5 +108,15 @@ def test_e2b_adapter_ships_as_its_own_distribution(wheels: dict[str, zipfile.Zip
     assert "sandboxio_e2b/py.typed" in names
     entry_points = next(n for n in names if n.endswith("entry_points.txt"))
     assert "e2b = sandboxio_e2b:E2BBackend" in e2b_wheel.read(entry_points).decode()
-    deps = {r.split(">")[0].split(";")[0].strip() for r in _metadata(e2b_wheel)}
+    deps = _names(e2b_wheel)
     assert deps == {"sandboxio", "e2b-code-interpreter"}
+
+
+def test_the_core_adapter_pairing_is_bounded(wheels: dict[str, zipfile.ZipFile]) -> None:
+    """Unbounded, `sandboxio[docker]` resolves to the 0.0.0 name reservation, and an adapter
+    pairs with a core major whose ports it was never written against."""
+    core = set(_metadata(wheels["sandboxio"]))
+    assert "sandboxio-docker>=0.1; extra == 'docker'" in core
+    assert "sandboxio-e2b>=0.1; extra == 'e2b'" in core
+    for adapter in ("sandboxio_docker", "sandboxio_e2b"):
+        assert "sandboxio<0.2,>=0.1" in _metadata(wheels[adapter]), adapter
