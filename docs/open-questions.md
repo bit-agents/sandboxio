@@ -6,7 +6,8 @@ in `docs/adr/`.
 
 **Status legend:** `OPEN` · `DECIDED` · `DEFERRED` (revisit at a named trigger)
 
-**Priority legend:** `P0` blocks commit one · `P1` blocks v0.1 core · `P2` blocks v0.1 ship
+**Priority legend:** `P0` blocks commit one · `P1` blocks v0.1 core · `P2` blocks v0.1 ship ·
+`P3` blocks nothing, revisited when its trigger fires
 
 | # | Question | Priority | Status |
 |---|----------|----------|--------|
@@ -23,6 +24,7 @@ in `docs/adr/`.
 | [Q11](#q11--stateful_code-on-docker) | `STATEFUL_CODE` on Docker | P2 | **DECIDED** |
 | [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | **DECIDED** |
 | [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | **DECIDED** |
+| [Q14](#q14--pep-723-headers-in-examples) | PEP 723 headers in `examples/` | P3 | **DEFERRED** |
 
 ---
 
@@ -257,3 +259,31 @@ which now also restructures `default_class` as a top-level mandatory key rather 
 pseudo-route. All findings are listed as
 [corrections to the original design](README.md#corrections-to-the-original-design). Every
 config sample in `spec/` is now parse-tested in CI.
+
+---
+
+## Q14 — PEP 723 headers in `examples/`
+
+**Priority:** P3 · **Status:** DEFERRED · **Source:** raised while releasing v0.1
+
+A `# /// script` header on each example would make `uv run https://…/01_hello_sandbox.py`
+work with no clone and no install, which is the shortest possible path from reading about
+the library to watching it run. The placeholder in
+[`examples/README.md`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md)
+has waited on a name existing on PyPI. That condition is now met, and the change still is
+not free.
+
+`tests/test_examples.py` imports each script in-process, so a header is inert there. The
+cost lands on contributors: the documented clone workflow is `uv sync --all-extras` followed
+by `uv run examples/05_langgraph_agent.py`, and inline metadata silently switches `uv run`
+from project mode to script mode — resolving `sandboxio` from PyPI rather than from the
+working tree. An example would then stop exercising the code under development, which is
+what `tests/test_examples.py` exists to guarantee.
+
+Neither audience should lose. The likely shape is a header plus a documented
+`uv run --project . examples/…` for contributors, or a second copy of each example carrying
+the header, but the trade is real and nobody has asked for the URL form yet.
+
+**Trigger:** the first request for an example that runs without a clone, or the next change
+to how `examples/` is executed. Whoever picks it up owns the contributor path too, and the
+placeholder inventory in `tests/test_placeholders.py` is what keeps the marker honest.
