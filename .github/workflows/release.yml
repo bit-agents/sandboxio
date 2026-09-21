@@ -17,6 +17,18 @@ jobs:
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
         with:
           enable-cache: false  # the publishing path does not restore a cache it did not build
+      # Hatch reads each version from its own __init__.py, so the tag reaches the artefacts
+      # through nothing but this check — and a wrong version on PyPI can never be reused.
+      - name: tag matches every package version
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          for f in src/sandboxio/__init__.py packages/*/src/*/__init__.py; do
+            got=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' "$f")
+            [ "$got" = "$want" ] || {
+              echo "::error file=$f::version $got does not match tag $GITHUB_REF_NAME"
+              exit 1
+            }
+          done
       - run: uv build --all-packages
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
