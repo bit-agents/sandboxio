@@ -12,9 +12,12 @@ meta:
 about:
   title: sandboxio
   description: >-
-    Run Python and shell commands in an isolated sandbox with no network by default, a
-    fixed time limit and stable error codes. One run_python tool instead of many narrow
-    ones; files persist under /work for the session. Backed by E2B microVMs in this image.
+    Give your assistant somewhere to run code that is not your machine. Python and shell
+    execute in an isolated sandbox with no network by default, a fixed time limit and
+    stable error codes; files persist under /work for the session. The backend, the egress
+    policy and the timeout are fixed at startup — no tool changes them, and nothing ever
+    runs on the host. One run_python tool instead of many narrow ones. Backed by E2B
+    microVMs in this image.
   icon: https://raw.githubusercontent.com/bit-agents/sandboxio/main/docs/assets/icon.png
 source:
   project: https://github.com/bit-agents/sandboxio
