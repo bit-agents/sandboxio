@@ -82,6 +82,32 @@ carries your `Signed-off-by` into the history.
 CI gates block merge and are not overridden. If a gate is wrong, change the gate in its own
 PR, with a reason.
 
+## Changelog entries
+
+Every change a user could notice gets one line under `## [Unreleased]` in
+[`CHANGELOG.md`](CHANGELOG.md), in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+heading that fits: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`.
+
+Write it for somebody deciding whether to upgrade, not as a summary of your diff:
+
+```markdown
+### Fixed
+
+- `CapabilityNotSupported` now names the backends that do support the capability, instead of
+  a generic "check `capabilities`" hint.
+```
+
+- **No entry needed** for refactors, tests, CI or docs that change nothing observable. When
+  in doubt, write one; a redundant line is cheaper than a silent behaviour change.
+- **Breaking changes open with `**Breaking:**`** and say what to do instead. What counts as
+  breaking, and what window a deprecation gets, is
+  [the version policy](docs/explanation/version-policy.md).
+- **A deprecation names its replacement and its removal version.** "Deprecated" without both
+  is an entry that helps nobody.
+- **An absorbed provider break is written twice**: here, and in the
+  [churn-absorption log](docs/churn-log.md) with the detail. The changelog says a version
+  bump is all you need; the churn log is the evidence for that claim.
+
 ## Reporting bugs
 
 **Issue templates require a reproduction. No repro, no triage** — stated up front and

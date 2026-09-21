@@ -6,7 +6,8 @@ All notable changes are documented here. The format follows
 [spec/03](docs/spec/03-public-api.md#stability-contract).
 
 Every absorbed provider break gets an entry here as well as in the
-[churn-absorption log](docs/churn-log.md).
+[churn-absorption log](docs/churn-log.md). How to write an entry is in
+[CONTRIBUTING.md](CONTRIBUTING.md#changelog-entries).
 
 ## [Unreleased]
 
@@ -61,6 +62,20 @@ Every absorbed provider break gets an entry here as well as in the
 - OTel rendering of the operation record in `sandboxio.otel`: GenAI semconv **1.37.0**
   `execute_tool` spans nesting under the caller's span, opt-in `sandboxio[otel]` extra for
   the API, no-op without a configured tracer provider.
+- A documentation site built from `docs/` with MkDocs Material, published at
+  `docs.sandboxio.dev`. The Markdown stays the source.
+- [The version policy](docs/explanation/version-policy.md): what counts as breaking, how long
+  a deprecation lives, and why the verdict can differ for callers and adapter authors.
+
+### Fixed
+
+- `CapabilityNotSupported` names the backends that do support the capability. It previously
+  fell back to a generic "check `capabilities`" hint at every raise site but one.
+- A credential-shaped DSN parameter is refused with the variable to export — `E2B_API_KEY`
+  for `e2b://` — rather than a description of one.
+- `create("modal://…")` reports a backend planned for v0.1.1. It previously offered
+  `uv pip install "sandboxio[modal]"`, an extra that does not exist, so the suggested fix
+  failed.
 
 Nothing is released. There is no public API yet — see
 [docs/build-order.md](docs/build-order.md).
