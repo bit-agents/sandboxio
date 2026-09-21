@@ -173,8 +173,8 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
 - [x] MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, six tools, one sandbox per
   process, config fixed at start; `docker/mcp/Dockerfile` (rootless, E2B backend, no socket)
   plus the Docker MCP Catalog `server.yaml`/`tools.json` ([spec/09](spec/09-integrations.md)).
-  **Publication is blocked** on the org name and accounts: image push and the registry PR
-  are listed under the README's pre-public TODO.
+  **Publication is blocked** until v0.1: the image push and the Docker MCP registry PR both
+  need a released version to point at.
 - [x] LangGraph tool (`sandboxio[langgraph]`) and OpenAI Agents tool (`sandboxio[openai-agents]`),
   each a native tool object under 100 lines, tested against the fake
 - [x] `sandboxio/otel.py` — GenAI semconv 1.37.0 `execute_tool` spans, zero-config, every
