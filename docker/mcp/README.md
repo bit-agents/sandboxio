@@ -10,7 +10,7 @@ docker run -i --rm -e E2B_API_KEY sandboxio-mcp --backend e2b://my-template --ti
 ```
 
 `server.yaml` and `tools.json` are the Docker MCP Catalog metadata, in the shape
-`docker/mcp-registry` expects under `servers/sandboxio/`. Publication needs the image pushed
-and a pull request to the registry, both blocked on the org name
-([README placeholders](../../README.md#license)). Usage and client configuration:
+`docker/mcp-registry` expects under `servers/sandboxio/`. The `image` job in `release.yml`
+pushes `amd64` and `arm64` on every `v*` tag, `latest` only for a final version; the pull
+request to the registry stays manual. Usage and client configuration:
 [docs/how-to/integrations.md](../../docs/how-to/integrations.md#mcp-server).

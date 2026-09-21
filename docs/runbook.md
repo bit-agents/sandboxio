@@ -115,9 +115,10 @@ story.
    there are not breaking.
 4. Deprecations landing in this release carry `DeprecationWarning` with correct
    `stacklevel`, PEP 702 `@deprecated`, a changelog entry, and a stated removal window.
-5. Tag; publish via **PyPI Trusted Publishing** with PEP 740 attestations. No token-based
-   publishing, no local `twine upload`.
-6. Publish the MCP container image; update the Docker MCP Catalog entry.
+5. Tag; the release workflow runs the e2b contract suite, then publishes via **PyPI Trusted
+   Publishing** with PEP 740 attestations. No token-based publishing, no local `twine upload`.
+6. The same workflow pushes the MCP image to `ghcr.io` with a provenance attestation. Open
+   the Docker MCP Catalog pull request by hand.
 7. Verify the install path a user actually takes: `uvx sandboxio demo` on a clean machine.
 8. Confirm the Docs workflow deployed and the codes this release touched resolve, e.g.
    `https://docs.sandboxio.dev/errors/SBX_E1002`.
