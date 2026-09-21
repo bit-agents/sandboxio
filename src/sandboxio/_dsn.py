@@ -14,6 +14,9 @@ from sandboxio.errors import ConfigurationError
 
 _SCHEME = re.compile(r"^[a-z][a-z0-9_-]*$")
 _CREDENTIAL_PARAM = re.compile(r"(?i)(token|secret|password|passwd|api[_-]?key|credential)")
+# The variable each backend reads its credential from, so the hint is the exact fix
+# (spec/07 credentials). `tests/test_error_hint_maps.py` fails if this drifts.
+CREDENTIAL_ENV: dict[str, str] = {"e2b": "E2B_API_KEY"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,9 +53,15 @@ def parse(dsn: str) -> ParsedDSN:
         parts.query, keep_blank_values=True, strict_parsing=bool(parts.query)
     ):
         if _CREDENTIAL_PARAM.search(key):
+            env = CREDENTIAL_ENV.get(scheme)
             raise ConfigurationError(
                 f"DSN parameter {key!r} looks like a credential; those never go in a DSN.",
-                hint=f"Unset {key!r}; export the {scheme} provider's own environment variable.",
+                hint=(
+                    f"Drop {key!r} from the DSN and export {env} instead."
+                    if env
+                    else f"Drop {key!r} from the DSN; {scheme} reads its credential "
+                    "from the environment."
+                ),
             )
         if key in params:
             raise ConfigurationError(f"DSN parameter {key!r} is repeated.")

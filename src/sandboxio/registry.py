@@ -24,8 +24,9 @@ ENTRY_POINT_GROUP = "sandboxio.backends"
 _FIRST_PARTY_EXTRAS: dict[str, str] = {
     "docker": "sandboxio[docker]",
     "e2b": "sandboxio[e2b]",
-    "modal": "sandboxio[modal]",
 }
+# Named so the error can say "planned", never an install command that would fail (ADR-0025).
+_PLANNED_BACKENDS: dict[str, str] = {"modal": "v0.1.1"}
 
 _registered: dict[str, str | BackendFactory] = {}
 _loaded: dict[str, BackendFactory] = {}
@@ -62,7 +63,7 @@ def resolve(name: str) -> BackendFactory:
     if target is None:
         if name in _FIRST_PARTY_EXTRAS:
             raise BackendNotInstalled(name, extra=_FIRST_PARTY_EXTRAS[name])
-        raise BackendNotFound(name, available=available())
+        raise BackendNotFound(name, available=available(), planned=_PLANNED_BACKENDS.get(name))
 
     try:
         backend = target if not isinstance(target, str) else _load(target)
