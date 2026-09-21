@@ -136,6 +136,53 @@ jobs:
           echo "every commit in this pull request is signed off"
         shell: bash
 
+  # CONTRIBUTING.md requires Conventional Commits subjects; until now only prose said so.
+  # Hand-rolled like the DCO gate: one regex does not justify a Node toolchain.
+  commits:
+    name: Conventional Commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      TYPES: build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: every commit subject is a Conventional Commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          bad=0
+          while read -r sha; do
+            subject=$(git log -1 --format=%s "$sha")
+            if ! printf '%s\n' "$subject" | grep -qE "^($TYPES)(\([^)]+\))?!?: .+"; then
+              echo "::error::not a Conventional Commit subject: $sha $subject"
+              bad=1
+            fi
+          done < <(git rev-list --no-merges "$BASE..$HEAD")
+          if [ "$bad" -ne 0 ]; then
+            echo "Subjects look like 'fix(docker): reap the container on a failed start'."
+            echo "Types: ${TYPES//|/, }. Breaking changes append '!' before the colon."
+            exit 1
+          fi
+          echo "every commit subject in this pull request is a Conventional Commit"
+        shell: bash
+
+      # Squash merge puts the title on main, not the subjects the step above checked.
+      - name: the pull request title is a Conventional Commit
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! printf '%s\n' "$TITLE" | grep -qE "^($TYPES)(\([^)]+\))?!?: .+"; then
+            echo "::error::not a Conventional Commit title: $TITLE"
+            echo "Types: ${TYPES//|/, }. Breaking changes append '!' before the colon."
+            exit 1
+          fi
+          echo "the pull request title is a Conventional Commit"
+        shell: bash
+
   # zizmor pinned like every action here: a new release adding audits must not turn an
   # unrelated pull request red.
   actions:
