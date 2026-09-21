@@ -51,6 +51,13 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocs-redirects>=1.2",
 ]
+# Coverage is its own group, so the everyday `uv run pytest` loop stays uninstrumented.
+# `coverage run -m pytest`, not pytest-cov: this package ships a pytest11 entry point, so
+# pytest imports sandboxio while loading plugins — before pytest-cov starts measuring, which
+# reads every module-level line as a miss (61% against the real 76%).
+cov = [
+    "coverage[toml]>=7.6",
+]
 dev = [
     "pytest>=8.0",
     "pytest-socket>=0.7",
@@ -120,6 +127,30 @@ filterwarnings = [
     # the socket. Narrow to that one finaliser so a response we leak still surfaces.
     "ignore:Exception ignored while finalizing file <urllib3\\.response\\.HTTPResponse:pytest.PytestUnraisableExceptionWarning",
 ]
+
+[tool.coverage.run]
+branch = true
+# Every distribution that ships, first-party adapters included — a wheel's code is covered
+# or it is not, regardless of which package it lives in.
+source = [
+    "src/sandboxio",
+    "packages/sandboxio-docker/src/sandboxio_docker",
+    "packages/sandboxio-e2b/src/sandboxio_e2b",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+# Lines that cannot run under the default selection, or cannot run at all.
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "^\\s*\\.\\.\\.$",
+    "@(typing\\.)?overload",
+    "raise NotImplementedError",
+]
+# The floor the badge claims, enforced on every pull request. Raise it when the real number
+# has stayed above the next step for a while; never lower it to make a red run green.
+fail_under = 80
 
 [tool.ruff]
 line-length = 96

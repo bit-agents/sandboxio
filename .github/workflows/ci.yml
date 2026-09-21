@@ -88,6 +88,47 @@ jobs:
           echo "sandboxio containers remaining: $leaked"
           test "$leaked" -eq 0
 
+  # The floor lives in pyproject (`fail_under`), not here, so `make coverage` and CI agree.
+  # Both selections run: the default one plus the Docker suite, because the adapters are
+  # shipped code and the default selection deselects their contract suites. The E2B adapter
+  # is the known hole — its suite is nightly and needs a credential, so it scores low here.
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0  # zizmor: ignore[cache-poisoning]
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --group cov
+      - run: docker pull python:3.12-slim
+      # `coverage run -m pytest`, never pytest-cov: the pytest11 entry point imports
+      # sandboxio before pytest-cov would start measuring (see pyproject).
+      - run: uv run coverage run -m pytest
+      - run: uv run coverage run --append -m pytest -m docker -p no:cacheprovider
+      - name: report, and fail under the floor
+        run: |
+          status=0
+          uv run coverage report > coverage.txt || status=$?
+          {
+            echo '### Coverage'
+            echo '```'
+            cat coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+        shell: bash
+      - name: the browsable report
+        if: always()
+        run: uv run coverage html
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 14
+
   e2b:
     name: e2b contract suite (nightly + release)
     if: github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')

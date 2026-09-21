@@ -1,5 +1,5 @@
 # Every target is a line from CONTRIBUTING.md. `make check` is what CI runs, in CI's order.
-.PHONY: help sync fix lint types test test-docker test-e2b docs site actions check
+.PHONY: help sync fix lint types test test-docker test-e2b coverage docs site actions check
 
 help:  ## list the targets
 	@grep -hE '^[a-z0-9-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/' | expand -t 16
@@ -28,6 +28,14 @@ test-docker:  ## the Docker contract suite, against a real daemon
 
 test-e2b:  ## the E2B contract suite; needs E2B_API_KEY in a git-ignored .env
 	uv run --env-file .env pytest -m e2b -p no:cacheprovider
+
+coverage:  ## the coverage report CI gates on: default selection plus the Docker suite
+	uv sync --all-extras --group cov
+	uv run coverage run -m pytest
+	uv run coverage run --append -m pytest -m docker -p no:cacheprovider
+	uv run coverage report
+	uv run coverage html
+	@echo "HTML report: htmlcov/index.html"
 
 docs:  ## regenerate the error catalogue and llms-full.txt, then check every link
 	uv run python scripts/gen_error_catalog.py
