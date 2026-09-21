@@ -1,0 +1,72 @@
+name: Frameworks
+
+# spec/08's CI matrix and spec/09's "tested in the weekly CI matrix". Each leg installs one
+# framework and nothing else, which is why the skips in tests/test_integrations.py are per
+# test: a module-level skip made a leg green without running anything.
+on:
+  schedule:
+    - cron: "23 4 * * 1"  # weekly, Monday
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/frameworks.yml"
+      - "pyproject.toml"
+      - "src/sandboxio/integrations/**"
+      - "src/sandboxio/mcp/**"
+      - "tests/test_integrations.py"
+      - "tests/test_mcp.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frameworks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matrix:
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: langchain-core (floor)
+            install: langchain-core==0.3
+            tests: tests/test_integrations.py
+          - label: langchain-core (latest)
+            install: langchain-core
+            tests: tests/test_integrations.py
+          - label: openai-agents (floor)
+            install: openai-agents==0.19
+            tests: tests/test_integrations.py
+          - label: openai-agents (latest)
+            install: openai-agents
+            tests: tests/test_integrations.py
+          - label: mcp (floor)
+            install: mcp==2.0
+            tests: tests/test_mcp.py
+          - label: mcp (latest)
+            install: mcp
+            tests: tests/test_mcp.py
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          enable-cache: false
+      # Deliberately not `uv sync`: the lockfile pins one resolution, and the whole point is
+      # to leave it and see whether the declared bound still holds.
+      - name: install sandboxio with one framework and nothing else
+        env:
+          INSTALL: ${{ matrix.install }}
+        run: |
+          uv venv
+          uv pip install -e . "$INSTALL" pytest pytest-socket anyio
+      - name: resolved versions
+        run: uv pip list | grep -Ei '^(langchain-core|openai-agents|mcp) ' | tee versions.txt
+      - name: run the tests that framework covers
+        env:
+          TESTS: ${{ matrix.tests }}
+        run: uv run --no-sync pytest "$TESTS" -p no:cacheprovider -rs

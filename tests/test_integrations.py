@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from importlib.util import find_spec
 
 import pytest
 
@@ -14,8 +15,14 @@ from sandboxio.testing.fake import FakeBackend
 
 pytestmark = pytest.mark.anyio
 
-langchain_core = pytest.importorskip("langchain_core")
-agents = pytest.importorskip("agents")
+# Per test, never module-wide: a module-level skip took the two framework-free tests with it,
+# so a run with one framework missing reported success having checked nothing.
+needs_langchain = pytest.mark.skipif(
+    find_spec("langchain_core") is None, reason="langchain-core not installed"
+)
+needs_agents = pytest.mark.skipif(
+    find_spec("agents") is None, reason="openai-agents not installed"
+)
 
 
 def test_adapters_stay_under_100_lines() -> None:
@@ -35,6 +42,7 @@ def test_render_is_written_for_the_model() -> None:
     assert "no network" in _common.CODE_DESCRIPTION
 
 
+@needs_langchain
 async def test_langgraph_tool_is_a_basetool_running_run_code() -> None:
     from langchain_core.tools import BaseTool
 
@@ -52,6 +60,7 @@ async def test_langgraph_tool_is_a_basetool_running_run_code() -> None:
         assert fake.calls[-1].timeout == 5
 
 
+@needs_langchain
 async def test_langgraph_factory_form_creates_one_sandbox_per_call_and_tears_it_down() -> None:
     from sandboxio.integrations.langgraph import make_code_tool
 
@@ -63,6 +72,7 @@ async def test_langgraph_factory_form_creates_one_sandbox_per_call_and_tears_it_
     assert fake.calls[0].network.egress == "deny", "an integration never weakens a default"
 
 
+@needs_agents
 async def test_openai_agents_tool_is_a_functiontool_running_run_code() -> None:
     from agents import FunctionTool
     from agents.tool_context import ToolContext
@@ -85,6 +95,7 @@ async def test_openai_agents_tool_is_a_functiontool_running_run_code() -> None:
     assert await command.on_invoke_tool(ctx, json.dumps({"command": "echo shell"})) == "shell"
 
 
+@needs_langchain
 async def test_tool_output_reports_a_denied_egress_instead_of_hiding_it() -> None:
     from sandboxio.integrations.langgraph import make_code_tool
 
@@ -114,7 +125,13 @@ def test_render_error_gives_the_model_the_code_the_fix_and_the_docs() -> None:
     assert lines[1].startswith("Fix: ") and lines[2].startswith("Docs: ")
 
 
-@pytest.mark.parametrize("module", ["langgraph", "openai_agents"])
+@pytest.mark.parametrize(
+    "module",
+    [
+        pytest.param("langgraph", marks=needs_langchain),
+        pytest.param("openai_agents", marks=needs_agents),
+    ],
+)
 async def test_a_sandbox_error_reaches_the_model_as_text_not_as_a_crash(module: str) -> None:
     """spec/09: all three integrations answer a SandboxError the same way."""
     import importlib

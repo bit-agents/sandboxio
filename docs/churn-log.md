@@ -17,5 +17,5 @@ and in [`CHANGELOG.md`](https://github.com/bit-agents/sandboxio/blob/main/CHANGE
 
 An empty log and a busy one tell different stories, and both are honest. This one is empty
 because there is nothing to report, not because nothing is being watched: the nightly
-latest-SDK canary runs every provider SDK unpinned to find these breaks before you do. The
-weekly framework matrix is not built yet.
+latest-SDK canary runs every provider SDK unpinned, and the weekly framework matrix runs each
+integration at its oldest supported version and at the newest release.

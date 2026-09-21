@@ -72,11 +72,16 @@ def _describe(container: Any) -> str:
 def _no_leaks_at_session_end() -> Iterator[None]:
     yield
     _backend._reaper.close()  # pyright: ignore[reportPrivateUsage]
-    leaked: list[Any] = _client.containers.list(all=True, filters={"label": LABEL_MANAGED})
-    if leaked:
-        # Assert now, not after a settle: the reaper's grace would hide the leak behind it.
-        detail = "\n  ".join(_describe(c) for c in leaked)
-        pytest.fail(f"leaked {len(leaked)} sandboxio containers:\n  {detail}")
+    try:
+        leaked: list[Any] = _client.containers.list(all=True, filters={"label": LABEL_MANAGED})
+        if leaked:
+            # Assert now, not after a settle: the reaper's grace would hide the leak behind it.
+            detail = "\n  ".join(_describe(c) for c in leaked)
+            pytest.fail(f"leaked {len(leaked)} sandboxio containers:\n  {detail}")
+    finally:
+        # Left to the GC, urllib3 finalises these after the run ends, where the unraisable
+        # hook turns it into a non-zero exit with every test already green.
+        _client.close()
 
 
 class TestDockerBackend(BackendContractSuite):
