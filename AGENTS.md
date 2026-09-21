@@ -98,7 +98,10 @@ CI green-in-name-only. The E2B suite is nightly and needs a credential; see
 
 ## Working style here
 
+- **Work in a worktree on a new branch**, never straight onto `main` and never in a
+  checkout someone else is using: `git worktree add ../<topic> -b <type>/<topic>`.
 - **Commit subjects follow Conventional Commits** and every commit is signed off (`git commit -s`).
+  CI enforces both on every pull request — on the commits and on the PR title.
 - **A bug fix arrives with the test that would have caught it.** If the contract suite
   should have caught it, the test goes in the suite.
 - **A decision that outlives the PR needs an ADR**, not a comment. Copy

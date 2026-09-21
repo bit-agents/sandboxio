@@ -71,7 +71,12 @@ Full loop and release process: [`docs/runbook.md`](docs/runbook.md).
 - **Never widen the API to the lowest common denominator.** One-backend features go behind
   `Capability` flags and `.native` ([ADR-0003](docs/adr/0003-no-lowest-common-denominator.md)).
 
-Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/).
+Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/), and CI
+checks every commit in the PR as well as the PR title.
+
+**Every PR is squash-merged** and its branch is deleted on merge, so the PR title becomes
+the subject on `main`. The squashed commit keeps the full commit messages, which is what
+carries your `Signed-off-by` into the history.
 
 CI gates block merge and are not overridden. If a gate is wrong, change the gate in its own
 PR, with a reason.
