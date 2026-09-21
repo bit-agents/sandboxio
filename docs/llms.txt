@@ -26,6 +26,7 @@ Canonical usage is `import sandboxio`, unaliased. `SBX` is the short code (error
 - [Isolation tiers](explanation/isolation-tiers.md): CONTAINER is not a boundary; MICROVM is the floor for untrusted code
 - [Deny by default](explanation/deny-by-default.md): why egress is off and what it costs
 - [Why errors have codes](explanation/error-codes.md): stable codes, hints that are fixes, no builtin inheritance
+- [Version policy](explanation/version-policy.md): what breaks, what a deprecation window is, why `.native` is exempt
 
 ## Reference
 

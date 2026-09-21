@@ -133,3 +133,7 @@ the contract suite.
 **Deprecation:** `DeprecationWarning` with correct `stacklevel`, plus PEP 702
 `@typing_extensions.deprecated`, plus a changelog entry, plus a generous window. Warnings
 alone do not reach users; the type-checker annotation is what does.
+
+What each of these means in practice — including the deprecation window, and where a change
+is additive for callers but breaking for adapter authors — is
+[the version policy](../explanation/version-policy.md).
