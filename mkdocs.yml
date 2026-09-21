@@ -1,0 +1,124 @@
+# The docs site at https://docs.sandboxio.dev (ADR-0029). The Markdown in docs/ is the
+# source; nothing here may change a published URL without an entry in redirect_maps.
+site_name: sandboxio
+site_url: https://docs.sandboxio.dev/
+site_description: One secure Python API for running AI-agent code in any sandbox.
+site_author: sandboxio contributors
+copyright: Prose CC BY 4.0, code MIT (ADR-0026)
+
+repo_url: https://github.com/bit-agents/sandboxio
+repo_name: bit-agents/sandboxio
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+site_dir: site
+
+# Error-code pages are semver-covered API (ADR-0010): /errors/SBX_E1002 must keep working,
+# so directory URLs stay on and a moved page needs a redirect, never a rename.
+use_directory_urls: true
+strict: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - content.action.edit
+    - content.code.copy
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - redirects:
+      # Every entry is a URL we promised and then moved. Additions only.
+      redirect_maps: {}
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  # GitHub's slug algorithm, so one anchor works both here and in the repo view.
+  - toc:
+      permalink: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
+
+nav:
+  - Home: README.md
+  - Quickstart: quickstart.md
+  - How-to:
+      - how-to/README.md
+      - Docker: how-to/docker.md
+      - E2B: how-to/e2b.md
+      - Offline testing: how-to/offline-testing.md
+      - Audit and tracing: how-to/observability.md
+      - CI: how-to/ci.md
+      - Integrations: how-to/integrations.md
+      - Operations: how-to/operations.md
+  - Explanation:
+      - explanation/README.md
+      - Isolation tiers: explanation/isolation-tiers.md
+      - Deny by default: explanation/deny-by-default.md
+      - Why errors have codes: explanation/error-codes.md
+  - Error codes: errors/README.md
+  - Reference:
+      - reference/README.md
+      - AGENTS.md snippet: reference/agents-snippet.md
+  - Specification:
+      - spec/README.md
+      - 01 Domain model: spec/01-domain-model.md
+      - 02 Ports: spec/02-ports.md
+      - 03 Public API: spec/03-public-api.md
+      - 04 Errors: spec/04-errors.md
+      - 05 Security policy: spec/05-security-policy.md
+      - 06 Observability: spec/06-observability.md
+      - 07 Configuration: spec/07-configuration.md
+      - 08 Adapter contract: spec/08-adapter-contract.md
+      - 09 Integrations: spec/09-integrations.md
+      - 10 CLI: spec/10-cli.md
+  - Decisions: adr/README.md
+  - Project:
+      - Runbook: runbook.md
+      - Churn-absorption log: churn-log.md
+
+# Built and linked from their indexes, deliberately out of the sidebar: one page per error
+# code or ADR would make the nav churn on every catalog entry.
+not_in_nav: |
+  errors/SBX_E*.md
+  adr/0*.md
+  build-order.md
+  open-questions.md
+  hazards.md

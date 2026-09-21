@@ -11,7 +11,16 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude", "dist", "htmlcov"}
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "node_modules",
+    "__pycache__",
+    ".claude",
+    "dist",
+    "htmlcov",
+    "site",
+}
 SUFFIXES = {".md", ".txt", ".py", ".yaml", ".yml", ".toml", ".cfg"}
 
 # Upper-case only: `{{sandboxio.debug}}` in the MCP catalog entry is Docker's own template

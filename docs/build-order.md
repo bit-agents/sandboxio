@@ -34,7 +34,7 @@ an import budget added in month three is a week of untangling.
 - [x] `LICENSE` (MIT), `LICENSE-DOCS` (CC BY 4.0, [ADR-0026](adr/0026-docs-license-cc-by.md)), `SECURITY.md`, `CONTRIBUTING.md` with DCO and inbound-equals-outbound
 - [x] PyPI Trusted Publishing, PEP 740 attestations, `CHANGELOG.md` — the release workflow
   is token-free and attesting; the PyPI-side publisher entry is configured at first release
-- [x] `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/)
+- [x] `AGENTS.md` at repo root carrying the Step 0 decisions and the links into [`spec/`](spec/README.md)
 - [x] Issue templates requiring reproduction; stated triage policy
 
 Adapter extras (`sandboxio[docker]`, `[e2b]`, `[modal]`) are deliberately **not** declared
@@ -180,16 +180,19 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
 - [x] `sandboxio/otel.py` — GenAI semconv 1.37.0 `execute_tool` spans, zero-config, every
   attribute string in one file (a test greps for strays); `LoggingSink` and `FileSink`
   beside `NoopSink`/`QueueSink`; `sandboxio[otel]` extra for the API
-- [x] Diátaxis docs: [`quickstart.md`](quickstart.md), [`how-to/`](how-to/) (Docker with image
+- [x] Diátaxis docs: [`quickstart.md`](quickstart.md), [`how-to/`](how-to/README.md) (Docker with image
   prep and offline wheelhouse, E2B, offline testing, observability, CI, operations,
-  integrations), [`explanation/`](explanation/), the generated [`errors/`](errors/README.md),
+  integrations), [`explanation/`](explanation/README.md), the generated [`errors/`](errors/README.md),
   `llms.txt` + generated `llms-full.txt` (`scripts/gen_llms_full.py --check` is a gate), the
   paste-ready [`AGENTS.md` snippet](reference/agents-snippet.md)
+- [x] The same Markdown published at `docs.sandboxio.dev` — MkDocs Material, GitHub Pages,
+  strict build, `tests/test_docs_site.py` proving every `SBX_E` code resolves at the URL
+  the exception prints ([ADR-0029](adr/0029-docs-site-mkdocs.md))
 - [x] Copy-paste GitHub Actions workflow for users in [`how-to/ci.md`](how-to/ci.md): fake job
   on PRs, Docker job on `main`, leak check
 - [x] `tests/test_readme_examples.py`: every README Python block is executed verbatim —
   scripts against fakes registered as `docker`/`e2b`, pytest-style blocks through pytester
-- [x] [`examples/`](../examples/README.md): complete runnable programs — hello world, the
+- [x] [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md): complete runnable programs — hello world, the
   one-line backend swap, streaming and timeouts, deny-by-default egress, a LangGraph agent
   and an OpenAI Agents one, and `sbx_fake` for the reader's own tools. `tests/test_examples.py`
   executes each script against the fakes; `examples/test_my_tool.py` is collected by pytest.
@@ -213,7 +216,7 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks) — and every program under [`examples/`](../examples/README.md) runs against the
+(six blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
 fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
 that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five

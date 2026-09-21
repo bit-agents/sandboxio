@@ -36,6 +36,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run pyright && uv run mypy
 uv run python -X importtime -c "import sandboxio" 2>&1 | tail -1    # import budget
 uv run python scripts/check_doc_links.py                            # doc links + anchors
+uv run mkdocs serve                                                 # docs site (--group docs)
 ```
 
 Before pushing, run what CI runs on PRs: unit + fake + docker contract + lint + types +
@@ -58,8 +59,9 @@ merge**:
 | No leaked containers | zero sandboxio-labelled containers after Docker jobs | [H2](hazards.md#h2--leaked-sandboxes) |
 | Error catalog | every code has a page, every page a code | [spec/04](spec/04-errors.md#catalog-is-generated) |
 | Doc samples | every YAML/JSON sample in `spec/` parses; every Python sample compiles | the input set shipped a config that was not valid YAML |
-| Doc links | every relative link and heading anchor resolves (`scripts/check_doc_links.py`) | `spec/` is the contract; a dead link into it is a dead requirement |
-| Executable docs | every README Python block (`tests/test_readme_examples.py`) and every program in [`examples/`](../examples/README.md) (`tests/test_examples.py`) runs, with `docker`/`e2b` resolving to the fake | a copied example that does not run is a P0 bug; it should fail our build, not a stranger's first attempt |
+| Docs site | `mkdocs build --strict` passes and every error code resolves under `/errors/` (`tests/test_docs_site.py`) | the error links ship inside the wheel ([ADR-0029](adr/0029-docs-site-mkdocs.md)) |
+| Doc links | every relative link and heading anchor resolves (`scripts/check_doc_links.py`), and no link leaves `docs/` | `spec/` is the contract; a dead link into it is a dead requirement |
+| Executable docs | every README Python block (`tests/test_readme_examples.py`) and every program in [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) (`tests/test_examples.py`) runs, with `docker`/`e2b` resolving to the fake | a copied example that does not run is a P0 bug; it should fail our build, not a stranger's first attempt |
 
 A red gate is not overridden. If a gate is wrong, change the gate in its own PR, with a
 reason.
@@ -71,7 +73,7 @@ reason.
 The nightly latest-SDK canary is the early-warning system, and absorbing what it catches is
 the core value proposition ([H5](hazards.md#h5--provider-churn-outpaces-maintenance)).
 
-It is the `latest-SDK canary` job in [`ci.yml`](../.github/workflows/ci.yml): it installs
+It is the `latest-SDK canary` job in [`ci.yml`](https://github.com/bit-agents/sandboxio/blob/main/.github/workflows/ci.yml): it installs
 every provider SDK unpinned, then runs `tests/test_sdk_surface.py` — the symbols and methods
 each adapter binds to — plus the whole credential-free suite. The live E2B contract suite
 runs on top of that only when `E2B_API_KEY` is set, so a rename upstream is caught with or
@@ -117,6 +119,8 @@ story.
    publishing, no local `twine upload`.
 6. Publish the MCP container image; update the Docker MCP Catalog entry.
 7. Verify the install path a user actually takes: `uvx sandboxio demo` on a clean machine.
+8. Confirm the Docs workflow deployed and the codes this release touched resolve, e.g.
+   `https://docs.sandboxio.dev/errors/SBX_E1002`.
 
 **Never:** publish from a laptop, hard-pin a provider SDK to force a green build, or ship a
 release with a skipped contract test.

@@ -164,9 +164,9 @@ Third-party adapters are first-class: the adapter contract is
 
 ## Documentation
 
-A built site at `docs.sandboxio.dev` ships with v0.1. It is not serving yet, which is why
-that is not a link. The Markdown under [`docs/`](docs/) is its source and stays the source,
-so nothing below moves when the site goes up. Read it here in the meantime:
+**[docs.sandboxio.dev](https://docs.sandboxio.dev)** — the Markdown under
+[`docs/`](docs/) is its source and stays the source, so nothing below moves. Read it here
+or there:
 
 - [`examples/`](examples/) — complete programs, one concept each: hello world, swapping
   backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
