@@ -37,10 +37,11 @@ docker = ["sandboxio-docker"]
 e2b = ["sandboxio-e2b"]
 # Spans need only the API; the host application brings the SDK and exporters (ADR-0011).
 otel = ["opentelemetry-api>=1.30"]
-# Integrations (spec/09): loose lower bounds; the weekly matrix catches framework churn.
+# Integrations (spec/09). Each bound is the oldest version the weekly framework matrix
+# actually runs the tests against — not a guess. Raising one needs a matrix leg to prove it.
 langgraph = ["langchain-core>=0.3"]
-openai-agents = ["openai-agents>=0.1"]
-mcp = ["mcp>=1.2"]
+openai-agents = ["openai-agents>=0.19"]
+mcp = ["mcp>=2.0"]
 
 [dependency-groups]
 # Only needed to build or serve the site (ADR-0029). MkDocs 2.0 drops the plugin

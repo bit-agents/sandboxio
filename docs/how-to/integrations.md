@@ -16,6 +16,21 @@ Two ways to hand over a sandbox:
 - a **factory** such as `backend.create` or `functools.partial(sandboxio.create, "e2b://")`
   — one fresh sandbox per tool call, torn down when the call ends.
 
+## Supported framework versions
+
+| Extra | Package | Tested from | Tested to |
+|-------|---------|-------------|-----------|
+| `sandboxio[langgraph]` | `langchain-core` | 0.3 | latest |
+| `sandboxio[openai-agents]` | `openai-agents` | 0.19 | latest |
+| `sandboxio[mcp]` | `mcp` | 2.0 | latest |
+
+"Tested from" is not a guess: a weekly CI matrix installs each framework at exactly that
+version, on its own, and runs the tests that cover it. There is no upper pin — a new release
+is exercised the following Monday, and an incompatibility becomes our bug to absorb rather
+than your migration ([the version policy](../explanation/version-policy.md)).
+
+Older versions may happen to work. They are not tested, so they are not supported.
+
 ## LangGraph / LangChain
 
 ```bash

@@ -24,8 +24,10 @@ Rules:
 - Under 100 lines each. All logic stays in core; an adapter that needs logic is telling you
   core is missing something.
 - Tool descriptions are written **for LLM consumption**: clear, constrained, one obvious way.
-- Framework dependencies get loose lower bounds (`langgraph>=0.2`), are tested in the weekly
-  CI matrix, and the supported version range is documented.
+- Framework dependencies get loose lower bounds, are tested in the weekly CI matrix, and the
+  supported version range is documented
+  ([how-to](../how-to/integrations.md#supported-framework-versions)). A bound MUST be a
+  version the matrix runs, not an aspiration.
 - An integration MUST NOT weaken a security default. It inherits deny-egress, timeouts and
   caps like any other caller.
 

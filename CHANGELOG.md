@@ -67,6 +67,13 @@ Every absorbed provider break gets an entry here as well as in the
 - [The version policy](docs/explanation/version-policy.md): what counts as breaking, how long
   a deprecation lives, and why the verdict can differ for callers and adapter authors.
 
+### Changed
+
+- **Breaking:** `sandboxio[openai-agents]` now requires `openai-agents>=0.19` and
+  `sandboxio[mcp]` requires `mcp>=2.0`. The previous bounds (`>=0.1`, `>=1.2`) were never
+  tested: the integration tests fail below 0.19 and hang on `mcp` 1.2. Nothing is released,
+  so no installed version changes.
+
 ### Fixed
 
 - `CapabilityNotSupported` names the backends that do support the capability. It previously
