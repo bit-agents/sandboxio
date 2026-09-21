@@ -14,7 +14,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 # The core bound is the port contract (spec/02, spec/08): a major there rewrites this adapter.
-dependencies = ["sandboxio>=0.1,<0.2", "e2b-code-interpreter>=2.0"]
+dependencies = ["sandboxio>=0.1.0a0,<0.2", "e2b-code-interpreter>=2.0"]
 
 [project.entry-points."sandboxio.backends"]
 e2b = "sandboxio_e2b:E2BBackend"

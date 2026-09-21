@@ -34,9 +34,11 @@ Changelog = "https://github.com/bit-agents/sandboxio/blob/main/CHANGELOG.md"
 # `sandboxio-<name>`; the extra pulls it in. e2b and modal land with their adapters.
 # The floor keeps the extra off the 0.0.0 name-reservation releases; the adapter carries the
 # upper bound on the core, because that is the pairing a third-party adapter also declares.
+# `0.1.0a0` rather than `0.1`: a floor naming no pre-release excludes every pre-release of the
+# line, which breaks installing an rc, and a resolver prefers a final release regardless.
 [project.optional-dependencies]
-docker = ["sandboxio-docker>=0.1"]
-e2b = ["sandboxio-e2b>=0.1"]
+docker = ["sandboxio-docker>=0.1.0a0"]
+e2b = ["sandboxio-e2b>=0.1.0a0"]
 # Spans need only the API; the host application brings the SDK and exporters (ADR-0011).
 otel = ["opentelemetry-api>=1.30"]
 # Integrations (spec/09). Each bound is the oldest version the weekly framework matrix

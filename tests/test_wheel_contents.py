@@ -116,7 +116,7 @@ def test_the_core_adapter_pairing_is_bounded(wheels: dict[str, zipfile.ZipFile])
     """Unbounded, `sandboxio[docker]` resolves to the 0.0.0 name reservation, and an adapter
     pairs with a core major whose ports it was never written against."""
     core = set(_metadata(wheels["sandboxio"]))
-    assert "sandboxio-docker>=0.1; extra == 'docker'" in core
-    assert "sandboxio-e2b>=0.1; extra == 'e2b'" in core
+    assert "sandboxio-docker>=0.1.0a0; extra == 'docker'" in core
+    assert "sandboxio-e2b>=0.1.0a0; extra == 'e2b'" in core
     for adapter in ("sandboxio_docker", "sandboxio_e2b"):
-        assert "sandboxio<0.2,>=0.1" in _metadata(wheels[adapter]), adapter
+        assert "sandboxio<0.2,>=0.1.0a0" in _metadata(wheels[adapter]), adapter
