@@ -9,7 +9,10 @@ Every absorbed provider break gets an entry here as well as in the
 [churn-absorption log](docs/churn-log.md). How to write an entry is in
 [CONTRIBUTING.md](CONTRIBUTING.md#changelog-entries).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-21
+
+First release. Docker, E2B and `FakeBackend`; Modal lands in 0.1.1
+([ADR-0025](docs/adr/0025-v01-scope-cut.md)).
 
 ### Added
 
@@ -81,8 +84,8 @@ Every absorbed provider break gets an entry here as well as in the
 
 - **Breaking:** `sandboxio[openai-agents]` now requires `openai-agents>=0.19` and
   `sandboxio[mcp]` requires `mcp>=2.0`. The previous bounds (`>=0.1`, `>=1.2`) were never
-  tested: the integration tests fail below 0.19 and hang on `mcp` 1.2. Nothing is released,
-  so no installed version changes.
+  tested: the integration tests fail below 0.19 and hang on `mcp` 1.2. Raised before the
+  first release, so no installed version changes.
 
 ### Fixed
 
@@ -94,5 +97,8 @@ Every absorbed provider break gets an entry here as well as in the
   `uv pip install "sandboxio[modal]"`, an extra that does not exist, so the suggested fix
   failed.
 
-Nothing is released. There is no public API yet — see
-[docs/build-order.md](docs/build-order.md).
+The surface semver covers is named in
+[spec/03](docs/spec/03-public-api.md#stability-contract); what counts as a break is the
+[version policy](docs/explanation/version-policy.md).
+
+[0.1.0]: https://github.com/bit-agents/sandboxio/releases/tag/v0.1.0

@@ -8,7 +8,7 @@ license-files = ["LICENSE", "LICENSE-DOCS"]
 authors = [{ name = "sandboxio contributors" }]
 keywords = ["sandbox", "agents", "llm", "docker", "e2b", "isolation", "security"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

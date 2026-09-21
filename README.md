@@ -3,23 +3,21 @@
 **One secure Python API for running AI-agent code in any sandbox.** Swap Docker ↔ E2B with
 one line; no network by default; test your agent tools offline with the built-in fake.
 
+[![PyPI](https://img.shields.io/pypi/v/sandboxio)](https://pypi.org/project/sandboxio/)
 [![CI](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml/badge.svg)](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](docs/adr/0015-python-version-floor.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/bit-agents/sandboxio/badge)](https://scorecard.dev/viewer/?uri=github.com/bit-agents/sandboxio)
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25-green)](https://github.com/bit-agents/sandboxio/actions/workflows/ci.yml)
 
-<!-- TODO(placeholder): the PyPI version badge needs a published release. -->
-
-> [!WARNING]
-> **Pre-alpha. The core, the contract suite, `FakeBackend`, the Docker and E2B adapters, the
-> CLI and the integrations exist and pass their gates; nothing is released.**
+> [!IMPORTANT]
+> **v0.1 — the API is not stable until 1.0.** A patch release never breaks the surface
+> [`docs/spec/03-public-api.md`](docs/spec/03-public-api.md#stability-contract) covers; a
+> minor release may, and every break arrives with a changelog entry and a migration note.
+> Pin a minor if that matters to you.
 >
-> The public API is not stable, nothing is published to PyPI, and no version is suitable for
-> any use. What *is* stable enough to build against is [`docs/spec/`](docs/spec/), which is
-> normative and CI-enforced.
->
-> Watch the repo if you want the v0.1 announcement. Do not depend on this yet.
+> What counts as a break, how long a deprecation lives, and why the answer differs for
+> callers and for adapter authors: [version policy](docs/explanation/version-policy.md).
 
 ## Why this exists
 
@@ -142,9 +140,9 @@ Full surface, including capability discovery, `require_isolation`, audit sinks a
 
 | Backend | Status | Isolation tier |
 |---------|--------|----------------|
-| Docker | adapter built, unreleased | `CONTAINER` — [containers share the host kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) |
-| E2B | adapter built, unreleased | `MICROVM` — [Firecracker microVM, its own kernel](https://e2b.dev/security) |
-| `FakeBackend` | built, unreleased | n/a — in-process, for tests |
+| Docker | shipped in v0.1 | `CONTAINER` — [containers share the host kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) |
+| E2B | shipped in v0.1 | `MICROVM` — [Firecracker microVM, its own kernel](https://e2b.dev/security) |
+| `FakeBackend` | shipped in v0.1 | n/a — in-process, for tests |
 | Modal | planned for v0.1.1 | `GVISOR` — [containerised and virtualised using gVisor](https://modal.com/docs/guide/security) |
 
 Every tier above is the mechanism the provider documents for itself, read on **2026-09-20**.
