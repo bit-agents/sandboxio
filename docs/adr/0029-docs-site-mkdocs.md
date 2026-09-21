@@ -25,7 +25,7 @@ GitHub's slug algorithm, which Python-Markdown's default does not reproduce.
 
 We will publish `docs/` with **MkDocs + Material**, built by `mkdocs.yml` at the repository
 root and deployed to **GitHub Pages** at **docs.sandboxio.dev** by `.github/workflows/docs.yml`
-on every push to `main`.
+on every push to `main` that touches the site's sources.
 
 - `use_directory_urls: true`, so `docs/errors/SBX_E1204.md` is served at `/errors/SBX_E1204`
   and `docs/errors/README.md` at `/errors`. `tests/test_docs_site.py` fails if any code in
