@@ -1,0 +1,61 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Pages deployments queue rather than cancel: a half-published site is worse than a slow one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  build:
+    name: build (strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      # No uv cache here, unlike CI: this job's output is published, and a cache any branch
+      # can write to must not reach a published artifact.
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          enable-cache: false
+      - run: uv sync --all-extras --group docs
+      # The stable error-code URLs are API (ADR-0010); this is the gate that proves they exist.
+      - run: uv run pytest -m docs
+      - run: uv run mkdocs build --strict
+      # No configure-pages step: site_url is fixed in mkdocs.yml, so nothing needs injecting.
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        if: github.event_name == 'push'
+        with:
+          path: site/
+
+  # Gated on the repository variable rather than the branch: `site_url` is fixed to
+  # docs.sandboxio.dev, so publishing before that name resolves would put canonical links to
+  # a dead host on every page. Set DOCS_DEPLOY=true once Pages and the DNS record exist.
+  deploy:
+    name: deploy to docs.sandboxio.dev
+    needs: build
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && vars.DOCS_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1

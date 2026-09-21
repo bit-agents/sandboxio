@@ -1,5 +1,5 @@
 # Every target is a line from CONTRIBUTING.md. `make check` is what CI runs, in CI's order.
-.PHONY: help sync fix lint types test test-docker test-e2b docs actions check
+.PHONY: help sync fix lint types test test-docker test-e2b docs site actions check
 
 help:  ## list the targets
 	@grep -hE '^[a-z0-9-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/' | expand -t 16
@@ -33,6 +33,10 @@ docs:  ## regenerate the error catalogue and llms-full.txt, then check every lin
 	uv run python scripts/gen_error_catalog.py
 	uv run python scripts/gen_llms_full.py
 	uv run python scripts/check_doc_links.py
+
+site:  ## build the docs site exactly as the Pages workflow publishes it
+	uv sync --group docs
+	uv run mkdocs build --strict
 
 actions:  ## the Actions security lint
 	uvx zizmor@1.30.1 --offline .github/workflows/

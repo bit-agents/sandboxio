@@ -5,7 +5,7 @@ the same contract suite as Docker and E2B, executes nothing, and needs no daemon
 account. Your tool's tests run in milliseconds anywhere pytest runs.
 
 This page as a runnable file, executed by CI like every other example:
-[`examples/test_my_tool.py`](../../examples/test_my_tool.py).
+[`examples/test_my_tool.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/test_my_tool.py).
 
 ## The fixture
 

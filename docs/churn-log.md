@@ -8,7 +8,7 @@ absorbed break is written down here — including the ones that were not absorbe
 
 Each entry records the date, the provider and the versions affected, what broke, what
 changed here, and whether you need to act. An entry lands in the same release as the fix,
-and in [`CHANGELOG.md`](../CHANGELOG.md) as well. The procedure is
+and in [`CHANGELOG.md`](https://github.com/bit-agents/sandboxio/blob/main/CHANGELOG.md) as well. The procedure is
 [*Provider churn* in the runbook](runbook.md).
 
 ## Entries

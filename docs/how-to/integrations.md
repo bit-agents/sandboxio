@@ -1,8 +1,8 @@
 # How to use sandboxio from LangGraph, the OpenAI Agents SDK and MCP
 
 Both agent integrations have a complete, CI-executed program:
-[`examples/05_langgraph_agent.py`](../../examples/05_langgraph_agent.py) and
-[`examples/06_openai_agents.py`](../../examples/06_openai_agents.py). Each runs its sandboxio
+[`examples/05_langgraph_agent.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/05_langgraph_agent.py) and
+[`examples/06_openai_agents.py`](https://github.com/bit-agents/sandboxio/blob/main/examples/06_openai_agents.py). Each runs its sandboxio
 half with no API key set, so you can watch the tool work before spending a token.
 
 Each integration returns the framework's **native** tool object wrapping `run_code` or
@@ -94,4 +94,4 @@ docker run -i --rm -e E2B_API_KEY sandboxio-mcp --backend e2b://code-interpreter
 
 The image is rootless, mounts no Docker socket, and defaults to the E2B backend because a
 sandbox provider inside the container must be a cloud one. Catalog metadata lives in
-[`docker/mcp/`](../../docker/mcp/README.md).
+[`docker/mcp/`](https://github.com/bit-agents/sandboxio/blob/main/docker/mcp/README.md).
