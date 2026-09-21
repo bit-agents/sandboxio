@@ -5,9 +5,10 @@ most libraries, so this process exists from day one rather than from the first r
 
 ## Reporting a vulnerability
 
-**Report privately through GitHub Security Advisories** — the repository's *Security* tab,
-*Report a vulnerability*. Do not open a public issue, and do not disclose before a fix is
-released.
+**[Report privately through GitHub Security
+Advisories](https://github.com/bit-agents/sandboxio/security/advisories/new)** — also reachable
+from the repository's *Security* tab, *Report a vulnerability*. Do not open a public issue, and
+do not disclose before a fix is released.
 
 You will get an acknowledgement **within 48 hours**.
 

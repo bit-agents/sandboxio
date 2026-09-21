@@ -22,3 +22,11 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+
+  # The MCP image is pinned by digest, which only stays current if a bot bumps it.
+  - package-ecosystem: docker
+    directory: /docker/mcp
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
