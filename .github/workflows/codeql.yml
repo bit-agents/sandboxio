@@ -1,0 +1,43 @@
+# CodeQL: the static analysis the ruff/mypy/pyright gates do not do — taint tracking across
+# the subprocess, path and deserialisation surfaces this library exists to wrap.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 4 * * 2"  # weekly, Tuesday: new queries find old code
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyse:
+    name: CodeQL (python)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@1c5b675653bb5c22dbe9b12b556ec555138e09fd  # v4.38.1
+        with:
+          languages: python
+          # Pure Python: nothing to compile, so no build step.
+          build-mode: none
+          # `security-extended` over the default, because a missed taint path here is the
+          # expensive bug; `-and-quality` is left out — ruff already owns that, noisily.
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd  # v4.38.1
+        with:
+          category: /language:python
