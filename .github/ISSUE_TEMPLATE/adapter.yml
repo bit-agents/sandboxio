@@ -1,0 +1,48 @@
+name: Adapter
+description: You are building or publishing a sandboxio backend adapter.
+labels: ["adapter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The adapter contract is [spec/08](https://github.com/bit-agents/sandboxio/blob/main/docs/spec/08-adapter-contract.md) and
+        the contract suite is what proves conformance. Third-party adapters are first-class:
+        they take the same shape as the first-party ones under `packages/`.
+  - type: input
+    id: backend
+    attributes:
+      label: Backend
+      description: The provider or runtime the adapter targets.
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Isolation tier it reports
+      description: A tier above CONTAINER needs a dated link to the provider's own documentation.
+      options: ["UNKNOWN", "CONTAINER", "GVISOR", "MICROVM"]
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source for that tier
+      description: The provider's own page, and the date you read it. UNKNOWN needs no source.
+  - type: textarea
+    id: suite
+    attributes:
+      label: Contract suite result
+      description: >-
+        Output of the suite against your adapter. A capability you declare and do not honour
+        is the one unforgivable bug, so the suite result is the review.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirms
+    attributes:
+      label: Before submitting
+      options:
+        - label: Every `Capability` the adapter declares is implemented
+          required: true
+        - label: Network is denied by default
+          required: true

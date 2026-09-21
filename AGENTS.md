@@ -83,13 +83,18 @@ A red gate is never worked around. If a gate is wrong, change the gate in its ow
 ## Commands
 
 ```bash
-uv sync                       # dev environment; 3.14 by default
+uv sync --all-extras          # dev environment; 3.14 by default
 uv run pytest                 # unit + gates; no Docker, no network
+uv run pytest -m docker       # the Docker contract suite, against a real daemon
 uv run ruff check . && uv run ruff format --check .
 uv run mypy && uv run pyright
+uv run python scripts/check_doc_links.py
 ```
 
-Everything CI runs is in these four lines. Run them before proposing a change.
+`make check` runs all of the above in CI's order. **`uv run pytest` deselects `-m docker`.** CI runs both, so the first line alone proves
+nothing about an adapter or the contract suite — that is how a container leak once reached
+CI green-in-name-only. The E2B suite is nightly and needs a credential; see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Working style here
 

@@ -1,0 +1,29 @@
+# Fast hooks only — seconds, not minutes. Types, tests and the contract suites stay in CI
+# (see AGENTS.md); a pre-commit hook you are tempted to skip protects nothing.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-yaml
+      - id: check-toml
+
+  # Pinned to the same ruff the project depends on, so local and CI never disagree.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: uv.lock matches pyproject.toml
+        entry: uv lock --check
+        language: system
+        files: ^(pyproject\.toml|uv\.lock|packages/.*/pyproject\.toml)$
+        pass_filenames: false

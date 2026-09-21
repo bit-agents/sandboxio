@@ -67,7 +67,7 @@ Resolution MUST be lazy and cached. Entry-point scanning counts against the impo
 > can load a routing file or call `route_for()`. The design is kept here because the DSN and
 > typed-config surfaces above were shaped to leave room for it; the MUSTs below bind the
 > implementation when it lands, not v0.1 adapters
-> ([build-order](../build-order.md#v02--differentiation-roi-order)).
+> ([build-order](../build-order.md#v02)).
 
 Designed now, loadable by the **library** before any server exists
 ([ADR-0009](../adr/0009-library-first-server-later.md)). Mental model: Kubernetes

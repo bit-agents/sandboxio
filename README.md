@@ -45,13 +45,13 @@ Every Python block below is executed by CI exactly as written
 does not run is a P0 bug. The Docker-backed lines run against the built-in fake in CI, so
 they are the same code you would run — only the backend differs.
 
-<!-- TODO(placeholder): replace with the real install line once the package is published.
-     `uvx sandboxio demo` is the documented entry point — never the `sbx` alias, which
-     resolves to an unrelated PyPI package (ADR-0014). -->
+The commands below are what v0.1 will install. Today the name on PyPI holds a `0.0.0`
+placeholder that carries no code, so `uv add sandboxio` does not yet get you a library.
+`uvx sandboxio demo` is the documented entry point — never the `sbx` alias, which resolves
+to an unrelated PyPI package ([ADR-0014](docs/adr/0014-project-name.md)).
 
 ```bash
-# {{INSTALL}} — not yet published
-uv add "sandboxio[docker]"     # planned
+uv add "sandboxio[docker]"     # from v0.1
 uvx sandboxio demo             # create, run, stream, prove egress is denied, tear down
 sandboxio doctor               # what is installed, reachable and missing — no secrets printed
 ```
@@ -164,10 +164,9 @@ Third-party adapters are first-class: the adapter contract is
 
 ## Documentation
 
-<!-- TODO(placeholder): link the published docs site once it exists (Diátaxis, generated from docs/). -->
-<!-- {{DOCS_URL}} -->
-
-Until then, read the repository:
+A built site at `docs.sandboxio.dev` ships with v0.1. It is not serving yet, which is why
+that is not a link. The Markdown under [`docs/`](docs/) is its source and stays the source,
+so nothing below moves when the site goes up. Read it here in the meantime:
 
 - [`examples/`](examples/) — complete programs, one concept each: hello world, swapping
   backends, streaming, proving egress is denied, agent tools. Each one is executed by CI.
@@ -198,4 +197,3 @@ there is no CLA.
 
 Code is [MIT](LICENSE). Prose in `docs/` is [CC BY 4.0](LICENSE-DOCS); code samples inside
 those documents are MIT ([ADR-0026](docs/adr/0026-docs-license-cc-by.md)).
-

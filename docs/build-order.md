@@ -246,12 +246,12 @@ built-in fake.* Publish the MCP server to the Docker MCP Catalog the same day.
 GPU, Volumes with per-tenant `sub_path`, gVisor tier. Third backend also re-tests the
 abstraction against a genuinely different filesystem model.
 
-## v0.2 — differentiation (ROI order)
+## v0.2
 
 1. **Flight recorder + `sandboxio replay <trace>`** — record code, file diffs, stdio and timing to
-   a portable trace; deterministic replay; local static HTML viewer. The signature feature.
+   a portable trace; deterministic replay; local static HTML viewer.
 2. **Egress learning mode** — `egress="learn"` records attempted domains, emits a
-   paste-ready allowlist. Nobody else does record-then-generate.
+   paste-ready allowlist.
 3. **Per-execution meter** — `{duration_ms, cost_usd?, backend}` on every result, plus
    `sandboxio bench`.
 4. **Auto dependency inference** — PEP 723 / import parsing → uv provisioning, sandbox-gated.

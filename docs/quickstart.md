@@ -26,7 +26,7 @@ sandboxio doctor --json     # paste-friendly, for bug reports
 
 ## 2. Add it to a project
 
-<!-- TODO(placeholder): {{INSTALL}} — nothing is published yet. -->
+From v0.1 onwards — the name currently holds a `0.0.0` placeholder with no code in it:
 
 ```bash
 uv add "sandboxio[docker]"   # or "sandboxio[e2b]" — the core has no backend built in

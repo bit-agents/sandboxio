@@ -19,16 +19,13 @@ SUFFIXES = {".md", ".txt", ".py", ".yaml", ".yml", ".toml", ".cfg"}
 PLACEHOLDER = re.compile(r"\{\{[A-Z_]+\}\}")
 
 # Every unfilled placeholder in the tree. Delete a row when it is filled.
-EXPECTED: dict[str, int] = {
-    "{{DOCS_URL}}": 2,  # blocked on the docs site being deployed, not on the domain
-    "{{INSTALL}}": 4,  # nothing is published to PyPI yet
-}
+# Empty, and the gate is what keeps it that way: a new marker fails here.
+EXPECTED: dict[str, int] = {}
 
 # Files still carrying a `TODO(placeholder)` marker.
 EXPECTED_TODO = {
     "README.md",
     "docs/llms-full.txt",
-    "docs/quickstart.md",
     "examples/README.md",
 }
 

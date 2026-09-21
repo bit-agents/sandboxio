@@ -110,7 +110,7 @@ churn-absorption log.
 
 ## Adapter authoring
 
-**Planned for v0.2** ([build-order](../build-order.md#v02--differentiation-roi-order)). An
+**Planned for v0.2** ([build-order](../build-order.md#v02)). An
 **adapter template repo** wired to the contract suite ships alongside the authoring guide.
 It is the ecosystem lever: a third party should reach a conforming adapter without reading
 core's source. Until it exists, the reference is `tests/test_fake_contract.py` and this

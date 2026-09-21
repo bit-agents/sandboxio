@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: sandboxio
+abstract: One secure Python API for running AI-agent code in any sandbox.
+message: If you use sandboxio in your work, please cite it.
+type: software
+authors:
+  - name: sandboxio contributors
+repository-code: https://github.com/bit-agents/sandboxio
+license: MIT
+keywords:
+  - sandbox
+  - agents
+  - llm
+  - isolation
+  - security
+# version and date-released land with v0.1; nothing is released yet.

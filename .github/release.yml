@@ -1,0 +1,22 @@
+# Categories for GitHub's generated release notes. Ordered by what a reader checks first:
+# what breaks, what was security-relevant, then what the abstraction absorbed on their behalf.
+changelog:
+  exclude:
+    labels: [duplicate, invalid, question, wontfix]
+  categories:
+    - title: Breaking changes
+      labels: [breaking]
+    - title: Security
+      labels: [security]
+    - title: Provider churn absorbed
+      labels: [provider-churn]
+    - title: Fixes
+      labels: [bug]
+    - title: Spec
+      labels: [spec-gap]
+    - title: Adapters
+      labels: [adapter]
+    - title: Dependencies
+      labels: [dependencies]
+    - title: Everything else
+      labels: ["*"]

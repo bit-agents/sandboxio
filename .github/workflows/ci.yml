@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: "17 3 * * *"  # nightly: cloud contract suites and the latest-SDK canary
 
+# The `cache-poisoning` ignores below: this workflow publishes nothing, so there is no
+# runtime artifact to poison. The tag trigger exists only to gate the e2b suite before a
+# release, and that job is the one with a credential — so it restores no cache at all.
 permissions:
   contents: read
 
@@ -30,7 +33,9 @@ jobs:
         python: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0  # zizmor: ignore[cache-poisoning]
         with:
           python-version: ${{ matrix.python }}
           enable-cache: true
@@ -41,7 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0  # zizmor: ignore[cache-poisoning]
         with:
           enable-cache: true
       - run: uv sync --all-extras
@@ -53,7 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0  # zizmor: ignore[cache-poisoning]
         with:
           enable-cache: true
       - run: uv sync --all-extras
@@ -65,7 +74,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0  # zizmor: ignore[cache-poisoning]
         with:
           enable-cache: true
       - run: uv sync --all-extras
@@ -85,9 +96,11 @@ jobs:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
         with:
-          enable-cache: true
+          enable-cache: false  # this job holds E2B_API_KEY; it restores no cache
       - run: uv sync --all-extras
       - name: run, or explain the skip
         run: |
@@ -102,6 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: every commit carries Signed-off-by
         env:
@@ -121,3 +135,17 @@ jobs:
           fi
           echo "every commit in this pull request is signed off"
         shell: bash
+
+  # zizmor pinned like every action here: a new release adding audits must not turn an
+  # unrelated pull request red.
+  actions:
+    name: actions security lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4  # v10.1.0
+        with:
+          enable-cache: false
+      - run: uvx zizmor@1.30.1 --offline .github/workflows/

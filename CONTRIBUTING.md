@@ -33,8 +33,12 @@ looks arbitrary usually has an ADR explaining what it is preventing.
 
 ```bash
 uv sync --all-extras          # core + docker + e2b + modal + dev
+uvx pre-commit install        # ruff, whitespace and uv.lock, on every commit
 uv run pytest                 # unit + fake contract suite; no Docker, no network
 ```
+
+The hooks are deliberately fast. Types, tests and the contract suites are not in them —
+a hook slow enough to skip protects nothing.
 
 Python 3.14 for development; the floor is 3.11 and is proven by CI, not by your local
 interpreter.
@@ -42,13 +46,11 @@ interpreter.
 Before pushing, run what CI runs:
 
 ```bash
-uv run pytest -q                        # fast: fake backend only
-uv run pytest -m docker                 # Docker contract suite (needs Docker)
-uv run --env-file .env pytest -m e2b    # E2B contract suite; E2B_API_KEY in a git-ignored .env
-uv run ruff check . && uv run ruff format --check .
-uv run pyright && uv run mypy
-uv run python scripts/check_doc_links.py
+make check                              # lint, types, tests, Docker suite, Actions lint, links
+make test-e2b                           # nightly in CI; needs E2B_API_KEY in a git-ignored .env
 ```
+
+`make help` lists every target, and each one is a single line you can run by hand instead.
 
 Full loop and release process: [`docs/runbook.md`](docs/runbook.md).
 

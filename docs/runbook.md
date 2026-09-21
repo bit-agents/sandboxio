@@ -147,8 +147,9 @@ Weekly, or as they arrive for anything security-adjacent.
   without debate ([H11](hazards.md#h11--ai-slop-issues-and-prs)).
 - Ask for `sandboxio doctor --json` output on any environment report; it is designed to be pasted
   and carries no secrets ([spec/10](spec/10-cli.md#doctor-output-contract)).
-- Labels: `provider-churn` (auto from canary), `adapter:<name>`, `security`, `spec-gap`,
-  `good-first-issue`.
+- Labels: `provider-churn` (auto from canary), `adapter` and `adapter:<name>`, `security`,
+  `spec-gap`, `breaking`, `dependencies`, and GitHub's own `good first issue` — spelled with
+  spaces, because that is the one its newcomer search reads.
 - A bug that the contract suite should have caught gets a `spec-gap` label and a suite test
   in the fix PR. That loop is what keeps the suite meaningful.
 - Q&A goes to GitHub Discussions — searchable and indexed, unlike chat.
