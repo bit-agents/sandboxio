@@ -92,11 +92,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      # Anything but digits and dots in the version is a pre-release, and `latest` in the
-      # catalog must never resolve to one.
-      - id: kind
+      # The tags are PEP 440, not semver — `0.1.0rc3` has no hyphen, so metadata-action's
+      # `type=semver` parses nothing and emits no tag at all. Derive both values here, the
+      # same way the version gate does. Anything but digits and dots is a pre-release, and
+      # `latest` in the catalog must never resolve to one.
+      - id: ver
         run: |
-          case "${GITHUB_REF_NAME#v}" in
+          v="${GITHUB_REF_NAME#v}"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          case "$v" in
             *[!0-9.]*) echo "final=false" >> "$GITHUB_OUTPUT" ;;
             *)         echo "final=true"  >> "$GITHUB_OUTPUT" ;;
           esac
@@ -113,8 +117,8 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/sandboxio-mcp
           flavor: latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ steps.kind.outputs.final == 'true' }}
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=raw,value=latest,enable=${{ steps.ver.outputs.final == 'true' }}
       # arm64 is not optional: Docker Desktop on Apple silicon is where this image is run.
       - id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
