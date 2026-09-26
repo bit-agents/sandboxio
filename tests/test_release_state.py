@@ -29,6 +29,7 @@ DENIED = (
     "nothing released",
     "not yet released",
     "not yet published",
+    "has not shipped",
     "no version is suitable for any use",
     "when we release",
     "`0.0.0` placeholder",
