@@ -104,6 +104,9 @@ CI green-in-name-only. The E2B suite is nightly and needs a credential; see
   CI enforces both on every pull request — on the commits and on the PR title.
 - **A bug fix arrives with the test that would have caught it.** If the contract suite
   should have caught it, the test goes in the suite.
+- **Before a release or an announcement, run the `docs-consistency` skill**
+  (`.claude/skills/docs-consistency/`). It audits the one class CI cannot see: prose
+  restating a decision — a tier, a scope cut, a dependency bound — that has since moved.
 - **A decision that outlives the PR needs an ADR**, not a comment. Copy
   [`docs/adr/0000-template.md`](docs/adr/0000-template.md).
 - **Do not invent security claims.** Isolation tiers are only published with a dated link
