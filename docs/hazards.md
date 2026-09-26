@@ -131,8 +131,9 @@ A slow or side-effecting import is fatal for a library agents load on every cold
 disqualifying in offline or air-gapped CI.
 
 - **Tripwire:** import budget over 150 ms.
-- **Response:** hard CI fail over 200 ms; **feature freeze until fixed** — this is one of
-  the pre-committed thresholds.
+- **Response:** CI is red past 150 ms ([ADR-0012](adr/0012-no-telemetry-no-import-side-effects.md));
+  past 200 ms it is a **feature freeze until fixed** rather than a fix — this is one of the
+  pre-committed thresholds.
 
 ### H9 — FakeBackend diverges from reality
 

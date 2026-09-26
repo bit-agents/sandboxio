@@ -102,7 +102,9 @@ churn-absorption log.
 
 ## Hygiene gates (CI-enforced)
 
-- Import budget: `python -X importtime -c "import sandboxio"` under 150 ms; hard fail over 200 ms.
+- Import budget: `python -X importtime -c "import sandboxio"` under 150 ms, and CI is red
+  past it. 200 ms is where the response escalates to a feature freeze, not where the build
+  starts failing ([H8](../hazards.md#h8--import-bloat-and-eager-imports)).
 - No network at import, verified with `pytest-socket`.
 - No leaked containers: Docker jobs assert zero sandboxio-labelled containers remain.
 - pyright + mypy strict on the public API; `py.typed` present in the wheel.
