@@ -135,7 +135,8 @@ Before running untrusted code:
 ## What this project does not claim
 
 - No third-party security audit has been performed.
-- It is **pre-alpha**, with nothing released; the API is not stable yet.
+- The API is not stable until `1.0`: a `0.x` minor may break it
+  ([the version policy](version-policy.md)).
 - No v0.1 backend provides the `GVISOR` tier — the tier exists in the model, not in what
   shipped.
 - Isolation tiers are claims about someone else's infrastructure, published only with a
