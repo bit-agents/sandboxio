@@ -117,8 +117,12 @@ story.
    `stacklevel`, PEP 702 `@deprecated`, a changelog entry, and a stated removal window.
 5. Tag; the release workflow runs the e2b contract suite, then publishes via **PyPI Trusted
    Publishing** with PEP 740 attestations. No token-based publishing, no local `twine upload`.
-6. The same workflow pushes the MCP image to `ghcr.io` with a provenance attestation. Open
-   the Docker MCP Catalog pull request by hand.
+6. The same workflow pushes the MCP image to `ghcr.io` with a provenance attestation. The
+   catalog entry does not follow on its own: bump `source.commit` in
+   [`docker/mcp/server.yaml`](https://github.com/bit-agents/sandboxio/blob/main/docker/mcp/server.yaml)
+   to the tag's commit, regenerate `tools.json`, and open the `docker/mcp-registry` pull
+   request by hand. Left undone, the catalog keeps pointing a reviewer at the previous
+   release — the procedure is in that directory's README.
 7. Verify the install path a user actually takes: `uvx sandboxio demo` on a clean machine.
 8. Confirm the Docs workflow deployed and the codes this release touched resolve, e.g.
    `https://docs.sandboxio.dev/errors/SBX_E1002`.
