@@ -1,6 +1,7 @@
 # How to run on E2B
 
-E2B runs each sandbox in a Firecracker microVM with a live code interpreter. It is the
+E2B runs each sandbox in [a Firecracker microVM with its own kernel](https://e2b.dev/security)
+— E2B's own description, read on **2026-09-20** — with a live code interpreter. It is the
 `MICROVM` tier and the backend to pick for untrusted, multi-tenant code
 ([isolation tiers](../explanation/isolation-tiers.md)).
 

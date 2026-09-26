@@ -65,9 +65,13 @@ The tier measures one property: resistance to kernel escape by an adversarial te
 
 | Your code is | Use | Why |
 |--------------|-----|-----|
-| yours, reviewed, or CI's own | `CONTAINER` (Docker) | a shared kernel is fine when nothing in the sandbox is trying to leave it |
+| yours, reviewed, or CI's own | `CONTAINER` (Docker) | [a shared kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) is fine when nothing in the sandbox is trying to leave it |
 | agent-generated, single-tenant, low-value data | `CONTAINER` with egress denied, or better | the network default is doing most of the work here |
-| untrusted, multi-tenant, or touching other people's data | `MICROVM` (E2B) as the floor | a dedicated guest kernel; a kernel bug is not immediately a host compromise |
+| untrusted, multi-tenant, or touching other people's data | `MICROVM` (E2B) as the floor | [a dedicated guest kernel](https://e2b.dev/security); a kernel bug is not immediately a host compromise |
+
+Both links are the provider's own description of its mechanism, read on **2026-09-20**;
+neither page carries a revision date, so that is the date it was read
+([ADR-0006](../adr/0006-isolation-tiers-first-class.md)).
 
 Make it enforceable rather than documented:
 

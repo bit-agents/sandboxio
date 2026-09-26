@@ -16,8 +16,9 @@ sb = await sandboxio.create("docker://python:3.12-slim")
 sb = await sandboxio.create(DockerConfig(template="ghcr.io/acme/agent-runtime:1.4"))
 ```
 
-The isolation tier is `CONTAINER`: a shared kernel. Use it for trusted, dev and CI code;
-for untrusted multi-tenant code pick a `MICROVM` backend
+The isolation tier is `CONTAINER`: [a container shares the host kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/),
+Docker's own description, read on **2026-09-20**. Use it for trusted, dev and CI code; for
+untrusted multi-tenant code pick a `MICROVM` backend
 ([isolation tiers](../explanation/isolation-tiers.md)).
 
 ## What the adapter does
