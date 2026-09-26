@@ -20,8 +20,8 @@ jobs:
     name: tests against the fake (every PR)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync
@@ -33,8 +33,8 @@ jobs:
     needs: fake
     runs-on: ubuntu-latest              # ships a Docker daemon
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync --extra docker
@@ -79,8 +79,8 @@ creates real sandboxes and costs real money:
     env:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
       - run: uv sync --extra e2b
       - run: uv run pytest -q -m e2b
 ```

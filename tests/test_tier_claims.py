@@ -44,7 +44,7 @@ H16_ANCHOR = "hazards.md#h16--docker-sandboxes-run-as-root-on-a-writable-rootfs"
 
 def claims() -> list[tuple[str, str]]:
     """Every (page, tier) pair a reader can meet outside the surveys."""
-    pairs = []
+    pairs: list[tuple[str, str]] = []
     for package in sorted(REPO_ROOT.glob("packages/sandboxio-*")):
         name = package.name.removeprefix("sandboxio-")
         assert name in BACKENDS, f"{package.name} ships a tier; name it in BACKENDS"

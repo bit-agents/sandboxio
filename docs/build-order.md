@@ -216,7 +216,7 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
+(five blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
 fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
 that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five

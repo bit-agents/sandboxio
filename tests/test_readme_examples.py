@@ -51,9 +51,15 @@ def _python_blocks() -> list[tuple[str, str]]:
 
 BLOCKS = _python_blocks()
 
+# docs/build-order.md states this count as the gate's exit criterion.
+EXPECTED_BLOCKS = 5
+
 
 def test_the_readme_has_examples() -> None:
-    assert len(BLOCKS) >= 4, "README example extraction broke"
+    assert len(BLOCKS) == EXPECTED_BLOCKS, (
+        f"README.md has {len(BLOCKS)} Python blocks, not {EXPECTED_BLOCKS}. Adding one is "
+        "fine — say so here and in docs/build-order.md, which states the count."
+    )
 
 
 @pytest.fixture
