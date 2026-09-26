@@ -110,13 +110,11 @@ Every Python block below is executed by CI exactly as written
 does not run is a P0 bug. The Docker-backed lines run against the built-in fake in CI, so
 they are the same code you would run — only the backend differs.
 
-The commands below are what v0.1 will install. Today the name on PyPI holds a `0.0.0`
-placeholder that carries no code, so `uv add sandboxio` does not yet get you a library.
 `uvx sandboxio demo` is the documented entry point — never the `sbx` alias, which resolves
 to an unrelated PyPI package ([ADR-0014](docs/adr/0014-project-name.md)).
 
 ```bash
-uv add "sandboxio[docker]"     # from v0.1
+uv add "sandboxio[docker]"
 uvx sandboxio demo             # create, run, stream, prove egress is denied, tear down
 sandboxio doctor               # what is installed, reachable and missing — no secrets printed
 ```
@@ -1664,7 +1662,8 @@ Before running untrusted code:
 ## What this project does not claim
 
 - No third-party security audit has been performed.
-- It is **pre-alpha**, with nothing released; the API is not stable yet.
+- The API is not stable until `1.0`: a `0.x` minor may break it
+  ([the version policy](version-policy.md)).
 - No v0.1 backend provides the `GVISOR` tier — the tier exists in the model, not in what
   shipped.
 - Isolation tiers are claims about someone else's infrastructure, published only with a
@@ -2045,7 +2044,9 @@ is something this project already had to get wrong once:
   dependency.
 - **You are all-in on one agent framework** whose sandbox layer already covers your
   providers.
-- **You need it today.** Nothing is released yet.
+- **You need the `GVISOR` tier.** No v0.1 backend provides it — the tier exists in the
+  model, not in what shipped. Docker is `CONTAINER`, E2B is `MICROVM`, and Modal lands
+  in 0.1.1.
 
 ## What is actually different
 

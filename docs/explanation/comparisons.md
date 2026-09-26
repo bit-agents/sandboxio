@@ -88,7 +88,9 @@ is something this project already had to get wrong once:
   dependency.
 - **You are all-in on one agent framework** whose sandbox layer already covers your
   providers.
-- **You need it today.** Nothing is released yet.
+- **You need the `GVISOR` tier.** No v0.1 backend provides it — the tier exists in the
+  model, not in what shipped. Docker is `CONTAINER`, E2B is `MICROVM`, and Modal lands
+  in 0.1.1.
 
 ## What is actually different
 

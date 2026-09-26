@@ -13,6 +13,9 @@ Every absorbed provider break gets an entry here as well as in the
 
 ### Fixed
 
+- The README and the docs describe 0.1.0 as released. They still said the name on PyPI was
+  an empty placeholder, that nothing had shipped and that the project was pre-alpha, which
+  contradicted the wheel a reader had just installed.
 - The links in every package's PyPI description are absolute, so they resolve. On
   `sandboxio-docker` and `sandboxio-e2b` the link to the project in "The … adapter for
   sandboxio" was a relative path and led nowhere; on `sandboxio` the links into the docs,
