@@ -20,7 +20,9 @@ SKIP_DIRS = {ROOT / "docs" / "spec", ROOT / "docs" / "errors"}
 # The placeholder version that held the name before 0.1.0 shipped.
 UNRELEASED_VERSION = "0.0.0"
 
-# Lower-cased, matched against whitespace-normalised prose.
+# Lower-cased, matched against whitespace-normalised prose. Each phrase has to be
+# unsayable about a released project: a gate that fails on ordinary prose gets
+# worked around, which is the one thing this repo does not do with a red gate.
 DENIED = (
     "pre-alpha",
     "nothing is released",
@@ -28,9 +30,7 @@ DENIED = (
     "not yet released",
     "not yet published",
     "no version is suitable for any use",
-    "reserved name",
     "when we release",
-    "will install",
     "`0.0.0` placeholder",
     "does not yet get you a library",
 )
