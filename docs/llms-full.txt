@@ -3501,7 +3501,9 @@ churn-absorption log.
 
 ## Hygiene gates (CI-enforced)
 
-- Import budget: `python -X importtime -c "import sandboxio"` under 150 ms; hard fail over 200 ms.
+- Import budget: `python -X importtime -c "import sandboxio"` under 150 ms, and CI is red
+  past it. 200 ms is where the response escalates to a feature freeze, not where the build
+  starts failing ([H8](../hazards.md#h8--import-bloat-and-eager-imports)).
 - No network at import, verified with `pytest-socket`.
 - No leaked containers: Docker jobs assert zero sandboxio-labelled containers remain.
 - pyright + mypy strict on the public API; `py.typed` present in the wheel.
@@ -3888,8 +3890,9 @@ A slow or side-effecting import is fatal for a library agents load on every cold
 disqualifying in offline or air-gapped CI.
 
 - **Tripwire:** import budget over 150 ms.
-- **Response:** hard CI fail over 200 ms; **feature freeze until fixed** — this is one of
-  the pre-committed thresholds.
+- **Response:** CI is red past 150 ms ([ADR-0012](adr/0012-no-telemetry-no-import-side-effects.md));
+  past 200 ms it is a **feature freeze until fixed** rather than a fix — this is one of the
+  pre-committed thresholds.
 
 ### H9 — FakeBackend diverges from reality
 
