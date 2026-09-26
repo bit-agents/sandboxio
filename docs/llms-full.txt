@@ -345,8 +345,10 @@ uvx sandboxio demo
 The demo creates a sandbox, runs code, streams output, tries to reach the network from
 inside — and reports that the attempt was denied — then tears the sandbox down. The first
 run pulls the `python:3.12-slim` image (about 130 MB, on the host, outside the sandbox's
-network policy). A warm run finishes in about two seconds. If Docker is not installed, the
-demo prints the exact install command and exits `1`.
+network policy). With the image pulled, the demo's own five steps take about two and a
+half seconds; `uvx` resolving and installing the package on a cold cache puts the whole
+command nearer six. If Docker is not installed, the demo prints the exact install command
+and exits `1`.
 
 When something is off, ask the doctor. It prints credential variable *names*, never values,
 and makes no provider API call:
@@ -521,7 +523,8 @@ Sandboxed code execution goes through `sandboxio` (`import sandboxio`, never ali
 - Tests use the `sbx_fake` pytest fixture (installed with the package) or
   `sandboxio.register("docker", lambda: FakeBackend())` so `docker://` resolves to the fake.
   Never require Docker or a provider account in unit tests.
-- `sb.native` and `sandboxio.experimental.*` are outside semver; say so when you use them.
+- `sb.native` is outside semver, and so is anything that emits `ExperimentalWarning`;
+  say so when you use them.
 - Diagnose the environment with `sandboxio doctor --json`; clean up with `sandboxio reap`.
 ````
 
@@ -551,8 +554,9 @@ sb = await sandboxio.create("docker://python:3.12-slim")
 sb = await sandboxio.create(DockerConfig(template="ghcr.io/acme/agent-runtime:1.4"))
 ```
 
-The isolation tier is `CONTAINER`: a shared kernel. Use it for trusted, dev and CI code;
-for untrusted multi-tenant code pick a `MICROVM` backend
+The isolation tier is `CONTAINER`: [a container shares the host kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/),
+Docker's own description, read on **2026-09-20**. Use it for trusted, dev and CI code; for
+untrusted multi-tenant code pick a `MICROVM` backend
 ([isolation tiers](../explanation/isolation-tiers.md)).
 
 ## What the adapter does
@@ -681,7 +685,8 @@ sb = await sandboxio.create()   # now uses `backend`
 
 # How to run on E2B
 
-E2B runs each sandbox in a Firecracker microVM with a live code interpreter. It is the
+E2B runs each sandbox in [a Firecracker microVM with its own kernel](https://e2b.dev/security)
+— E2B's own description, read on **2026-09-20** — with a live code interpreter. It is the
 `MICROVM` tier and the backend to pick for untrusted, multi-tenant code
 ([isolation tiers](../explanation/isolation-tiers.md)).
 
@@ -990,8 +995,8 @@ jobs:
     name: tests against the fake (every PR)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync
@@ -1003,8 +1008,8 @@ jobs:
     needs: fake
     runs-on: ubuntu-latest              # ships a Docker daemon
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
         with:
           enable-cache: true
       - run: uv sync --extra docker
@@ -1049,8 +1054,8 @@ creates real sandboxes and costs real money:
     env:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
       - run: uv sync --extra e2b
       - run: uv run pytest -q -m e2b
 ```
@@ -1601,9 +1606,13 @@ The tier measures one property: resistance to kernel escape by an adversarial te
 
 | Your code is | Use | Why |
 |--------------|-----|-----|
-| yours, reviewed, or CI's own | `CONTAINER` (Docker) | a shared kernel is fine when nothing in the sandbox is trying to leave it |
+| yours, reviewed, or CI's own | `CONTAINER` (Docker) | [a shared kernel](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) is fine when nothing in the sandbox is trying to leave it |
 | agent-generated, single-tenant, low-value data | `CONTAINER` with egress denied, or better | the network default is doing most of the work here |
-| untrusted, multi-tenant, or touching other people's data | `MICROVM` (E2B) as the floor | a dedicated guest kernel; a kernel bug is not immediately a host compromise |
+| untrusted, multi-tenant, or touching other people's data | `MICROVM` (E2B) as the floor | [a dedicated guest kernel](https://e2b.dev/security); a kernel bug is not immediately a host compromise |
+
+Both links are the provider's own description of its mechanism, read on **2026-09-20**;
+neither page carries a revision date, so that is the date it was read
+([ADR-0006](../adr/0006-isolation-tiers-first-class.md)).
 
 Make it enforceable rather than documented:
 
@@ -2328,7 +2337,7 @@ async with await sandboxio.create() as sb:                      # zero-config, l
     print(res.stdout)
 
 sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
-sb = await sandboxio.create("e2b://code-interpreter")
+sb = await sandboxio.create("e2b://code-interpreter-v1")
 sb = await sandboxio.create("modal://base?gpu=T4")           # v0.1.1 — not installable yet
 
 res = await sb.run(["pytest", "-q"], timeout=120)
@@ -2400,7 +2409,7 @@ with sandboxio.create_sync("docker://python:3.12-slim") as sb:
 ([07](07-configuration.md)), `ExecResult` shape, `Capability` and `IsolationTier` members,
 the contract suite.
 
-**Not covered:** `.native` and everything reached through it; anything under
+**Not covered:** `.native` and everything reached through it; anything under a **future**
 `sandboxio.experimental.*`; anything emitting `ExperimentalWarning`.
 
 **Deprecation:** `DeprecationWarning` with correct `stacklevel`, plus PEP 702
@@ -3262,7 +3271,7 @@ See [ADR-0008](../adr/0008-dsn-and-typed-config.md).
 <backend>://[<template>][?<param>=<value>&…]
 ```
 
-Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`, `fake://`, and
+Examples: `docker://python:3.12-slim`, `e2b://code-interpreter-v1?timeout=600`, `fake://`, and
 — once the Modal adapter lands in v0.1.1 — `modal://base?gpu=T4`.
 
 Rules:
@@ -3287,7 +3296,7 @@ Rules:
 
 ```python
 sandboxio.create(E2BConfig(
-    template="code-interpreter",
+    template="code-interpreter-v1",
     network=NetworkPolicy(allow=("api.openai.com",)),
     resources=Resources(memory_mb=2048),
 ))
@@ -3331,7 +3340,7 @@ Designed now, loadable by the **library** before any server exists
 # sandboxio-routing.yaml
 backends:
   docker-local: { adapter: docker, image: "python:3.12-slim" }
-  e2b-fast:     { adapter: e2b, template: code-interpreter, api_key: os.environ/E2B_API_KEY }
+  e2b-fast:     { adapter: e2b, template: code-interpreter-v1, api_key: os.environ/E2B_API_KEY }
   modal-gpu:    { adapter: modal, gpu: T4, api_key: os.environ/MODAL_TOKEN }
 
 isolation_classes:            # cf. Kubernetes RuntimeClass
@@ -3468,13 +3477,14 @@ shared test, not a special case in the fake.
 | unit + fake contract | FakeBackend | every PR |
 | docker contract | Docker via docker-py, Ryuk-style reaper | every PR |
 | e2b contract | E2B (real) | nightly + release, gated on secret |
-| modal contract | Modal (real) | nightly + release, gated on secret |
-| **latest-SDK canary** | all cloud adapters against `pip install -U <provider>` | nightly — the churn early-warning system |
-| framework matrix | LangGraph / OpenAI Agents adapters across supported versions | weekly |
+| modal contract | Modal (real) | with the adapter in v0.1.1 ([ADR-0025](../adr/0025-v01-scope-cut.md)) |
+| **latest-SDK canary** | every shipped cloud adapter against `pip install -U <provider>` | nightly — the churn early-warning system |
+| framework matrix | LangGraph, OpenAI Agents and MCP, each at its floor and at latest | weekly |
 
 Python matrix: **3.11, 3.12, 3.13, 3.14** on the unit and fake-contract job; 3.11 is a
 required check and 3.14 is the default ([ADR-0015](../adr/0015-python-version-floor.md)).
-Note `crewai` caps at `<3.14`, so its adapter job runs on 3.11-3.13 only.
+The `crewai` adapter is v0.2; `crewai` caps at `<3.14`, so its job will run on
+3.11-3.13 only when it lands.
 
 Canary failures MUST open an auto-labelled `provider-churn` issue, which feeds the public
 churn-absorption log.
@@ -3555,7 +3565,7 @@ Both an integration and the first server surface
 
 ```bash
 python -m sandboxio.mcp --backend docker://python:3.12-slim
-docker run ghcr.io/<org>/sandboxio-mcp --backend e2b://code-interpreter
+docker run ghcr.io/<org>/sandboxio-mcp --backend e2b://code-interpreter-v1
 ```
 
 Tools exposed — deliberately few, code-execution-pattern first:
@@ -4200,7 +4210,7 @@ egress probe is honest on `fake://`. Integrations live in core under
 other exceptions). `SbxSandboxClient` stays v0.2.
 
 **Exit:** every README example runs verbatim — the gate is `tests/test_readme_examples.py`
-(six blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
+(five blocks) — and every program under [`examples/`](https://github.com/bit-agents/sandboxio/blob/main/examples/README.md) runs against the
 fakes, the gate being `tests/test_examples.py`, which also fails on an example missing from
 that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, image already
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five

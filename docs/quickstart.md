@@ -13,8 +13,10 @@ uvx sandboxio demo
 The demo creates a sandbox, runs code, streams output, tries to reach the network from
 inside — and reports that the attempt was denied — then tears the sandbox down. The first
 run pulls the `python:3.12-slim` image (about 130 MB, on the host, outside the sandbox's
-network policy). A warm run finishes in about two seconds. If Docker is not installed, the
-demo prints the exact install command and exits `1`.
+network policy). With the image pulled, the demo's own five steps take about two and a
+half seconds; `uvx` resolving and installing the package on a cold cache puts the whole
+command nearer six. If Docker is not installed, the demo prints the exact install command
+and exits `1`.
 
 When something is off, ask the doctor. It prints credential variable *names*, never values,
 and makes no provider API call:

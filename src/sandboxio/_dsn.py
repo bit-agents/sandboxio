@@ -29,8 +29,8 @@ class ParsedDSN:
 def parse(dsn: str) -> ParsedDSN:
     """Split a DSN into backend, template and scalar params. Credentials are refused.
 
-    >>> parse("e2b://code-interpreter?timeout=600")
-    ParsedDSN(backend='e2b', template='code-interpreter', params={'timeout': '600'})
+    >>> parse("e2b://code-interpreter-v1?timeout=600")
+    ParsedDSN(backend='e2b', template='code-interpreter-v1', params={'timeout': '600'})
     """
     if "://" not in dsn:
         raise ConfigurationError(

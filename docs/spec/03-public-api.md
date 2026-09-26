@@ -55,7 +55,7 @@ async with await sandboxio.create() as sb:                      # zero-config, l
     print(res.stdout)
 
 sb = await sandboxio.create("docker://python:3.12-slim")        # one-line backend swap
-sb = await sandboxio.create("e2b://code-interpreter")
+sb = await sandboxio.create("e2b://code-interpreter-v1")
 sb = await sandboxio.create("modal://base?gpu=T4")           # v0.1.1 — not installable yet
 
 res = await sb.run(["pytest", "-q"], timeout=120)
@@ -127,7 +127,7 @@ with sandboxio.create_sync("docker://python:3.12-slim") as sb:
 ([07](07-configuration.md)), `ExecResult` shape, `Capability` and `IsolationTier` members,
 the contract suite.
 
-**Not covered:** `.native` and everything reached through it; anything under
+**Not covered:** `.native` and everything reached through it; anything under a **future**
 `sandboxio.experimental.*`; anything emitting `ExperimentalWarning`.
 
 **Deprecation:** `DeprecationWarning` with correct `stacklevel`, plus PEP 702

@@ -3,6 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-09-19
 **Resolves:** [Q1](../open-questions.md#q1--project-name)
+**Amended by:** [ADR-0025](0025-v01-scope-cut.md) — `sandboxio[modal]` lands in v0.1.1
 **Related:** [ADR-0010](0010-stable-error-codes.md), [ADR-0004](0004-thin-core-lazy-adapters.md)
 
 ## Context
