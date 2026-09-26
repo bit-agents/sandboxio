@@ -13,7 +13,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
-SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", ".claude", "site"}
+# `worktrees`, not `.claude`: the skills beside it are tracked prose and their links
+# rot like any other. Worktrees are whole checkouts, so scanning them double-counts.
+SKIP_DIRS = {".git", ".venv", "node_modules", "__pycache__", "worktrees", "site"}
 
 FENCE = re.compile(r"^(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*$")
