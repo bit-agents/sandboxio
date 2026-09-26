@@ -54,7 +54,10 @@ customer. One less layer.
 library with a protocol in front, so the sandbox your assistant talks to is the sandbox your
 tests and your production agent get — same defaults, same error codes, same
 [contract suite](../spec/08-adapter-contract.md). Moving from Docker to a microVM is the
-`--backend` flag, not a different server with a different tool surface.
+`--backend` flag, not a different server with a different tool surface — and `sandbox_info()`
+tells the client which tier it actually got. Pick that flag deliberately: `docker://` is the
+`CONTAINER` tier, for trusted code, and `MICROVM` is the floor for untrusted
+([isolation tiers](isolation-tiers.md)).
 
 The rest of the difference is what the server refuses to do. Configuration is fixed at process
 start with deliberately no tool to change it, no tool executes on the host, and the image is
