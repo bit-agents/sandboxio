@@ -2409,7 +2409,7 @@ with sandboxio.create_sync("docker://python:3.12-slim") as sb:
 ([07](07-configuration.md)), `ExecResult` shape, `Capability` and `IsolationTier` members,
 the contract suite.
 
-**Not covered:** `.native` and everything reached through it; anything under
+**Not covered:** `.native` and everything reached through it; anything under a **future**
 `sandboxio.experimental.*`; anything emitting `ExperimentalWarning`.
 
 **Deprecation:** `DeprecationWarning` with correct `stacklevel`, plus PEP 702
