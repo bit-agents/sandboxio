@@ -88,13 +88,14 @@ shared test, not a special case in the fake.
 | unit + fake contract | FakeBackend | every PR |
 | docker contract | Docker via docker-py, Ryuk-style reaper | every PR |
 | e2b contract | E2B (real) | nightly + release, gated on secret |
-| modal contract | Modal (real) | nightly + release, gated on secret |
-| **latest-SDK canary** | all cloud adapters against `pip install -U <provider>` | nightly — the churn early-warning system |
-| framework matrix | LangGraph / OpenAI Agents adapters across supported versions | weekly |
+| modal contract | Modal (real) | with the adapter in v0.1.1 ([ADR-0025](../adr/0025-v01-scope-cut.md)) |
+| **latest-SDK canary** | every shipped cloud adapter against `pip install -U <provider>` | nightly — the churn early-warning system |
+| framework matrix | LangGraph, OpenAI Agents and MCP, each at its floor and at latest | weekly |
 
 Python matrix: **3.11, 3.12, 3.13, 3.14** on the unit and fake-contract job; 3.11 is a
 required check and 3.14 is the default ([ADR-0015](../adr/0015-python-version-floor.md)).
-Note `crewai` caps at `<3.14`, so its adapter job runs on 3.11-3.13 only.
+The `crewai` adapter is v0.2; `crewai` caps at `<3.14`, so its job will run on
+3.11-3.13 only when it lands.
 
 Canary failures MUST open an auto-labelled `provider-churn` issue, which feeds the public
 churn-absorption log.

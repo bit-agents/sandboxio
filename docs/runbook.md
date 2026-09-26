@@ -15,7 +15,7 @@ One command, and it stays one command — a contributor who cannot get running i
 minutes does not become a contributor.
 
 ```bash
-uv sync --all-extras          # core + docker + e2b + modal + dev
+uv sync --all-extras          # core + docker + e2b + dev
 uv run pytest                 # unit + fake contract suite; no Docker, no network
 ```
 

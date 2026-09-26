@@ -32,7 +32,7 @@ looks arbitrary usually has an ADR explaining what it is preventing.
 ## Development
 
 ```bash
-uv sync --all-extras          # core + docker + e2b + modal + dev
+uv sync --all-extras          # core + docker + e2b + dev
 uvx pre-commit install        # ruff, whitespace and uv.lock, on every commit
 uv run pytest                 # unit + fake contract suite; no Docker, no network
 ```
