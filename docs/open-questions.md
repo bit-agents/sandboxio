@@ -25,6 +25,7 @@ in `docs/adr/`.
 | [Q12](#q12--v01-scope-cut) | v0.1 scope cut | P2 | **DECIDED** |
 | [Q13](#q13--doc-bug-is-on-a-dataclass) | Doc bug: `is` on a dataclass | P2 | **DECIDED** |
 | [Q14](#q14--pep-723-headers-in-examples) | PEP 723 headers in `examples/` | P3 | **DEFERRED** |
+| [Q15](#q15--the-version-literal-versus-hatch-vcs) | The version literal versus `hatch-vcs` | P3 | **DEFERRED** |
 
 ---
 
@@ -287,3 +288,33 @@ the header, but the trade is real and nobody has asked for the URL form yet.
 **Trigger:** the first request for an example that runs without a clone, or the next change
 to how `examples/` is executed. Whoever picks it up owns the contributor path too, and the
 placeholder inventory in `tests/test_placeholders.py` is what keeps the marker honest.
+
+---
+
+## Q15 — The version literal versus `hatch-vcs`
+
+**Priority:** P3 · **Status:** DEFERRED · **Source:** raised while releasing v0.1
+
+The version is a literal in three `__init__.py` files, which Hatch reads at build time. The
+tag is therefore not the version; it only claims to be. Nothing enforced the agreement until
+the release workflow grew a step that compares `${GITHUB_REF_NAME#v}` against all three.
+
+That gate works — it stopped a build whose tree still said `0.1.0rc1` under a `v0.1.0rc2`
+tag — but it only fires once the tag exists, and the
+[tag ruleset](https://github.com/bit-agents/sandboxio/rules) forbids deleting or moving a
+`v*` tag. So the recovery is a new version number, and `0.1.0rc2` was abandoned for no
+reason other than the literal.
+
+`hatch-vcs` derives the version from the tag instead. The bump commit, the gate and the risk
+of the three distributions drifting apart all disappear, because there is nothing left to
+keep in sync.
+
+The cost is not zero. `sandboxio.__version__` is public API
+([spec/03](spec/03-public-api.md)) and would resolve through `importlib.metadata` rather than
+a module constant, which changes what it reports in a source tree that was never installed,
+and an sdist built outside a git checkout needs a fallback. Both are solvable and neither is
+a decision to take in the middle of a release.
+
+**Trigger:** the next tag that disagrees with the tree, or the first release after 0.2,
+whichever comes first. It changes a documented public attribute, so it needs an ADR rather
+than a pull request that quietly swaps the build backend.
