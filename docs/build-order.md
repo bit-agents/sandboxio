@@ -169,12 +169,12 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
   `sandboxio.doctor()` → `DoctorReport`), `sandboxio reap` (dry run by default; Docker lists
   stopped containers too; `--label`, `--kill`), `uvx sandboxio demo` (create · run · stream ·
   egress probe · teardown) — [spec/10](spec/10-cli.md). Console scripts `sandboxio` and the
-  undocumented `sbx` alias; `python -m sandboxio`.
+  `sbx` alias; `python -m sandboxio`.
 - [x] MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, six tools, one sandbox per
   process, config fixed at start; `docker/mcp/Dockerfile` (rootless, E2B backend, no socket)
   plus the Docker MCP Catalog `server.yaml`/`tools.json` ([spec/09](spec/09-integrations.md)).
-  **Publication is blocked** until v0.1: the image push and the Docker MCP registry PR both
-  need a released version to point at.
+  The release workflow pushes the image on every `v*` tag; the Docker MCP registry pull
+  request stays manual.
 - [x] LangGraph tool (`sandboxio[langgraph]`) and OpenAI Agents tool (`sandboxio[openai-agents]`),
   each a native tool object under 100 lines, tested against the fake
 - [x] `sandboxio/otel.py` — GenAI semconv 1.37.0 `execute_tool` spans, zero-config, every
@@ -222,7 +222,7 @@ that index. Quickstart timing on this machine, fresh venv, cold `uv` cache, imag
 pulled: `uvx --from ".[docker]" sandboxio demo` **6.1 s** end to end (the demo's own five
 steps 2.5 s, create 1.3 s); `uvx --from . sandboxio demo` on the bare distribution 2.6 s to
 the install hint. The MCP image builds and runs as uid 10001 with
-`python -m sandboxio.mcp` as entrypoint; pushing it and the catalog PR wait for the org name.
+`python -m sandboxio.mcp` as entrypoint; `0.1.0` pushed it, and the catalog PR stays manual.
 Docker suite green including reap, zero containers left; E2B suite green including reap,
 zero sandboxes left; 3.11 and 3.14 gates green. **Done.**
 

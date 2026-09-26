@@ -13,10 +13,27 @@ Every absorbed provider break gets an entry here as well as in the
 
 ### Fixed
 
+- The README and the docs describe 0.1.0 as released. They still said the name on PyPI was
+  an empty placeholder, that nothing had shipped and that the project was pre-alpha, which
+  contradicted the wheel a reader had just installed.
 - The links in every package's PyPI description are absolute, so they resolve. On
   `sandboxio-docker` and `sandboxio-e2b` the link to the project in "The … adapter for
   sandboxio" was a relative path and led nowhere; on `sandboxio` the links into the docs,
   the licences and `SECURITY.md` were dead the same way.
+- The normative `spec/09` named `openai-agents>=0.1` and `mcp>=1.2`, two bounds the build
+  raised because the integration tests fail below `openai-agents` 0.19 and hang on `mcp`
+  1.2. A new gate compares every bound and extra that page names against
+  `pyproject.toml`, so the contract cannot drift from the wheel again.
+- `docs/` no longer says sandboxio runs on Modal today. Modal is planned for 0.1.1
+  ([ADR-0025](docs/adr/0025-v01-scope-cut.md)).
+- The isolation-tier page now cites the provider documentation behind each tier, with the
+  date it was read, as [ADR-0006](docs/adr/0006-isolation-tiers-first-class.md) requires;
+  it had been describing a README tier table that has not been blank since 0.1.0.
+- The `sandboxio reap` how-to said exit `1` meant a kill failed. It also means a backend
+  could not be listed, dry run or not — the orphan list is incomplete and the operator has
+  to know.
+- The MCP server how-to and the comparison page name the isolation tier of the `docker://`
+  backend they demonstrate, and point at E2B for untrusted input.
 
 ## [0.1.0] - 2026-09-21
 

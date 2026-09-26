@@ -13,7 +13,7 @@ and in [`CHANGELOG.md`](https://github.com/bit-agents/sandboxio/blob/main/CHANGE
 
 ## Entries
 
-*None yet — the first release has not shipped.*
+*None yet — no provider break absorbed since 0.1.0.*
 
 An empty log and a busy one tell different stories, and both are honest. This one is empty
 because there is nothing to report, not because nothing is being watched: the nightly

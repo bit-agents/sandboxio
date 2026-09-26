@@ -5,8 +5,10 @@ Context for coding agents working in this repository. Humans: read
 
 ## What this is
 
-sandboxio is one secure Python API for running AI-agent code in any sandbox (Docker, E2B,
-Modal, and an in-process fake). It is a library, not a framework and not a service.
+sandboxio is one secure Python API for running AI-agent code in any sandbox. v0.1 ships
+Docker, E2B and an in-process fake; Modal is planned for v0.1.1
+([ADR-0025](docs/adr/0025-v01-scope-cut.md)), so do not write docs that imply it is
+available. It is a library, not a framework and not a service.
 
 **The specification exists and is normative.** [`docs/spec/`](docs/spec/) is written in
 RFC-2119 language and wins over every other document, including this one. Where the spec is

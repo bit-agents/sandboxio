@@ -47,13 +47,11 @@ Every Python block below is executed by CI exactly as written
 does not run is a P0 bug. The Docker-backed lines run against the built-in fake in CI, so
 they are the same code you would run — only the backend differs.
 
-The commands below are what v0.1 will install. Today the name on PyPI holds a `0.0.0`
-placeholder that carries no code, so `uv add sandboxio` does not yet get you a library.
 `uvx sandboxio demo` is the documented entry point — never the `sbx` alias, which resolves
 to an unrelated PyPI package ([ADR-0014](docs/adr/0014-project-name.md)).
 
 ```bash
-uv add "sandboxio[docker]"     # from v0.1
+uv add "sandboxio[docker]"
 uvx sandboxio demo             # create, run, stream, prove egress is denied, tear down
 sandboxio doctor               # what is installed, reachable and missing — no secrets printed
 ```
