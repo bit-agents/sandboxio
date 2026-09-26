@@ -1,0 +1,12 @@
+{"version":3,"term":{"cols":100,"rows":14},"timestamp":1790449576,"command":"uvx --from \"sandboxio[docker]\" sandboxio demo","env":{"SHELL":"/bin/zsh"}}
+[0.139, "o", "sandboxio demo on docker://python:3.12-slim  \u001b[2m(deny-egress, 120 s lifetime)\u001b[0m\r\n"]
+[1.072, "o", "\u001b[32m✓\u001b[0m create    \u001b[2m  1008 ms\u001b[0m  <DockerSandbox docker:45e2ddafc354 container running caps=RUN_COMMAND|RUN_CODE|STREAMING|FILESYSTEM|UPLOAD_DOWNLOAD|NETWORK_POLICY>\r\n"]
+[0.360, "o", "\u001b[32m✓\u001b[0m run_code  \u001b[2m   360 ms\u001b[0m  hello from CPython 3.12.14\r\n"]
+[0.024, "o", "  \u001b[2mstream\u001b[0m  tick 1\r\n"]
+[0.307, "o", "  \u001b[2mstream\u001b[0m  tick 2\r\n"]
+[0.304, "o", "  \u001b[2mstream\u001b[0m  tick 3\r\n"]
+[0.011, "o", "\u001b[32m✓\u001b[0m stream    \u001b[2m   646 ms\u001b[0m  3 chunks: tick 1 / tick 2 / tick 3\r\n"]
+[0.288, "o", "\u001b[32m✓\u001b[0m egress    \u001b[2m   287 ms\u001b[0m  denied by default — nothing left the sandbox\r\n"]
+[0.111, "o", "\u001b[32m✓\u001b[0m teardown  \u001b[2m   110 ms\u001b[0m  sandbox killed on context exit\r\n"]
+[0.001, "o", "\r\n\u001b[32mdemo passed\u001b[0m in 2411 ms · isolation tier container — a shared kernel: trusted, dev and CI code only\r\n"]
+[0.034, "x", "0"]

@@ -52,6 +52,11 @@ make test-e2b                           # nightly in CI; needs E2B_API_KEY in a 
 make site                               # the docs site, built exactly as Pages publishes it
 ```
 
+`make demo-cast` re-records the terminal capture in `README.md` and the quickstart. It needs
+`asciinema`, `agg` and a Docker daemon, and it runs the real command — so the timings in the
+GIF are the machine's, not a target. Run it when the demo's output changes, and take the
+median of a few runs rather than the fastest.
+
 Coverage is a floor, not a target: CI fails under the `fail_under` in `pyproject.toml`,
 measured over the default selection plus the Docker suite. Raise the floor once the real
 number has held above the next step; never lower it to make a red run green.
