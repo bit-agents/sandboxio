@@ -27,7 +27,8 @@ Sandboxed code execution goes through `sandboxio` (`import sandboxio`, never ali
 - Tests use the `sbx_fake` pytest fixture (installed with the package) or
   `sandboxio.register("docker", lambda: FakeBackend())` so `docker://` resolves to the fake.
   Never require Docker or a provider account in unit tests.
-- `sb.native` and `sandboxio.experimental.*` are outside semver; say so when you use them.
+- `sb.native` is outside semver, and so is anything that emits `ExperimentalWarning`;
+  say so when you use them.
 - Diagnose the environment with `sandboxio doctor --json`; clean up with `sandboxio reap`.
 ````
 

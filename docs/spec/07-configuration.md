@@ -8,7 +8,7 @@ See [ADR-0008](../adr/0008-dsn-and-typed-config.md).
 <backend>://[<template>][?<param>=<value>&…]
 ```
 
-Examples: `docker://python:3.12-slim`, `e2b://code-interpreter?timeout=600`, `fake://`, and
+Examples: `docker://python:3.12-slim`, `e2b://code-interpreter-v1?timeout=600`, `fake://`, and
 — once the Modal adapter lands in v0.1.1 — `modal://base?gpu=T4`.
 
 Rules:
@@ -33,7 +33,7 @@ Rules:
 
 ```python
 sandboxio.create(E2BConfig(
-    template="code-interpreter",
+    template="code-interpreter-v1",
     network=NetworkPolicy(allow=("api.openai.com",)),
     resources=Resources(memory_mb=2048),
 ))
@@ -77,7 +77,7 @@ Designed now, loadable by the **library** before any server exists
 # sandboxio-routing.yaml
 backends:
   docker-local: { adapter: docker, image: "python:3.12-slim" }
-  e2b-fast:     { adapter: e2b, template: code-interpreter, api_key: os.environ/E2B_API_KEY }
+  e2b-fast:     { adapter: e2b, template: code-interpreter-v1, api_key: os.environ/E2B_API_KEY }
   modal-gpu:    { adapter: modal, gpu: T4, api_key: os.environ/MODAL_TOKEN }
 
 isolation_classes:            # cf. Kubernetes RuntimeClass

@@ -52,7 +52,7 @@ Both an integration and the first server surface
 
 ```bash
 python -m sandboxio.mcp --backend docker://python:3.12-slim
-docker run ghcr.io/<org>/sandboxio-mcp --backend e2b://code-interpreter
+docker run ghcr.io/<org>/sandboxio-mcp --backend e2b://code-interpreter-v1
 ```
 
 Tools exposed — deliberately few, code-execution-pattern first:
