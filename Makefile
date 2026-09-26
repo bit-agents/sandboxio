@@ -1,5 +1,5 @@
 # Every target is a line from CONTRIBUTING.md. `make check` is what CI runs, in CI's order.
-.PHONY: help sync fix lint types test test-docker test-e2b coverage docs site actions check
+.PHONY: help sync fix lint types test test-docker test-e2b coverage docs demo-cast site actions check
 
 help:  ## list the targets
 	@grep -hE '^[a-z0-9-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/' | expand -t 16
@@ -41,6 +41,12 @@ docs:  ## regenerate the error catalogue and llms-full.txt, then check every lin
 	uv run python scripts/gen_error_catalog.py
 	uv run python scripts/gen_llms_full.py
 	uv run python scripts/check_doc_links.py
+
+demo-cast:  ## re-record docs/assets/demo.{cast,gif}; needs asciinema, agg and a Docker daemon
+	asciinema record docs/assets/demo.cast --headless --overwrite --quiet --window-size 100x14 \
+	  --command 'uvx --from "sandboxio[docker]" sandboxio demo'
+	agg --theme github-dark --font-size 18 --last-frame-duration 4 --fps-cap 24 \
+	  docs/assets/demo.cast docs/assets/demo.gif
 
 site:  ## build the docs site exactly as the Pages workflow publishes it
 	uv sync --group docs

@@ -7,16 +7,19 @@ Everything here also runs against the in-process fake, which needs neither.
 ## 1. Prove the install works
 
 ```bash
-uvx sandboxio demo
+uvx --from "sandboxio[docker]" sandboxio demo
 ```
+
+![The demo creating a Docker sandbox, running code, streaming output, being refused the network, and tearing down — 2.4 s](assets/demo.gif)
 
 The demo creates a sandbox, runs code, streams output, tries to reach the network from
 inside — and reports that the attempt was denied — then tears the sandbox down. The first
 run pulls the `python:3.12-slim` image (about 130 MB, on the host, outside the sandbox's
 network policy). With the image pulled, the demo's own five steps take about two and a
 half seconds; `uvx` resolving and installing the package on a cold cache puts the whole
-command nearer six. If Docker is not installed, the demo prints the exact install command
-and exits `1`.
+command nearer six. Without the Docker extra it prints the command above and exits `1`
+([spec/10](spec/10-cli.md#demo-contract)); with the extra but no daemon running it fails
+naming the daemon it could not reach, and `sandboxio doctor` says what to start.
 
 When something is off, ask the doctor. It prints credential variable *names*, never values,
 and makes no provider API call:

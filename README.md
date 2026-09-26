@@ -52,9 +52,16 @@ to an unrelated PyPI package ([ADR-0014](docs/adr/0014-project-name.md)).
 
 ```bash
 uv add "sandboxio[docker]"
-uvx sandboxio demo             # create, run, stream, prove egress is denied, tear down
+uvx --from "sandboxio[docker]" sandboxio demo    # create, run, stream, egress denied, tear down
 sandboxio doctor               # what is installed, reachable and missing — no secrets printed
 ```
+
+![The demo creating a Docker sandbox, running code, streaming output, being refused the network, and tearing down — 2.4 s](docs/assets/demo.gif)
+
+That is a real recording, not a mock-up: [`docs/assets/demo.cast`](docs/assets/demo.cast) is
+the asciicast it was rendered from. 2.4 s warm on a laptop, about six from a cold `uv` cache.
+The core distribution carries no backend, so a bare `uvx sandboxio demo` prints the command
+above and exits `1` ([spec/10](docs/spec/10-cli.md#demo-contract)).
 
 Run code in a sandbox. `create()` with no arguments is local Docker; nothing leaves the
 sandbox unless you say so.
