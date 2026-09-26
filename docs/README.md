@@ -51,8 +51,10 @@ Coding assistants: [`llms.txt`](llms.txt) indexes these pages and
 ## About this documentation
 
 Working documentation for **sandboxio**: a framework-agnostic Python sandbox abstraction library
-for AI-agent code and tool execution. One async API over Docker, E2B and Modal backends;
-ports/adapters; capability discovery; security-first defaults; native escape hatches.
+for AI-agent code and tool execution. One async API over the Docker and E2B backends that
+shipped in v0.1, plus an in-process fake for tests; ports/adapters; capability discovery;
+security-first defaults; native escape hatches. Modal is planned for v0.1.1
+([ADR-0025](adr/0025-v01-scope-cut.md)).
 
 > **Naming:** the project is `sandboxio`; `SBX` is its short code, used for error codes
 > (`SBX_E1002`), env vars (`SBX_DEBUG`), the pytest fixture (`sbx_fake`) and the CLI alias.

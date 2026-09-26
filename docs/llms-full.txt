@@ -1139,6 +1139,12 @@ sandbox it cannot reconfigure: the backend, the egress policy and the timeout ar
 you start the process, and no tool runs anything on the host. If you are writing the agent in
 Python, call `sandboxio.create()` directly; the protocol hop buys you nothing.
 
+The `docker://` backend used below is the `CONTAINER` tier: a shared kernel, for trusted,
+dev and CI code. If the client may feed the server code you would not run yourself, start it
+on an `e2b://` backend instead — `MICROVM` is the documented floor for untrusted code
+([isolation tiers](../explanation/isolation-tiers.md)). The container image defaults to E2B
+for exactly this reason.
+
 ```bash
 uv add "sandboxio[mcp,docker]"
 python -m sandboxio.mcp --backend docker://python:3.12-slim
@@ -1222,7 +1228,10 @@ sandboxio reap --json
 
 Listing is the default because the tool operates on live infrastructure and a label filter
 can be wrong. A backend whose extra is not installed is reported as *not installed*, not an
-error. Exit `1` only when a kill failed.
+error. Exit `1` when a backend could not be listed — even on a dry run, because the orphan
+list is then incomplete — and, with `--kill`, when a kill failed. A dry run that listed
+every requested backend exits `0`, however many sandboxes it found
+([spec/10](../spec/10-cli.md#behaviour-requirements)).
 
 ## `sandboxio demo`
 
@@ -1692,13 +1701,21 @@ not features, not cost. The rank orders that property only
 
 | Tier | Mechanism | Honest position |
 |------|-----------|-----------------|
-| `CONTAINER` | a Linux container sharing the host kernel (runc) | **Not a security boundary against hostile code.** For trusted, dev and CI code only. A kernel exploit is a host compromise. |
-| `GVISOR` | a user-space kernel interposed between the container and the host | Defence in depth, not hardware-VM equivalence. No v0.1 backend provides it; the tier is a property of the model, not of what shipped. |
-| `MICROVM` | a dedicated guest kernel in a hardware-virtualised VM (Firecracker) | The recommended floor for untrusted, multi-tenant code. |
+| `CONTAINER` | a Linux container sharing the host kernel (runc) — [Docker's own description](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/) | **Not a security boundary against hostile code.** For trusted, dev and CI code only. A kernel exploit is a host compromise. |
+| `GVISOR` | a user-space kernel interposed between the container and the host — [Modal's own description](https://modal.com/docs/guide/security) | Defence in depth, not hardware-VM equivalence. No v0.1 backend provides it; the tier is a property of the model, not of what shipped. |
+| `MICROVM` | a dedicated guest kernel in a hardware-virtualised VM (Firecracker) — [E2B's own description](https://e2b.dev/security) | The recommended floor for untrusted, multi-tenant code. |
 | `UNKNOWN` | the adapter has not verified its mechanism | Satisfies **no** requirement. Creating on it warns once per backend. |
 
-Docker is `CONTAINER`. E2B is `MICROVM`. The fake reports `CONTAINER` while isolating nothing,
-because it is for tests.
+Each mechanism above links the provider's own documentation, read on **2026-09-20** — the
+same three sources the [repository README](https://github.com/bit-agents/sandboxio#backends)
+cites per backend. None of those pages carries its own revision date, so that is the date it
+was read, not a date the provider published; re-verification is a
+[quarterly item](../runbook.md#quarterly-review). `UNKNOWN` carries no source because it is
+the absence of a claim.
+
+Docker is `CONTAINER`. E2B is `MICROVM`. Modal is `GVISOR` and is planned for v0.1.1
+([ADR-0025](../adr/0025-v01-scope-cut.md)). The fake reports `CONTAINER` while isolating
+nothing, because it is for tests.
 
 ## Why `CONTAINER` is still in the product
 
@@ -1721,13 +1738,18 @@ with `ConfigurationError` and nothing was created or billed. `require_isolation=
 meaningless and raises. This one line is the most valuable security affordance in the API:
 it turns a silent downgrade into a failed deployment.
 
-## Why the README's tier cells are blank
+## Why every tier carries a dated source
 
 A tier is a claim about someone else's infrastructure. This project publishes one only with
 a dated link to the provider's own documentation, re-verified quarterly
 ([ADR-0006](../adr/0006-isolation-tiers-first-class.md),
-[hazard H4](../hazards.md#h4--isolation-claims-we-cannot-defend)). A provider changing its
-isolation mechanism is a breaking change in this project's public data, not a footnote.
+[hazard H4](../hazards.md#h4--isolation-claims-we-cannot-defend)) — which is why the table
+above and the per-backend table in the
+[repository README](https://github.com/bit-agents/sandboxio#backends) both cite the
+provider, not us. A backend whose mechanism is not verified that way reports `UNKNOWN`
+rather than `CONTAINER`, because `CONTAINER` is itself a claim. A provider changing its
+isolation mechanism is a breaking change in this project's public data, not a footnote: it
+goes in the changelog and the [churn log](../churn-log.md).
 
 
 ==============================================================================
@@ -2010,7 +2032,10 @@ customer. One less layer.
 library with a protocol in front, so the sandbox your assistant talks to is the sandbox your
 tests and your production agent get — same defaults, same error codes, same
 [contract suite](../spec/08-adapter-contract.md). Moving from Docker to a microVM is the
-`--backend` flag, not a different server with a different tool surface.
+`--backend` flag, not a different server with a different tool surface — and `sandbox_info()`
+tells the client which tier it actually got. Pick that flag deliberately: `docker://` is the
+`CONTAINER` tier, for trusted code, and `MICROVM` is the floor for untrusted
+([isolation tiers](isolation-tiers.md)).
 
 The rest of the difference is what the server refuses to do. Configuration is fixed at process
 start with deliberately no tool to change it, no tool executes on the host, and the image is
@@ -3511,7 +3536,7 @@ Rules:
 
 Decisions taken for v0.1: the adapters live in core under `sandboxio.integrations.*` with
 their framework behind an extra — `sandboxio[langgraph]` (`langchain-core>=0.3`, the tool
-type is `langchain_core.tools.BaseTool`) and `sandboxio[openai-agents]` (`openai-agents>=0.1`).
+type is `langchain_core.tools.BaseTool`) and `sandboxio[openai-agents]` (`openai-agents>=0.19`).
 Each ships `make_code_tool()` and `make_command_tool()`, taking either a ready sandbox or a
 per-call factory. A `SandboxError` is rendered into the tool's return string — code, fix and
 docs URL — rather than raised into the framework, so the model can read what went wrong and
@@ -3558,7 +3583,7 @@ endpoint:
   code.
 - Bind to localhost unless explicitly configured otherwise.
 
-Behind `sandboxio[mcp]` (`mcp>=1.2`; built on the SDK's `MCPServer`). One sandbox per
+Behind `sandboxio[mcp]` (`mcp>=2.0`; built on the SDK's `MCPServer`). One sandbox per
 server process, created on the first tool call and killed at shutdown. A `SandboxError`
 raised by a tool reaches the model as a tool error carrying the code, the fix and the docs
 URL — the SDK hides any other exception behind a generic line. Options: `--backend`,
@@ -4128,7 +4153,7 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
   `sandboxio.doctor()` → `DoctorReport`), `sandboxio reap` (dry run by default; Docker lists
   stopped containers too; `--label`, `--kill`), `uvx sandboxio demo` (create · run · stream ·
   egress probe · teardown) — [spec/10](spec/10-cli.md). Console scripts `sandboxio` and the
-  undocumented `sbx` alias; `python -m sandboxio`.
+  `sbx` alias; `python -m sandboxio`.
 - [x] MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, six tools, one sandbox per
   process, config fixed at start; `docker/mcp/Dockerfile` (rootless, E2B backend, no socket)
   plus the Docker MCP Catalog `server.yaml`/`tools.json` ([spec/09](spec/09-integrations.md)).

@@ -169,7 +169,7 @@ lowest common denominator ([ADR-0003](adr/0003-no-lowest-common-denominator.md))
   `sandboxio.doctor()` → `DoctorReport`), `sandboxio reap` (dry run by default; Docker lists
   stopped containers too; `--label`, `--kill`), `uvx sandboxio demo` (create · run · stream ·
   egress probe · teardown) — [spec/10](spec/10-cli.md). Console scripts `sandboxio` and the
-  undocumented `sbx` alias; `python -m sandboxio`.
+  `sbx` alias; `python -m sandboxio`.
 - [x] MCP server `python -m sandboxio.mcp` behind `sandboxio[mcp]`, six tools, one sandbox per
   process, config fixed at start; `docker/mcp/Dockerfile` (rootless, E2B backend, no socket)
   plus the Docker MCP Catalog `server.yaml`/`tools.json` ([spec/09](spec/09-integrations.md)).

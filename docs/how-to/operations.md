@@ -36,7 +36,10 @@ sandboxio reap --json
 
 Listing is the default because the tool operates on live infrastructure and a label filter
 can be wrong. A backend whose extra is not installed is reported as *not installed*, not an
-error. Exit `1` only when a kill failed.
+error. Exit `1` when a backend could not be listed — even on a dry run, because the orphan
+list is then incomplete — and, with `--kill`, when a kill failed. A dry run that listed
+every requested backend exits `0`, however many sandboxes it found
+([spec/10](../spec/10-cli.md#behaviour-requirements)).
 
 ## `sandboxio demo`
 

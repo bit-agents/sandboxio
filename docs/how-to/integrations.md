@@ -77,6 +77,12 @@ sandbox it cannot reconfigure: the backend, the egress policy and the timeout ar
 you start the process, and no tool runs anything on the host. If you are writing the agent in
 Python, call `sandboxio.create()` directly; the protocol hop buys you nothing.
 
+The `docker://` backend used below is the `CONTAINER` tier: a shared kernel, for trusted,
+dev and CI code. If the client may feed the server code you would not run yourself, start it
+on an `e2b://` backend instead — `MICROVM` is the documented floor for untrusted code
+([isolation tiers](../explanation/isolation-tiers.md)). The container image defaults to E2B
+for exactly this reason.
+
 ```bash
 uv add "sandboxio[mcp,docker]"
 python -m sandboxio.mcp --backend docker://python:3.12-slim
