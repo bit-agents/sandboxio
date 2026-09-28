@@ -58,6 +58,21 @@ highest-severity bug this project can ship
 ([H1](../hazards.md#h1--a-security-default-silently-does-not-apply)), and the contract suite
 proves deny-by-default against a canary host on every real backend.
 
+## What an allowlist does not close
+
+An allowlist narrows which hosts code can connect to. On E2B it does not narrow DNS. As soon
+as the list contains a domain, E2B
+[allows the sandbox's resolver, `8.8.8.8`](https://docs.e2b.dev/sandbox/internet-access)
+(read on **2026-09-27**), and that resolver answers any name, listed or not. Code in the
+sandbox can then carry data out in the names it looks up, to whoever runs the authoritative
+servers of a domain it picks. The contract suite does not catch this: it checks that an
+unlisted host cannot be *reached*, not that it cannot be *resolved*.
+
+`egress="deny"` with no allowlist does not have this gap: on E2B no query gets an answer, and
+on Docker the sandbox has no network interface at all. If the data in a sandbox must not
+leave, keep egress denied and
+[get dependencies in another way](../how-to/docker.md#getting-dependencies-into-a-deny-egress-sandbox).
+
 ## Choosing a tier
 
 The tier measures one property: resistance to kernel escape by an adversarial tenant
