@@ -29,7 +29,7 @@ def test_every_action_is_pinned_to_a_commit_sha(path: object) -> None:
     unpinned = [
         ref
         for ref in USES.findall(path.read_text())
-        if not ref.startswith("./") and not PINNED.match(ref)
+        if not ref.startswith(("./", "$/")) and not PINNED.match(ref)
     ]
     assert not unpinned, (
         f"{path.name} uses a mutable ref: {unpinned}. Pin to a 40-char commit SHA with the "

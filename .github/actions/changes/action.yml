@@ -1,0 +1,34 @@
+# One list of prose paths for every workflow that skips work on them. Skipping is opt-in by
+# path, so a file nobody classified runs everything. Needs a checkout with fetch-depth: 0.
+name: what changed
+description: Says whether a pull request touches anything besides prose.
+
+outputs:
+  code:
+    description: '"true" unless this is a pull request that changes only prose'
+    value: ${{ steps.diff.outputs.code }}
+
+runs:
+  using: composite
+  steps:
+    - id: diff
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE: ${{ github.event.pull_request.base.sha }}
+        HEAD: ${{ github.event.pull_request.head.sha }}
+      run: |
+        if [ "$EVENT" != "pull_request" ]; then
+          echo "code=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        # Not `< <(git diff ...)`: a failed diff there reads as "prose only".
+        changed=$(git diff --name-only "$BASE...$HEAD")
+        code=false
+        while read -r path; do
+          case "$path" in
+            docs/* | *.md | mkdocs.yml) ;;
+            *) code=true; echo "not prose: $path"; break ;;
+          esac
+        done <<< "$changed"
+        echo "code=$code" | tee -a "$GITHUB_OUTPUT"

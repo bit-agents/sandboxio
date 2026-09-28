@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import re
 
+import pytest
+
 from _helpers import REPO_ROOT, run_python
+
+pytestmark = pytest.mark.doccheck
 
 DOCS = REPO_ROOT / "docs"
 

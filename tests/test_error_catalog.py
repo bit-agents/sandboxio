@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+
 from _helpers import REPO_ROOT, run_python
 from sandboxio.errors import catalog
+
+pytestmark = pytest.mark.doccheck
 
 ERRORS_DIR = REPO_ROOT / "docs" / "errors"
 

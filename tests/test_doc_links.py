@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from _helpers import REPO_ROOT, run_python
+
+pytestmark = pytest.mark.doccheck
 
 
 def test_every_relative_link_and_anchor_resolves() -> None:

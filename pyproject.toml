@@ -148,6 +148,7 @@ addopts = "--strict-markers --strict-config --disable-socket --allow-unix-socket
 markers = [
     "wheel: builds a wheel; needs `uv` on PATH",
     "docs: builds the docs site; needs `uv sync --group docs`",
+    "doccheck: reads the docs; the only tests CI runs when a pull request changes prose alone",
     "docker: needs a working Docker daemon",
     "e2b: needs E2B_API_KEY and network; `uv run --env-file .env pytest -m e2b`",
 ]

@@ -10,6 +10,10 @@ import re
 from collections import Counter
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.doccheck
+
 ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {
     ".git",
