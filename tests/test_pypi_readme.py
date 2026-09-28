@@ -16,6 +16,8 @@ import pytest
 
 from _helpers import REPO_ROOT
 
+pytestmark = pytest.mark.doccheck
+
 PYPROJECTS = [
     REPO_ROOT / "pyproject.toml",
     *sorted(REPO_ROOT.glob("packages/*/pyproject.toml")),

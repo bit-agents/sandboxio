@@ -15,6 +15,8 @@ import yaml
 
 from _helpers import REPO_ROOT
 
+pytestmark = pytest.mark.doccheck
+
 SKIP_MARKER = "<!-- doc-sample: skip -->"
 FENCE = re.compile(r"^(?P<indent>\s*)(?P<ticks>```+|~~~+)(?P<info>.*)$")
 PARSED_LANGS = {"yaml", "yml", "json", "python", "py"}

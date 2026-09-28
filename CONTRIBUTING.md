@@ -92,6 +92,10 @@ carries your `Signed-off-by` into the history.
 CI gates block merge and are not overridden. If a gate is wrong, change the gate in its own
 PR, with a reason.
 
+A PR that changes only `docs/`, `*.md` or `mkdocs.yml` skips the code jobs and runs just the
+tests marked `doccheck`. A new test that reads the docs needs that marker, or a prose-only
+PR will not run it.
+
 ## Changelog entries
 
 Every change a user could notice gets one line under `## [Unreleased]` in

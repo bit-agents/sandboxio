@@ -14,6 +14,8 @@ import pytest
 
 from _helpers import REPO_ROOT
 
+pytestmark = pytest.mark.doccheck
+
 # The canonical dated table. Every other page has to agree with the date it states, so a
 # quarterly re-verification (runbook) moves one date and the gate finds the stragglers.
 CANONICAL = REPO_ROOT / "README.md"

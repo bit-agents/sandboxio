@@ -272,6 +272,7 @@ def test_every_attribute_string_lives_in_otel_py() -> None:
     assert not offenders, "\n".join(offenders)
 
 
+@pytest.mark.doccheck
 def test_semconv_version_is_pinned_and_documented() -> None:
     assert re.fullmatch(r"\d+\.\d+\.\d+", otel.SEMCONV_VERSION)
     spec = (REPO_ROOT / "docs" / "spec" / "06-observability.md").read_text()

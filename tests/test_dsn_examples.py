@@ -10,7 +10,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 from _helpers import REPO_ROOT
+
+pytestmark = pytest.mark.doccheck
 
 # Read, not imported: a documentation gate should not need the provider SDK installed.
 BACKEND = REPO_ROOT / "packages" / "sandboxio-e2b" / "src" / "sandboxio_e2b" / "_backend.py"

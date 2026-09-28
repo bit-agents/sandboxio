@@ -9,7 +9,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 import sandboxio
+
+pytestmark = pytest.mark.doccheck
 
 ROOT = Path(__file__).resolve().parent.parent
 

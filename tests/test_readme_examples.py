@@ -22,6 +22,8 @@ from _helpers import REPO_ROOT
 from sandboxio import registry
 from sandboxio.testing.fake import FakeBackend
 
+pytestmark = pytest.mark.doccheck
+
 README = REPO_ROOT / "README.md"
 FENCE = re.compile(r"^```(\w*)\s*$")
 SKIP_MARKER = "<!-- doc-sample: skip -->"

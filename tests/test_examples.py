@@ -22,6 +22,8 @@ from _helpers import REPO_ROOT
 from sandboxio import registry
 from sandboxio.testing.fake import FakeBackend
 
+pytestmark = pytest.mark.doccheck
+
 EXAMPLES = sorted(
     p for p in (REPO_ROOT / "examples").glob("*.py") if not p.name.startswith("test_")
 )
