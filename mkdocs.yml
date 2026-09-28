@@ -115,6 +115,7 @@ nav:
       - 09 Integrations: spec/09-integrations.md
       - 10 CLI: spec/10-cli.md
   - Decisions: adr/README.md
+  - Proposals: proposals/README.md
   - Project:
       - Runbook: runbook.md
       - Churn-absorption log: churn-log.md
@@ -124,6 +125,7 @@ nav:
 not_in_nav: |
   errors/SBX_E*.md
   adr/0*.md
+  proposals/0*.md
   build-order.md
   open-questions.md
   hazards.md
