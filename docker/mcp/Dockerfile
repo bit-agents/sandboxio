@@ -9,14 +9,14 @@
 
 # Both stages pin the base image by digest; Dependabot raises the bump, so a pinned
 # digest does not mean an unpatched base.
-FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9 AS build
+FROM python:3.15-slim@sha256:94d3426f1def7db4a106a232ac121bfd975393e5dfd40a619b955fae45fe7913 AS build
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE LICENSE-DOCS ./
 COPY src ./src
 COPY packages ./packages
 RUN pip install --no-cache-dir --prefix=/install ./packages/sandboxio-e2b "./[mcp,e2b]"
 
-FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
+FROM python:3.15-slim@sha256:94d3426f1def7db4a106a232ac121bfd975393e5dfd40a619b955fae45fe7913
 COPY --from=build /install /usr/local
 RUN useradd --uid 10001 --create-home --shell /usr/sbin/nologin sandboxio
 USER 10001
